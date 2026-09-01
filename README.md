@@ -87,7 +87,15 @@ This repository provides an **end-to-end working prototype for 3D ULPIN generati
 If you plan to extract text from scanned bitmap drawings or images:
 - **macOS (via Homebrew)**:
   ```bash
+  # If brew is installed:
   brew install tesseract
+
+  # If you get 'brew: command not found', configure your PATH first:
+  eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+  echo 'eval "$(/opt/homebrew/bin/brew shellenv zsh)"' >> ~/.zshrc
+
+  # If Homebrew is not installed yet on your Mac:
+  # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ```
 - **Ubuntu / Debian**:
   ```bash
