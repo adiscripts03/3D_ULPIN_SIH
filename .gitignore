@@ -1,0 +1,15 @@
+# Virtual environment
+ulpin_env/
+.env
+env/
+venv/
+
+# Python cache & build files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# OS files
+.DS_Store
+Thumbs.db
