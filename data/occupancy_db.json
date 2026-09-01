@@ -5,5 +5,19 @@
     ],
     "HSTL01-F1-X01-4S": [
         "BT_ID_JOHN"
+    ],
+    "HSTL01-F1-X30-2S": [
+        "BT_ID_ALEX",
+        "BT_ID_SARAH"
+    ],
+    "HSTL01-F1-130-2S": [
+        "BT_ID_ALEX",
+        "BT_ID_SARAH"
+    ],
+    "HSTL01-F2-201-4S": [
+        "BT_ID_JOHN"
+    ],
+    "HSTL01-F10-1001-4S": [
+        "BT_ID_PRIYA"
     ]
 }

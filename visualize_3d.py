@@ -4,10 +4,10 @@ import plotly.graph_objects as go
 import os
 
 DB_FILE = "data/occupancy_db.json"
-FINAL_DATA_FILE = "data/room_labels_floor1_final.csv"
+FINAL_DATA_FILE = "data/room_labels_all_floors_final.csv" if os.path.exists("data/room_labels_all_floors_final.csv") else "data/room_labels_floor1_final.csv"
 OUTPUT_HTML = "frontend/hostel_3d_twin.html"
 
-def get_box_mesh(x0, x1, y0, y1, z0, z1, color, label, hover_text, opacity=0.88):
+def get_box_mesh(x0, x1, y0, y1, z0, z1, color, label, hover_text, floor_num, opacity=0.88):
     # 8 vertices of a 3D rectangular parcel
     x = [x0, x1, x1, x0, x0, x1, x1, x0]
     y = [y0, y0, y1, y1, y0, y0, y1, y1]
@@ -25,7 +25,7 @@ def get_box_mesh(x0, x1, y0, y1, z0, z1, color, label, hover_text, opacity=0.88)
         opacity=opacity,
         flatshading=True,
         lighting=dict(ambient=0.7, diffuse=0.8, roughness=0.5, specular=0.2),
-        name=label,
+        name=f"F{floor_num} - {label}",
         text=hover_text,
         hoverinfo="text"
     )
@@ -51,11 +51,16 @@ def main():
     # Track bounds for annotations & axis setup
     min_x, max_x = float("inf"), float("-inf")
     min_y, max_y = float("inf"), float("-inf")
+    min_z, max_z = float("inf"), float("-inf")
+
+    floors = sorted(list(set(int(r["floor"]) for r in rows)))
+    trace_floor_map = [] # stores floor number for each trace
 
     for r in rows:
         ulpin = r["ulpin_3d"]
         label = r["room_id"]
         ptype = r.get("type", "")
+        floor_num = int(r["floor"])
         
         # Real-world metric boundaries
         x0 = float(r["real_x_start_m"])
@@ -75,6 +80,7 @@ def main():
 
         min_x, max_x = min(min_x, x0), max(max_x, x1)
         min_y, max_y = min(min_y, y0), max(max_y, y1)
+        min_z, max_z = min(min_z, z0), max(max_z, z1)
 
         area_sqm = round((x1 - x0) * (y1 - y0), 1)
         lat = r.get("latitude", "N/A")
@@ -99,7 +105,7 @@ def main():
         elif "CORR" in ptype or "CORR" in ulpin:
             color = "#42A5F5" # Blue Corridor
             status = "Horizontal Corridor"
-            opacity = 0.65
+            opacity = 0.60
         else:
             # Residential room (2S / 4S)
             cap = 4 if "4S" in ulpin else 2
@@ -120,34 +126,36 @@ def main():
                 status += f"<br>Occupants: {', '.join(occupants)}"
 
         hover_text = (
-            f"<b>Unit: {label}</b><br>"
+            f"<b>Floor {floor_num} | Unit: {label}</b><br>"
             f"<b>3D ULPIN:</b> {ulpin}<br>"
             f"<b>Type:</b> {ptype}<br>"
             f"<b>Status:</b> {status}<br>"
             f"<b>Dimensions:</b> {round(x1-x0,2)}m × {round(y1-y0,2)}m × {round(z1-z0,2)}m<br>"
             f"<b>Area:</b> {area_sqm} m²<br>"
             f"<b>Coordinates:</b> Lat {lat}, Lon {lon}<br>"
-            f"<b>Elevation:</b> {z0}m – {z1}m"
+            f"<b>Elevation:</b> {z0}m – {z1}m (Slab: {r.get('z_slab_top', z1)}m)"
         )
         
-        mesh = get_box_mesh(x0, x1, y0, y1, z0, z1, color, label, hover_text, opacity)
+        mesh = get_box_mesh(x0, x1, y0, y1, z0, z1, color, label, hover_text, floor_num, opacity)
         fig.add_trace(mesh)
+        trace_floor_map.append(floor_num)
 
-    # 3D Ground Orientation Badges / Labels
+    total_parcel_traces = len(trace_floor_map)
     mid_x = (min_x + max_x) / 2.0
     
-    # Front Facade Marker & Entrance Pointer
+    # 3D Ground Orientation Badges / Labels
     fig.add_trace(go.Scatter3d(
         x=[mid_x, max_x - 8.0],
         y=[-4.0, -4.0],
         z=[0.0, 0.0],
         mode="text",
-        text=["<b>▲ FRONT FACADE (Outdoor Gym / Ground View) ▲</b>", "<b>X01 - X06 (Main Entrance Wing) ►</b>"],
+        text=["<b>▲ FRONT FACADE (Outdoor Gym / Ground View) ▲</b>", "<b>Units 01-06 (Entrance Wing) ►</b>"],
         textposition="top center",
         textfont=dict(size=14, color="#1565C0"),
         hoverinfo="none",
         name="Front Facade"
     ))
+    trace_floor_map.append(0) # 0 = always visible annotation
 
     # Back Facade Marker
     fig.add_trace(go.Scatter3d(
@@ -155,66 +163,93 @@ def main():
         y=[max_y + 4.0, max_y + 4.0],
         z=[0.0, 0.0],
         mode="text",
-        text=["<b>▼ BACK FACADE (Rear Wing) ▼</b>", "<b>X56 - X53 (Rear Wing) ►</b>"],
+        text=["<b>▼ BACK FACADE (Rear Wing) ▼</b>", "<b>Units 56-53 (Rear Wing) ►</b>"],
         textposition="bottom center",
         textfont=dict(size=14, color="#C62828"),
         hoverinfo="none",
         name="Back Facade"
     ))
+    trace_floor_map.append(0)
 
-    # Common Hall Marker (West Wing after flip)
+    # Vertical Floor Elevation Labels along West Wing Edge
+    floor_elev_x = [min_x - 5.0] * len(floors)
+    floor_elev_y = [mid_y := (min_y + max_y) / 2.0] * len(floors)
+    floor_elev_z = [((f - 1) * 3.4) + 1.45 for f in floors]
+    floor_elev_text = [f"<b>◄ Floor {f} ({((f-1)*3.4):.1f}m - {(((f-1)*3.4)+2.9):.1f}m)</b>" for f in floors]
+
     fig.add_trace(go.Scatter3d(
-        x=[min_x + 5.0],
-        y=[19.4],
-        z=[3.2],
+        x=floor_elev_x,
+        y=floor_elev_y,
+        z=floor_elev_z,
         mode="text",
-        text=["<b>COMMON HALL</b>"],
-        textposition="top center",
-        textfont=dict(size=13, color="#D84315"),
+        text=floor_elev_text,
+        textposition="middle left",
+        textfont=dict(size=11, color="#37474F"),
         hoverinfo="none",
-        name="Common Hall"
+        name="Floor Levels"
     ))
+    trace_floor_map.append(0)
 
-    # Bridgeway Marker
-    fig.add_trace(go.Scatter3d(
-        x=[max_x - 22.5],
-        y=[19.4],
-        z=[3.2],
-        mode="text",
-        text=["<b>Connecting Bridgeway 1</b>"],
-        textposition="top center",
-        textfont=dict(size=11, color="#6A1B9A"),
-        hoverinfo="none",
-        name="Bridgeway"
-    ))
+    # Build Interactive Floor Filter Dropdown / Buttons
+    buttons = [
+        dict(
+            label="🏢 All 10 Floors (Full Tower)",
+            method="update",
+            args=[{"visible": [True] * len(trace_floor_map)}]
+        )
+    ]
+    for fl in floors:
+        vis = [
+            (trace_floor_map[idx] == fl or trace_floor_map[idx] == 0)
+            for idx in range(len(trace_floor_map))
+        ]
+        buttons.append(dict(
+            label=f"Level {fl} (Floor {fl})",
+            method="update",
+            args=[{"visible": vis}]
+        ))
 
-    # Set up 3D Scene with Default Camera looking directly at the FRONT FACADE
+    # Set up 3D Scene with Default Camera looking directly at the FRONT FACADE of the full tower
     fig.update_layout(
         title=dict(
-            text="<b>3D ULPIN Digital Twin — Smart Hostel Cadastre</b><br><sup>Floor 1 Volumetric Parcels — Aligned with Physical Building Facade (X01 on Right)</sup>",
-            x=0.05,
+            text=f"<b>3D ULPIN Digital Twin — 10-Storey Smart Hostel Volumetric Cadastre</b><br><sup>{len(rows)} Volumetric 3D Parcels across Floors 1 to 10 (Total Height: {max_z:.1f}m)</sup>",
+            x=0.04,
             y=0.96,
             font=dict(size=18, family="Arial, sans-serif")
         ),
+        updatemenus=[
+            dict(
+                type="dropdown",
+                direction="down",
+                x=0.04,
+                y=0.88,
+                showactive=True,
+                active=0,
+                buttons=buttons,
+                bgcolor="#FFFFFF",
+                bordercolor="#B0BEC5",
+                font=dict(size=12, color="#263238")
+            )
+        ],
         scene=dict(
             xaxis=dict(title="East/West (Meters)", backgroundcolor="#F8F9FA", gridcolor="#E0E0E0"),
             yaxis=dict(title="Front → Back Depth (Meters)", backgroundcolor="#F8F9FA", gridcolor="#E0E0E0"),
-            zaxis=dict(title="Elevation Z (Meters)", backgroundcolor="#ECEFF1", gridcolor="#CFD8DC"),
+            zaxis=dict(title="Vertical Elevation Z (Meters)", backgroundcolor="#ECEFF1", gridcolor="#CFD8DC"),
             aspectmode="data", # 1:1:1 True Metric Real World Aspect Ratio
             camera=dict(
-                # Camera placed facing the FRONT FACADE directly
-                eye=dict(x=0.0, y=-1.85, z=0.95),
-                center=dict(x=0.0, y=0.0, z=-0.15),
+                # Camera placed facing the FRONT FACADE with elevated perspective for the 10-floor tower
+                eye=dict(x=0.0, y=-2.15, z=1.25),
+                center=dict(x=0.0, y=0.0, z=0.15),
                 up=dict(x=0.0, y=0.0, z=1.0)
             )
         ),
-        margin=dict(l=0, r=0, b=0, t=60),
+        margin=dict(l=0, r=0, b=0, t=75),
         showlegend=False
     )
 
     os.makedirs(os.path.dirname(OUTPUT_HTML), exist_ok=True)
     fig.write_html(OUTPUT_HTML)
-    print(f"✅ 3D Digital Twin successfully generated at: {OUTPUT_HTML}")
+    print(f"✅ 10-Storey 3D Digital Twin successfully generated ({len(rows)} units) at: {OUTPUT_HTML}")
 
 if __name__ == "__main__":
     main()

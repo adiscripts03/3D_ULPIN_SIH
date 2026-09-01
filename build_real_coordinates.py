@@ -163,16 +163,59 @@ def extract_cad_properties():
 
     return properties
 
+def generate_multi_floor_properties(base_properties, total_floors=10):
+    all_properties = []
+    room_height = 2.9
+    beam_height = 0.5
+    floor_to_floor = room_height + beam_height  # 3.4m pitch
+
+    for floor in range(1, total_floors + 1):
+        z_min = round((floor - 1) * floor_to_floor, 2)
+        z_max = round(z_min + room_height, 2)
+        z_slab_top = round(floor * floor_to_floor, 2)
+
+        for base in base_properties:
+            prop = dict(base)
+            prop["floor"] = floor
+            prop["z_min"] = z_min
+            prop["z_max"] = z_max
+            prop["z_slab_top"] = z_slab_top
+
+            base_label = base["label"]
+            base_prop_id = base["prop_id"]
+
+            # Map room placeholder Xnn to actual floor room number (e.g. X01 -> 101 on F1, 201 on F2, 1001 on F10)
+            if base_prop_id.startswith("X") and base_prop_id[1:].isdigit():
+                num_part = base_prop_id[1:]
+                room_num = f"{floor}{num_part}"
+                prop["label"] = room_num
+                prop["prop_id"] = room_num
+            else:
+                prop["label"] = base_label
+                prop["prop_id"] = base_prop_id
+
+            all_properties.append(prop)
+
+    return all_properties
+
 def main():
-    properties = extract_cad_properties()
+    base_properties = extract_cad_properties()
     
-    fieldnames = list(properties[0].keys())
+    # Generate Floor 1
+    fieldnames = list(base_properties[0].keys())
     with open("data/room_labels_floor1_real.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(properties)
+        writer.writerows(base_properties)
+    print(f"Extracted {len(base_properties)} base units for Floor 1 -> data/room_labels_floor1_real.csv")
 
-    print(f"Extracted and saved {len(properties)} horizontally flipped units to data/room_labels_floor1_real.csv")
+    # Generate Full 10-Floor Stack
+    all_floors_properties = generate_multi_floor_properties(base_properties, total_floors=10)
+    with open("data/room_labels_all_floors_real.csv", "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(all_floors_properties)
+    print(f"Generated {len(all_floors_properties)} stacked units across 10 floors -> data/room_labels_all_floors_real.csv")
 
 if __name__ == "__main__":
     main()

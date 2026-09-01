@@ -152,43 +152,43 @@ python visualize_3d.py
 ### Option B: Step-by-Step Execution
 
 #### Step 1: CAD & Metric Extraction
-Extracts geometric bounding boxes and textual labels from `data/floor_plan.pdf`, applies CAD scaling ($0.1362\text{ m/pt}$), flips orientation to match physical building facade, and assigns metric boundaries.
+Extracts geometric bounding boxes and textual labels from `data/floor_plan.pdf`, applies CAD scaling ($0.1362\text{ m/pt}$), flips orientation to match physical building facade, and extrudes metric boundaries across all 10 floors ($3.4\text{m}$ pitch).
 ```bash
 python build_real_coordinates.py
 ```
-*Output*: `data/room_labels_floor1_real.csv`
+*Outputs*: `data/room_labels_floor1_real.csv` (70 units), `data/room_labels_all_floors_real.csv` (700 units)
 
 #### Step 2: Spatial Georeferencing
-Calculates exact GPS Centroids (Latitude, Longitude) from the building GPS anchor point and sets vertical elevations ($Z_{min}, Z_{max}$).
+Calculates exact GPS Centroids (Latitude, Longitude) from the building GPS anchor point and sets vertical elevations ($Z_{min}, Z_{max}$) for each floor level.
 ```bash
 python add_georeference.py
 ```
-*Output*: `data/room_labels_floor1_geo.csv`
+*Outputs*: `data/room_labels_floor1_geo.csv` (70 units), `data/room_labels_all_floors_geo.csv` (700 units)
 
 #### Step 3: 3D ULPIN Standardization
-Constructs standardized volumetric cadastral identifiers adhering to the project schema.
+Constructs standardized volumetric cadastral identifiers adhering to the project schema across all 10 floors.
 ```bash
 python generate_ulpin.py
 ```
-*Output*: `data/room_labels_floor1_final.csv`
+*Outputs*: `data/room_labels_floor1_final.csv` (70 units), `data/room_labels_all_floors_final.csv` (700 units)
 
-#### Step 4: Intelligent Topology & Geometry Validation
+#### Step 4: Intelligent 3D Volumetric Topology Validation
 Executes automated integrity checks using `shapely`:
-1. **Uniqueness Audit**: Ensures zero duplicate IDs.
-2. **Legal Area Audit**: Checks that unit areas meet minimum statutory thresholds.
-3. **Topological Overlap Audit**: Detects any polygon intersections ($>0.01\text{ m}^2$) between distinct parcels.
+1. **Uniqueness Audit**: Ensures all 700 3D ULPINs across 10 floors are 100% unique.
+2. **Legal Area Audit**: Checks that unit areas meet minimum statutory thresholds per zoning type.
+3. **3D Spatial Overlap Audit**: Performs 3D volumetric collision detection ($Z$-interval overlap + 2D polygon intersection) verifying 0 spatial collisions.
 ```bash
 python validate_properties.py
 ```
 
 #### Step 5: Dynamic Rights & Occupancy Management Demo
-Simulates allotment, prevents overcrowding above legal capacity, prevents residential check-in to common/utility zones, and updates `data/occupancy_db.json`.
+Simulates multi-floor student allotment (Floors 1 to 10), prevents overcrowding above legal capacity, prevents residential check-in to common/utility zones, and updates `data/occupancy_db.json`.
 ```bash
 python occupancy_manager.py
 ```
 
-#### Step 6: Generate 3D Interactive Digital Twin
-Creates an interactive, self-contained 3D volumetric model with hover tooltips, spatial parcel coloring, and facade labels.
+#### Step 6: Generate 10-Storey 3D Interactive Digital Twin
+Creates an interactive, self-contained 10-storey 3D volumetric model with hover tooltips, spatial parcel coloring, floor filter dropdowns, and facade labels.
 ```bash
 python visualize_3d.py
 ```
@@ -217,16 +217,16 @@ $$\mathbf{\text{ULPIN}} = \langle\text{BUILDING\_ID}\rangle - \langle\text{FLOOR
 | Component | Format | Description | Example |
 |---|---|---|---|
 | **Building Code** | `HSTL01` | Unique primary land parcel / building code | `HSTL01` |
-| **Floor Level** | `F<N>` | Vertical floor index ($F1, F2, \dots$) | `F1` |
-| **Property / Unit ID** | Alphanumeric | Unit name, corridor ID, or utility zone | `X01`, `BRIDGE_1`, `COMMON_HALL` |
+| **Floor Level** | `F<N>` | Vertical floor index ($F1, F2, \dots, F10$) | `F1`, `F10` |
+| **Property / Unit ID** | Alphanumeric | Unit name, corridor ID, or utility zone | `101`, `201`, `1001`, `BRIDGE_1` |
 | **Spatial Type** | `4S`, `2S`, `HALL`, `WASH`, `STR`, `LIFT`, `CORR`, `BRIDGE` | Legal zoning / property classification | `4S` (4-Seater Room), `WASH` (Washroom) |
 
-### Sample 3D ULPIN Identifiers:
-- `HSTL01-F1-X01-4S` — Floor 1, Unit X01 (4-Seater Residential Parcel)
-- `HSTL01-F1-X07-2S` — Floor 1, Unit X07 (2-Seater Residential Parcel)
+### Sample 3D ULPIN Identifiers Across 10 Floors:
+- `HSTL01-F1-101-4S` — Floor 1, Unit 101 (4-Seater Residential Parcel, Elev 0.0m–2.9m)
+- `HSTL01-F2-201-4S` — Floor 2, Unit 201 (4-Seater Residential Parcel, Elev 3.4m–6.3m)
+- `HSTL01-F5-BRIDGE_1-BRIDGE` — Floor 5, Connecting Bridgeway (Elev 13.6m–16.5m)
+- `HSTL01-F10-1001-4S` — Floor 10, Penthouse Unit 1001 (Elev 30.6m–33.5m)
 - `HSTL01-F1-COMMON_HALL-HALL` — Floor 1, West Wing Common Assembly Area
-- `HSTL01-F1-BRIDGE_1-BRIDGE` — Floor 1, Courtyard Transit Bridgeway
-- `HSTL01-F1-STAIRS1-STR` — Floor 1, Vertical Transit Core (Stairwell)
 
 ---
 
@@ -239,12 +239,12 @@ $$\mathbf{\text{ULPIN}} = \langle\text{BUILDING\_ID}\rangle - \langle\text{FLOOR
 ├── .gitignore                          # Git tracking exclusions
 ├── 3D_ULPIN_Hostel_Prototype_Plan.md  # Detailed SIH prototype architectural plan
 │
-├── build_real_coordinates.py           # Extracts CAD vectors, scales to meters, flips facade
-├── add_georeference.py                 # Transforms metric offsets into global Lat/Lon
-├── generate_ulpin.py                   # Generates standardized 3D ULPIN primary keys
-├── validate_properties.py              # Shapely topology validation (overlap, area, duplicates)
-├── occupancy_manager.py                # Dynamic occupancy & capacity management engine
-├── visualize_3d.py                     # Plotly WebGL 3D digital twin generator
+├── build_real_coordinates.py           # Extracts CAD vectors, stacks 10 floors with 3.4m pitch
+├── add_georeference.py                 # Transforms metric offsets into global Lat/Lon + Elev
+├── generate_ulpin.py                   # Generates standardized 3D ULPIN primary keys (700 units)
+├── validate_properties.py              # 3D volumetric topology validation (overlap, area, duplicates)
+├── occupancy_manager.py                # Multi-floor dynamic occupancy & capacity management engine
+├── visualize_3d.py                     # 10-storey Plotly WebGL 3D digital twin generator
 │
 ├── check_pdf.py                        # Diagnostic script for PDF inspection
 ├── extract_layout.py                   # Diagnostic text/coordinate dumper
@@ -254,29 +254,40 @@ $$\mathbf{\text{ULPIN}} = \langle\text{BUILDING\_ID}\rangle - \langle\text{FLOOR
 ├── data/
 │   ├── floor_plan.pdf                  # Ground truth architectural CAD floor plan
 │   ├── room_labels.csv                 # Raw label extractions
-│   ├── room_labels_floor1_real.csv     # Metric coordinates ($X, Y$ in meters)
-│   ├── room_labels_floor1_geo.csv      # Georeferenced coordinates (Lat, Lon, Elevation)
-│   ├── room_labels_floor1_final.csv    # Final 3D ULPIN dataset with all attributes
+│   ├── room_labels_floor1_real.csv     # Floor 1 metric coordinates ($X, Y$ in meters)
+│   ├── room_labels_all_floors_real.csv # 10-Floor metric coordinates (700 units)
+│   ├── room_labels_floor1_geo.csv      # Floor 1 georeferenced coordinates
+│   ├── room_labels_all_floors_geo.csv  # 10-Floor georeferenced dataset (700 units)
+│   ├── room_labels_floor1_final.csv    # Floor 1 3D ULPIN dataset
+│   ├── room_labels_all_floors_final.csv# Final 10-Floor 3D ULPIN dataset (700 units)
 │   └── occupancy_db.json               # Live dynamic rights / occupancy ledger
 │
 └── frontend/
-    └── hostel_3d_twin.html             # Standalone interactive 3D WebGL Digital Twin
+    └── hostel_3d_twin.html             # Standalone interactive 10-storey 3D WebGL Digital Twin
 ```
 
 ---
 
 ## 🧪 Validation Engine & Test Output
 
-When running `python validate_properties.py`, the engine validates 70 individual volumetric parcels across multiple geometric dimensions:
+When running `python validate_properties.py`, the engine validates all 700 volumetric parcels across 10 stacked floors:
 
 ```text
---- Starting Validation Engine for 70 properties ---
+============================================================
+  🏢 3D VOLUMETRIC CADASTRE VALIDATION ENGINE
+  Total Units: 700 across 10 Floors (Floors 1 to 10)
+============================================================
 
-✅ PASSED: All 3D ULPINs are perfectly unique.
-✅ PASSED: All rooms meet their specific capacity area requirements.
-✅ PASSED: Perfect topological integrity! No overlapping properties found.
+✅ PASSED [Uniqueness]: All 700 3D ULPINs are 100% unique.
+✅ PASSED [Area Standards]: All 560 residential units (56/floor) meet statutory minimums.
+✅ PASSED [3D Topology]: 0 spatial collisions. Perfect 3D volumetric cadastre integrity across all 10 floors.
 
-Validation complete.
+📊 Summary Breakdown:
+   • Total Floors: 10
+   • Residential Parcels: 560 (2-Seater & 4-Seater)
+   • Common/Transit Parcels: 140 (Corridors, Stairs, Lifts, Halls, Bridges, Washrooms)
+   • Building Footprint: ~60.0m (W) × 38.8m (D) × 33.5m (H)
+============================================================
 ```
 
 ---

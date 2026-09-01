@@ -14,9 +14,9 @@ METERS_PER_DEG_LON = 111320.0 * math.cos(math.radians(ANCHOR_LAT))
 # We now use exact mathematically calculated Y coordinates from the CSV
 
 
-def main():
+def georeference_dataset(input_file, output_file):
     rows = []
-    with open("data/room_labels_floor1_real.csv", "r") as f:
+    with open(input_file, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
             rows.append(row)
@@ -40,14 +40,23 @@ def main():
 
     # Save output
     fieldnames = list(rows[0].keys())
-    with open("data/room_labels_floor1_geo.csv", "w", newline="") as f:
+    with open(output_file, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"Successfully georeferenced {len(rows)} rooms.")
-    print("Saved to data/room_labels_floor1_geo.csv")
-    print(f"Sample {rows[0]['label']}: Lat {rows[0]['latitude']}, Lon {rows[0]['longitude']}")
+    print(f"Successfully georeferenced {len(rows)} properties -> {output_file}")
+    return rows
+
+def main():
+    # Process Floor 1
+    georeference_dataset("data/room_labels_floor1_real.csv", "data/room_labels_floor1_geo.csv")
+    
+    # Process All 10 Floors
+    all_rows = georeference_dataset("data/room_labels_all_floors_real.csv", "data/room_labels_all_floors_geo.csv")
+    print(f"Sample Floor 1 ({all_rows[0]['label']}): Lat {all_rows[0]['latitude']}, Lon {all_rows[0]['longitude']}, Elev {all_rows[0]['z_min']}m-{all_rows[0]['z_max']}m")
+    sample_f10 = next(r for r in all_rows if r["floor"] == "10" or r["floor"] == 10)
+    print(f"Sample Floor 10 ({sample_f10['label']}): Lat {sample_f10['latitude']}, Lon {sample_f10['longitude']}, Elev {sample_f10['z_min']}m-{sample_f10['z_max']}m")
 
 if __name__ == "__main__":
     main()

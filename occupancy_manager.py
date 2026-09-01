@@ -4,9 +4,11 @@ import os
 
 DB_FILE = "data/occupancy_db.json"
 
+DATA_FILE = "data/room_labels_all_floors_final.csv" if os.path.exists("data/room_labels_all_floors_final.csv") else "data/room_labels_floor1_final.csv"
+
 def load_properties():
     properties = {}
-    with open("data/room_labels_floor1_final.csv", "r") as f:
+    with open(DATA_FILE, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Enforce max capacity based on the ULPIN Type flag
@@ -19,7 +21,8 @@ def load_properties():
             
             properties[row["ulpin_3d"]] = {
                 "capacity": capacity,
-                "room_id": row["room_id"]
+                "room_id": row["room_id"],
+                "floor": int(row["floor"])
             }
     return properties
 
@@ -58,25 +61,27 @@ def main():
     props = load_properties()
     db = load_occupancy()
     
-    print("--- 3D ULPIN Occupancy Linkage Demo ---\n")
+    print(f"--- 3D ULPIN Multi-Floor Occupancy Linkage Demo ({len(props)} Units) ---\n")
     
-    # Grab the first 4-seater, 2-seater, and Washroom dynamically from our verified CSV
-    room_4s = next(u for u in props if "4S" in u)
-    room_2s = next(u for u in props if "2S" in u)
+    # Grab units across multiple floors dynamically
+    f1_room_2s = next(u for u, p in props.items() if p["floor"] == 1 and "2S" in u)
+    f2_room_4s = next(u for u, p in props.items() if p["floor"] == 2 and "4S" in u)
+    f10_room_4s = next(u for u, p in props.items() if p["floor"] == 10 and "4S" in u)
     washroom = next(u for u in props if "WASH" in u)
     
-    print("[Demo 1: Checking into a 2-Seater Property]")
-    print(check_in(room_2s, "BT_ID_ALEX", props, db))
-    print(check_in(room_2s, "BT_ID_SARAH", props, db))
-    print(check_in(room_2s, "BT_ID_JOHN", props, db)) # This MUST fail due to 2S capacity!
+    print("[Demo 1: Checking into a Floor 1 2-Seater Property]")
+    print(check_in(f1_room_2s, "BT_ID_ALEX", props, db))
+    print(check_in(f1_room_2s, "BT_ID_SARAH", props, db))
+    print(check_in(f1_room_2s, "BT_ID_JOHN", props, db)) # This MUST fail due to 2S capacity!
     
     print("\n[Demo 2: Checking into a Non-Residential Zone]")
     print(check_in(washroom, "BT_ID_JOHN", props, db)) # This MUST fail!
     
-    print("\n[Demo 3: Checking into a 4-Seater Property]")
-    print(check_in(room_4s, "BT_ID_JOHN", props, db)) # This should succeed!
+    print("\n[Demo 3: Checking into Floor 2 & Floor 10 4-Seater Properties]")
+    print(check_in(f2_room_4s, "BT_ID_JOHN", props, db))   # Floor 2 allocation
+    print(check_in(f10_room_4s, "BT_ID_PRIYA", props, db)) # Floor 10 penthouse allocation
     
-    print("\n--- Live Database State (data/occupancy_db.json) ---")
+    print(f"\n--- Live Database State ({DB_FILE}) ---")
     print(json.dumps(db, indent=2))
 
 if __name__ == "__main__":

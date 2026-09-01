@@ -7,9 +7,9 @@ def get_room_type(prop_id, ptype):
         return ptype
     return "MISC"
 
-def main():
+def generate_ulpins_for_dataset(input_file, output_file):
     rows = []
-    with open("data/room_labels_floor1_geo.csv", "r") as f:
+    with open(input_file, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
             rows.append(row)
@@ -37,18 +37,29 @@ def main():
     fieldnames.insert(0, "ulpin_3d")
     fieldnames.insert(1, "room_id")
 
-    with open("data/room_labels_floor1_final.csv", "w", newline="") as f:
+    with open(output_file, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"Generated 3D ULPINs for {len(rows)} properties.")
-    print("Saved to data/room_labels_floor1_final.csv")
-    print("\n--- Samples ---")
-    print(f"Room X01: {rows[0]['ulpin_3d']}")
-    for r in rows:
-        if "COMMON" in r["ulpin_3d"] or "BRIDGE" in r["ulpin_3d"]:
-            print(f"{r['room_id']}: {r['ulpin_3d']}")
+    print(f"Generated 3D ULPINs for {len(rows)} properties -> {output_file}")
+    return rows
+
+def main():
+    # Process Floor 1
+    f1_rows = generate_ulpins_for_dataset("data/room_labels_floor1_geo.csv", "data/room_labels_floor1_final.csv")
+    
+    # Process All 10 Floors
+    all_rows = generate_ulpins_for_dataset("data/room_labels_all_floors_geo.csv", "data/room_labels_all_floors_final.csv")
+    
+    print("\n--- 3D ULPIN Samples Across Floors ---")
+    print(f"Floor 1 Unit 101:  {all_rows[0]['ulpin_3d']}")
+    sample_f2 = next(r for r in all_rows if r["floor"] == "2" or r["floor"] == 2)
+    print(f"Floor 2 Unit 201:  {sample_f2['ulpin_3d']}")
+    sample_f5 = next(r for r in all_rows if (r["floor"] == "5" or r["floor"] == 5) and "BRIDGE" in r["ulpin_3d"])
+    print(f"Floor 5 Bridgeway: {sample_f5['ulpin_3d']}")
+    sample_f10 = next(r for r in all_rows if r["floor"] == "10" or r["floor"] == 10)
+    print(f"Floor 10 Unit 1001: {sample_f10['ulpin_3d']}")
 
 if __name__ == "__main__":
     main()
