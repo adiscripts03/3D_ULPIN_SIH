@@ -1,0 +1,107 @@
+{
+  "platform_name": "National 3D ULPIN Volumetric Cadastre Platform",
+  "governing_body": "Department of Land Resources (DoLR) | Ministry of Rural Development, Government of India",
+  "cadastral_standard": "ISO 19152 LADM & National Bhu-Aadhaar Framework",
+  "active_institutions": [
+    {
+      "institution_id": "INST_IIITN",
+      "institution_name": "Indian Institute of Information Technology, Nagpur (Pilot Case Study)",
+      "institution_code": "IIITN",
+      "category": "Institutional / Higher Education",
+      "master_surface_ulpin": "MH-NGP-IIITN-2026",
+      "bhu_aadhaar_id": "27-712-004-891024",
+      "location": {
+        "survey_number": "Survey No. 140, 141/1",
+        "village": "Waranga, Dongargaon",
+        "taluka": "Nagpur (Rural)",
+        "district": "Nagpur",
+        "state": "Maharashtra",
+        "pincode": "441108",
+        "campus_anchor_lat": 20.9495556,
+        "campus_anchor_lon": 79.0294722,
+        "total_plot_area_sqm": 404685.64
+      },
+      "buildings": [
+        {
+          "building_id": "HSTL01",
+          "building_name": "Boys Hostel Block 1 (10-Storey Tower)",
+          "category": "Residential / Student Housing",
+          "total_floors": 10,
+          "floor_pitch_m": 3.4,
+          "room_clear_height_m": 2.9,
+          "slab_thickness_m": 0.5,
+          "anchor_lat": 20.9495556,
+          "anchor_lon": 79.0294722,
+          "total_parcels": 700,
+          "residential_units": 560,
+          "common_transit_units": 140,
+          "floor_plan_source": "data/floor_plan.pdf",
+          "data_file": "data/room_labels_all_floors_final.csv"
+        },
+        {
+          "building_id": "HSTL02",
+          "building_name": "Girls Hostel Block 2",
+          "category": "Residential / Student Housing",
+          "total_floors": 8,
+          "floor_pitch_m": 3.4,
+          "room_clear_height_m": 2.9,
+          "slab_thickness_m": 0.5,
+          "anchor_lat": 20.9499500,
+          "anchor_lon": 79.0305000,
+          "total_parcels": 560,
+          "residential_units": 448,
+          "common_transit_units": 112,
+          "floor_plan_source": "data/floor_plan.pdf",
+          "data_file": "data/room_labels_all_floors_final.csv"
+        },
+        {
+          "building_id": "ACAD01",
+          "building_name": "Academic & Administrative Complex",
+          "category": "Institutional / Academic",
+          "total_floors": 6,
+          "floor_pitch_m": 3.8,
+          "room_clear_height_m": 3.2,
+          "slab_thickness_m": 0.6,
+          "anchor_lat": 20.9488000,
+          "anchor_lon": 79.0288000,
+          "total_parcels": 300,
+          "residential_units": 0,
+          "common_transit_units": 300,
+          "floor_plan_source": "data/floor_plan.pdf",
+          "data_file": "data/room_labels_all_floors_final.csv"
+        }
+      ]
+    },
+    {
+      "institution_id": "INST_DDA01",
+      "institution_name": "DDA Multi-Storey Housing Society (Sector 19B, Dwarka)",
+      "institution_code": "DDA_DWK",
+      "category": "Multi-Storey Residential Apartment Complex",
+      "master_surface_ulpin": "DL-SW-DDA-2026",
+      "bhu_aadhaar_id": "07-101-002-451201",
+      "location": {
+        "survey_number": "Plot No. 4, Pocket 3",
+        "village": "Dwarka",
+        "taluka": "South West Delhi",
+        "district": "New Delhi",
+        "state": "Delhi",
+        "pincode": "110075",
+        "campus_anchor_lat": 28.5821000,
+        "campus_anchor_lon": 77.0503000,
+        "total_plot_area_sqm": 85000.0
+      },
+      "buildings": [
+        {
+          "building_id": "TOWER_A",
+          "building_name": "Tower A (High-Income Group - 14 Floors)",
+          "category": "Strata-Title Residential",
+          "total_floors": 14,
+          "floor_pitch_m": 3.2,
+          "total_parcels": 112,
+          "anchor_lat": 28.5821000,
+          "anchor_lon": 77.0503000
+        }
+      ]
+    }
+  ]
+}
