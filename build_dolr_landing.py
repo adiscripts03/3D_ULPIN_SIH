@@ -948,11 +948,11 @@ def build_dolr_official_page():
 """
 
     final_html = template.replace("__PLOT_DIV_PLACEHOLDER__", plot_div).replace("__TRACE_META_PLACEHOLDER__", trace_meta_json)
-    output_path = "frontend/index.html"
+    output_path = "frontend/3d_cadastre_portal.html"
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(final_html)
 
-    print(f"✅ Clean Official DoLR Landing Page successfully generated at: {output_path}")
+    print(f"✅ Clean 3D Cadastre Programme Page successfully generated at: {output_path}")
 
 if __name__ == "__main__":
     build_dolr_official_page()

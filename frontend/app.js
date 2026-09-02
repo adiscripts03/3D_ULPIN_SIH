@@ -13,8 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function initApp() {
   await loadAnalytics();
   await loadInstitutions();
-  await loadBuildings();
-  await loadBuilding3DTwin(currentBuildingId);
+  await loadBuildings("INST_IIITN");
 }
 
 function setupEventListeners() {
@@ -58,11 +57,10 @@ async function loadAnalytics() {
   try {
     const res = await fetch("/api/analytics/summary");
     const data = await res.json();
-    document.getElementById("metric-parcels").innerText = data.total_3d_parcels.toLocaleString();
-    document.getElementById("metric-area").innerText = `${data.total_carpet_area_sqm.toLocaleString()} m²`;
-    document.getElementById("metric-volume").innerText = `${data.total_volume_cbm.toLocaleString()} m³`;
-    document.getElementById("metric-occupants").innerText = data.active_occupants_registered.toLocaleString();
-    document.getElementById("metric-liens").innerText = `₹${(data.total_encumbered_value_inr / 100000).toFixed(1)}L (${data.active_bank_mortgage_liens})`;
+    const chip = document.getElementById("chip-stats");
+    if (chip) {
+      chip.innerText = `${data.total_3d_parcels.toLocaleString()} Parcels | ${data.total_carpet_area_sqm.toLocaleString()} m²`;
+    }
   } catch (err) {
     console.error("Failed to load analytics:", err);
   }
@@ -79,6 +77,7 @@ async function loadInstitutions() {
       const opt = document.createElement("option");
       opt.value = i.institution_id;
       opt.innerText = `${i.institution_code} - ${i.institution_name}`;
+      if (i.institution_id === "INST_IIITN") opt.selected = true;
       sel.appendChild(opt);
     });
   } catch (err) {
@@ -87,7 +86,7 @@ async function loadInstitutions() {
 }
 
 // Load Buildings Dropdown
-async function loadBuildings(institutionId = null) {
+async function loadBuildings(institutionId = "INST_IIITN") {
   try {
     let url = "/api/buildings";
     if (institutionId) url += `?institution_id=${institutionId}`;
@@ -95,15 +94,18 @@ async function loadBuildings(institutionId = null) {
     const buildings = await res.json();
     const sel = document.getElementById("building-select");
     sel.innerHTML = "";
-    buildings.forEach(b => {
+    buildings.forEach((b, idx) => {
       const opt = document.createElement("option");
       opt.value = b.building_id;
       opt.innerText = `${b.building_id} - ${b.building_name} (${b.total_floors} Floors)`;
-      if (b.building_id === currentBuildingId) opt.selected = true;
+      if (b.building_id === currentBuildingId || idx === 0) opt.selected = true;
       sel.appendChild(opt);
     });
-    if (buildings.length > 0 && !buildings.some(b => b.building_id === currentBuildingId)) {
-      currentBuildingId = buildings[0].building_id;
+    if (buildings.length > 0) {
+      if (!buildings.some(b => b.building_id === currentBuildingId)) {
+        currentBuildingId = buildings[0].building_id;
+      }
+      await loadBuilding3DTwin(currentBuildingId);
     }
   } catch (err) {
     console.error("Failed to load buildings:", err);
@@ -113,7 +115,7 @@ async function loadBuildings(institutionId = null) {
 // Load and Render 3D Digital Twin Mesh
 async function loadBuilding3DTwin(buildingId) {
   const container = document.getElementById("plot3d-container");
-  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:0.9rem;">⏳ Fetching 3D Mesh & Cadastral Geometry for ${buildingId}...</div>`;
+  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8c857b;font-size:0.82rem;">Loading spatial model for ${buildingId}...</div>`;
 
   try {
     const res = await fetch(`/api/parcels/mesh-data/${buildingId}`);
@@ -122,7 +124,7 @@ async function loadBuilding3DTwin(buildingId) {
 
     // Populate Floor Filter Dropdown
     const floorSel = document.getElementById("floor-filter");
-    floorSel.innerHTML = '<option value="ALL">All Floors (Full Stack)</option>';
+    floorSel.innerHTML = '<option value="ALL">All Floors</option>';
     currentBuildingData.floors.forEach(fl => {
       const opt = document.createElement("option");
       opt.value = fl;
@@ -137,14 +139,14 @@ async function loadBuilding3DTwin(buildingId) {
       inspectParcel(currentBuildingData.parcels[0].ulpin_3d);
     }
   } catch (err) {
-    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f43f5e;">❌ Error loading 3D Mesh: ${err.message}</div>`;
+    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#b91c1c;">Error loading 3D Mesh: ${err.message}</div>`;
   }
 }
 
 function renderPlotly3D(parcels) {
   const traces = [];
 
-  parcels.forEach((p, idx) => {
+  parcels.forEach((p) => {
     const x0 = p.x0, x1 = p.x1;
     const y0 = p.y0, y1 = p.y1;
     const z0 = p.z0, z1 = p.z1;
@@ -161,37 +163,53 @@ function renderPlotly3D(parcels) {
 
     let hoverText = `<b>3D ULPIN:</b> ${p.ulpin_3d}<br>` +
                     `<b>Floor:</b> ${p.floor} | <b>Unit:</b> ${p.room_id}<br>` +
-                    `<b>Type:</b> ${p.type} (${p.status_label})<br>` +
+                    `<b>Zoning:</b> ${p.type} (${p.status_label})<br>` +
                     `<b>Carpet Area:</b> ${p.carpet_area} m² | <b>Volume:</b> ${p.volume} m³<br>` +
                     `<b>Undivided Land Share (UDS):</b> ${(p.uds * 100).toFixed(4)}%<br>` +
                     `<b>GPS:</b> ${p.latitude}, ${p.longitude}`;
 
-    if (p.has_lien) hoverText += `<br><span style="color:#f43f5e;font-weight:bold;">⚠️ Active Bank Mortgage Lien</span>`;
-    if (p.occupants.length > 0) hoverText += `<br><b>Occupants:</b> ${p.occupants.join(", ")}`;
+    if (p.has_lien) hoverText += `<br><span style="color:#b91c1c;font-weight:bold;">Active Bank Mortgage Lien</span>`;
+    if (p.occupants.length > 0) hoverText += `<br><b>Titleholder(s):</b> ${p.occupants.join(", ")}`;
+
+    // Warm, muted, architectural color mapping
+    let color = "#475569";
+    if (p.type === "4S" || p.type === "2S" || p.type === "3BHK" || p.type === "2BHK") {
+      if (p.occupants.length === 0) color = "#16a34a";      // warm forest green (vacant)
+      else if (p.occupants.length < 4) color = "#d97706";   // warm amber (partial)
+      else color = "#dc2626";                               // warm red (full)
+    } else if (p.type === "CORR") {
+      color = "#0284c7";                                    // warm slate blue
+    } else if (p.type === "STR" || p.type === "LIFT") {
+      color = "#64748b";                                    // neutral transit slate
+    } else if (p.type === "WASH") {
+      color = "#0d9488";                                    // deep teal
+    } else if (p.type === "HALL") {
+      color = "#b45309";                                    // warm ochre
+    }
 
     traces.push({
       type: "mesh3d",
       x: vx, y: vy, z: vz,
       i: i, j: j, k: k,
-      color: p.color,
-      opacity: p.type === "CORR" ? 0.60 : 0.88,
+      color: color,
+      opacity: p.type === "CORR" ? 0.50 : 0.88,
       flatshading: true,
       name: p.ulpin_3d,
       hoverinfo: "text",
       hovertext: hoverText,
       customdata: [p.ulpin_3d],
-      lighting: { ambient: 0.7, diffuse: 0.8, specular: 0.2, roughness: 0.5 }
+      lighting: { ambient: 0.75, diffuse: 0.8, specular: 0.1, roughness: 0.6 }
     });
   });
 
   const layout = {
-    paper_bgcolor: "#0b1120",
-    plot_bgcolor: "#0b1120",
+    paper_bgcolor: "#ebe8e0",
+    plot_bgcolor: "#ebe8e0",
     margin: { l: 0, r: 0, b: 0, t: 0 },
     scene: {
-      xaxis: { title: "X (East Meters)", color: "#64748b", gridcolor: "rgba(255,255,255,0.06)", showbackground: false },
-      yaxis: { title: "Y (North Meters)", color: "#64748b", gridcolor: "rgba(255,255,255,0.06)", showbackground: false },
-      zaxis: { title: "Elevation Z (Meters)", color: "#64748b", gridcolor: "rgba(255,255,255,0.06)", showbackground: false },
+      xaxis: { title: "X (Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
+      yaxis: { title: "Y (Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
+      zaxis: { title: "Elevation Z (Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
       aspectmode: "data",
       camera: {
         eye: { x: 1.6, y: -1.8, z: 1.4 }
@@ -250,7 +268,7 @@ async function inspectParcel(ulpin) {
 
     document.getElementById("insp-ulpin").innerText = p.ulpin_3d;
     document.getElementById("insp-type").innerText = `${p.type} (${p.is_common_property ? 'Common Property' : 'Private Stratum'})`;
-    document.getElementById("insp-floor").innerText = `Floor ${p.floor} (Z: ${p.z_min}m to ${p.z_max}m)`;
+    document.getElementById("insp-floor").innerText = `Level ${p.floor} (Z: ${p.z_min}m to ${p.z_max}m)`;
     document.getElementById("insp-area").innerText = `${p.carpet_area_sqm} m²`;
     document.getElementById("insp-volume").innerText = `${p.gross_volume_cbm} m³`;
     document.getElementById("insp-uds").innerText = `${(p.undivided_share_land * 100).toFixed(5)}% of Base Surface`;
@@ -259,12 +277,12 @@ async function inspectParcel(ulpin) {
     // Occupants / Titleholders
     const occContainer = document.getElementById("insp-occupants-list");
     if (p.occupants.length === 0) {
-      occContainer.innerHTML = `<span style="color:#64748b;font-size:0.75rem;">Vacant (No active title recorded)</span>`;
+      occContainer.innerHTML = `<span style="color:#8c857b;font-size:0.75rem;">Vacant (No active title recorded)</span>`;
     } else {
       occContainer.innerHTML = p.occupants.map(o => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:0.75rem;">
-          <span style="color:#f8fafc;font-weight:600;">👤 ${o}</span>
-          <span style="color:#10b981;font-size:0.7rem;background:rgba(16,185,129,0.15);padding:1px 6px;border-radius:4px;">ACTIVE</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:0.74rem;">
+          <span style="color:#1c1917;font-weight:600;">${o}</span>
+          <span style="color:#15803d;font-size:0.68rem;background:#dcfce7;padding:1px 5px;border-radius:3px;font-weight:600;">ACTIVE</span>
         </div>
       `).join("");
     }
@@ -272,13 +290,13 @@ async function inspectParcel(ulpin) {
     // Encumbrances
     const lienContainer = document.getElementById("insp-liens-list");
     if (!p.active_encumbrances || p.active_encumbrances.length === 0) {
-      lienContainer.innerHTML = `<span style="color:#10b981;font-size:0.75rem;">✅ Clear Title (No Registered Encumbrance)</span>`;
+      lienContainer.innerHTML = `<span style="color:#15803d;font-size:0.74rem;font-weight:500;">Clear Title (No Active Encumbrance)</span>`;
     } else {
       lienContainer.innerHTML = p.active_encumbrances.map(e => `
-        <div style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:6px;padding:8px;margin-top:4px;">
-          <div style="color:#f43f5e;font-weight:700;font-size:0.75rem;">🏦 ${e.mortgagee_name}</div>
-          <div style="color:#e2e8f0;font-size:0.72rem;margin-top:2px;">Ref: ${e.sanction_reference}</div>
-          <div style="color:#94a3b8;font-size:0.7rem;">Amount: ₹${Number(e.loan_amount_inr).toLocaleString()}</div>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:6px 8px;margin-top:4px;">
+          <div style="color:#b91c1c;font-weight:600;font-size:0.74rem;">${e.mortgagee_name}</div>
+          <div style="color:#44403c;font-size:0.7rem;margin-top:1px;">Ref: ${e.sanction_reference}</div>
+          <div style="color:#78716c;font-size:0.7rem;">Amount: ₹${Number(e.loan_amount_inr).toLocaleString()}</div>
         </div>
       `).join("");
     }
@@ -308,7 +326,7 @@ function closeModal() {
 
 function switchModalTab(tab) {
   activeModalTab = tab;
-  document.querySelectorAll(".modal-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.style.display = "none");
 
   document.getElementById(`tab-btn-${tab}`).classList.add("active");
@@ -335,13 +353,13 @@ async function submitAllotment() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Allotment failed");
 
-    showToast(data.message, "success");
+    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
     closeModal();
     await loadBuilding3DTwin(currentBuildingId);
     await loadAnalytics();
     inspectParcel(ulpin);
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
   }
 }
 
@@ -373,12 +391,12 @@ async function submitTransfer() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Transfer mutation failed");
 
-    showToast(data.message, "success");
+    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
     closeModal();
     await loadBuilding3DTwin(currentBuildingId);
     inspectParcel(ulpin);
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
   }
 }
 
@@ -408,13 +426,13 @@ async function submitMortgage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Mortgage stamping failed");
 
-    showToast(data.message, "success");
+    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
     closeModal();
     await loadBuilding3DTwin(currentBuildingId);
     await loadAnalytics();
     inspectParcel(ulpin);
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
   }
 }
 
@@ -425,14 +443,14 @@ async function runTopologyAudit() {
     const data = await res.json();
     if (!res.ok) throw new Error("Validation check failed");
 
-    const msg = `✅ Topology Report for ${currentBuildingId}:\n` +
-                `• Total 3D Parcels: ${data.total_parcels_audited}\n` +
-                `• Spatial Collisions: ${data['3d_collision_count']}\n` +
-                `• Duplicate IDs: ${data.duplicate_id_count}\n` +
-                `• Compliance Score: ${data.compliance_score_percent}% (${data.validation_status})`;
+    const msg = `Topology Compliance Report (${currentBuildingId}):\n` +
+                `- Total Audited 3D Parcels: ${data.total_parcels_audited}\n` +
+                `- Spatial 3D Collisions: ${data['3d_collision_count']}\n` +
+                `- Duplicate Identifiers: ${data.duplicate_id_count}\n` +
+                `- Compliance Rating: ${data.compliance_score_percent}% (${data.validation_status})`;
     alert(msg);
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
   }
 }
 
@@ -444,11 +462,11 @@ async function triggerCadIngest() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Ingest failed");
 
-    showToast(data.message, "success");
+    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
     await loadBuilding3DTwin(currentBuildingId);
     await loadAnalytics();
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
   }
 }
 
@@ -458,5 +476,5 @@ function showToast(message, type = "info") {
   toast.className = `toast ${type}`;
   toast.innerText = message;
   container.appendChild(toast);
-  setTimeout(() => { toast.remove(); }, 4000);
+  setTimeout(() => { toast.remove(); }, 3500);
 }

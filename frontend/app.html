@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>National 3D ULPIN & Volumetric Cadastre Platform | DoLR</title>
+  <title>3D ULPIN Cadastral Management System | DoLR</title>
   <link rel="stylesheet" href="/static/app.css">
   <script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
 </head>
@@ -11,186 +11,149 @@
 
   <!-- Top Header -->
   <header>
-    <div class="header-brand">
-      <div class="emblem">🏛️</div>
+    <div class="brand-section">
       <div class="brand-title">
-        <h1>National 3D ULPIN & Volumetric Cadastre Platform</h1>
-        <p>Department of Land Resources (DoLR) | Ministry of Rural Development, Govt. of India</p>
+        <h1>National 3D ULPIN Cadastral System</h1>
+        <p>Department of Land Resources | Ministry of Rural Development, Government of India</p>
       </div>
     </div>
-    <div class="header-actions">
-      <span class="badge-status"><span class="dot"></span> ISO 19152 LADM v2 ACTIVE</span>
-      <button class="btn btn-secondary" id="btn-run-topology">⚡ 3D Topology Audit</button>
+    <div class="header-right">
+      <div class="stat-chip" id="chip-stats">2,744 Parcels | 63,740 m²</div>
+      <div class="stat-chip" style="background:var(--accent-soft);color:var(--accent-primary);font-weight:600;">ISO 19152 LADM v2</div>
+      <a href="/" class="btn btn-subtle">← DoLR Home</a>
+      <a href="/programmes/3d-ulpin" class="btn btn-subtle">3D Schemes Page</a>
+      <button class="btn btn-subtle" id="btn-run-topology">Topology Audit</button>
       <button class="btn btn-primary" id="btn-open-actions">+ Cadastral Actions</button>
+      <a href="/docs" target="_blank" class="btn btn-subtle">API Docs</a>
     </div>
   </header>
 
-  <!-- Controls Bar: Multi-Estate & Multi-Building Switcher -->
-  <div class="controls-bar">
-    <div class="selector-group">
-      <div class="select-wrapper">
-        <label for="institution-select">Cadastral Estate / Institution</label>
+  <!-- Controls Toolbar -->
+  <div class="toolbar">
+    <div class="controls-cluster">
+      
+      <div class="control-item">
+        <span class="control-label">Estate</span>
         <select id="institution-select">
           <option value="">Loading Estates...</option>
         </select>
       </div>
 
-      <div class="select-wrapper">
-        <label for="building-select">Multi-Storey Building / Tower</label>
+      <div class="control-item">
+        <span class="control-label">Building</span>
         <select id="building-select">
           <option value="">Loading Buildings...</option>
         </select>
       </div>
 
-      <div class="select-wrapper">
-        <label for="floor-filter">Floor Filter</label>
+      <div class="control-item">
+        <span class="control-label">Level</span>
         <select id="floor-filter">
-          <option value="ALL">All Floors (Full Stack)</option>
+          <option value="ALL">All Floors</option>
         </select>
       </div>
 
-      <div class="select-wrapper">
-        <label for="type-filter">Zoning & Rights Filter</label>
+      <div class="control-item">
+        <span class="control-label">Zoning</span>
         <select id="type-filter">
-          <option value="ALL">All Units & Parcels</option>
-          <option value="RESIDENTIAL">Residential Stratum Only</option>
-          <option value="COMMON">Common Property / Transit</option>
-          <option value="MORTGAGED">Encumbered / Mortgaged Units</option>
+          <option value="ALL">All Units</option>
+          <option value="RESIDENTIAL">Residential Stratum</option>
+          <option value="COMMON">Common Core</option>
+          <option value="MORTGAGED">Mortgaged Units</option>
         </select>
       </div>
+
     </div>
 
     <div>
-      <button class="btn btn-secondary" id="btn-ingest-cad" title="Re-parse CAD Vector PDF and Update 3D Geometry">🔄 Sync CAD Drawing</button>
-      <a href="/docs" target="_blank" class="btn btn-secondary" style="text-decoration: none;">📖 API Docs</a>
+      <button class="btn btn-subtle" id="btn-ingest-cad" title="Re-parse CAD Vector PDF and Update 3D Geometry">Sync CAD Drawing</button>
     </div>
   </div>
 
-  <!-- Metric Statistics Row -->
-  <div class="metrics-row">
-    <div class="metric-card">
-      <div class="metric-label">Total 3D Volumetric Parcels</div>
-      <div class="metric-value" id="metric-parcels">0</div>
-    </div>
-    <div class="metric-card emerald">
-      <div class="metric-label">Total Registered Carpet Area</div>
-      <div class="metric-value" id="metric-area">0 m²</div>
-    </div>
-    <div class="metric-card amber">
-      <div class="metric-label">Total Enclosed Airspace Volume</div>
-      <div class="metric-value" id="metric-volume">0 m³</div>
-    </div>
-    <div class="metric-card purple">
-      <div class="metric-label">Active Registered Occupants</div>
-      <div class="metric-value" id="metric-occupants">0</div>
-    </div>
-    <div class="metric-card rose">
-      <div class="metric-label">Bank Mortgage Liens (CERSAI)</div>
-      <div class="metric-value" id="metric-liens">₹0</div>
-    </div>
-  </div>
-
-  <!-- Main Cadastral Layout -->
-  <main class="main-layout">
+  <!-- Workspace -->
+  <main class="workspace">
     
     <!-- 3D Digital Twin Viewport -->
-    <div class="viewport-card">
-      <div class="viewport-header">
-        <div class="viewport-title">
-          <span>🌐 3D Digital Twin & Volumetric Strata Cadastre</span>
-        </div>
-        <div class="view-controls">
-          <span style="font-size:0.72rem;color:#94a3b8;">Click any 3D unit to inspect legal title</span>
-        </div>
+    <section class="viewport-panel">
+      <div class="panel-header">
+        <div class="panel-title">Volumetric Strata Cadastre</div>
+        <div class="panel-subtitle">Click any 3D parcel to load title record</div>
       </div>
-
-      <!-- Color Legend Bar -->
-      <div class="legend-bar">
-        <div class="legend-item"><div class="legend-dot" style="background:#2ECC71;"></div> Vacant</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#F39C12;"></div> Partial Occupancy</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#E74C3C;"></div> Full Occupancy</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#42A5F5;"></div> Corridor</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#78909C;"></div> Stairs / Lift Core</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#00BCD4;"></div> Washrooms</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#FFB300;"></div> Assembly Hall</div>
-      </div>
-
-      <!-- 3D Container -->
       <div id="plot3d-container"></div>
-    </div>
+    </section>
 
-    <!-- Legal Title Deed & RRR Inspector Drawer -->
-    <aside class="inspector-card">
-      <div class="inspector-header">
-        <h2>📜 3D Legal Title Inspector</h2>
-        <p>Bhu-Aadhaar 3D Unit Cadastral Card</p>
+    <!-- Title Deed & RRR Inspector Panel -->
+    <aside class="inspector-panel">
+      <div class="panel-header">
+        <div class="panel-title">Cadastral Title Record</div>
+        <div class="panel-subtitle">Bhu-Aadhaar 3D Unit Card</div>
       </div>
 
       <div class="inspector-body">
         
-        <!-- Primary 3D ULPIN Identity -->
-        <div class="property-group">
-          <div class="property-group-title">
-            <span>Identification</span>
-            <span class="tag-badge" style="background:rgba(56,189,248,0.2);color:#38bdf8;">LADM LA_SpatialUnit</span>
+        <!-- Identification -->
+        <div class="section-box">
+          <div class="section-header">
+            <span>Spatial Identification</span>
+            <span style="color:var(--accent-primary);font-size:0.68rem;">LA_SpatialUnit</span>
           </div>
-          <div class="prop-row">
-            <span class="prop-label">3D ULPIN</span>
-            <span class="prop-value" id="insp-ulpin" style="color:#38bdf8;">Select a 3D unit</span>
+          <div class="data-row">
+            <span class="data-label">3D ULPIN</span>
+            <span class="data-value" id="insp-ulpin" style="color:var(--accent-primary);">Select parcel</span>
           </div>
-          <div class="prop-row">
-            <span class="prop-label">Zoning / Type</span>
-            <span class="prop-value" id="insp-type">-</span>
+          <div class="data-row">
+            <span class="data-label">Classification</span>
+            <span class="data-value" id="insp-type">-</span>
           </div>
-          <div class="prop-row">
-            <span class="prop-label">Vertical Level</span>
-            <span class="prop-value" id="insp-floor">-</span>
-          </div>
-        </div>
-
-        <!-- 3D Spatial Metrics -->
-        <div class="property-group">
-          <div class="property-group-title">
-            <span>Spatial & Land Equity</span>
-            <span class="tag-badge" style="background:rgba(16,185,129,0.2);color:#10b981;">RERA Metric</span>
-          </div>
-          <div class="prop-row">
-            <span class="prop-label">RERA Carpet Area</span>
-            <span class="prop-value" id="insp-area">-</span>
-          </div>
-          <div class="prop-row">
-            <span class="prop-label">Volumetric Airspace</span>
-            <span class="prop-value" id="insp-volume">-</span>
-          </div>
-          <div class="prop-row">
-            <span class="prop-label">Undivided Land Share (UDS)</span>
-            <span class="prop-value" id="insp-uds" style="color:#f59e0b;">-</span>
-          </div>
-          <div class="prop-row">
-            <span class="prop-label">WGS84 Centroid</span>
-            <span class="prop-value" id="insp-gps" style="font-size:0.68rem;">-</span>
+          <div class="data-row">
+            <span class="data-label">Elevation Band</span>
+            <span class="data-value" id="insp-floor">-</span>
           </div>
         </div>
 
-        <!-- Registered Titleholders / Occupants -->
-        <div class="property-group">
-          <div class="property-group-title">
-            <span>Rights & Occupancy</span>
-            <span class="tag-badge" style="background:rgba(168,85,247,0.2);color:#a855f7;">LA_Right</span>
+        <!-- Metric Dimensions & Land Share -->
+        <div class="section-box">
+          <div class="section-header">
+            <span>Dimensions & Equity</span>
+            <span style="color:#15803d;font-size:0.68rem;">RERA Standard</span>
           </div>
-          <div id="insp-occupants-list" style="margin-top:6px;">
-            <span style="color:#64748b;font-size:0.75rem;">Select a unit in 3D viewport</span>
+          <div class="data-row">
+            <span class="data-label">Carpet Area</span>
+            <span class="data-value" id="insp-area">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Enclosed Airspace</span>
+            <span class="data-value" id="insp-volume">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Undivided Land Share (UDS)</span>
+            <span class="data-value" id="insp-uds" style="color:var(--accent-primary);">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Centroid GPS</span>
+            <span class="data-value" id="insp-gps" style="font-size:0.68rem;">-</span>
           </div>
         </div>
 
-        <!-- Encumbrances & Bank Mortgage Liens -->
-        <div class="property-group">
-          <div class="property-group-title">
+        <!-- Titleholders / Occupants -->
+        <div class="section-box">
+          <div class="section-header">
+            <span>Rights & Title</span>
+            <span style="color:#0369a1;font-size:0.68rem;">LA_Right</span>
+          </div>
+          <div id="insp-occupants-list" style="margin-top:4px;">
+            <span style="color:var(--text-muted);font-size:0.75rem;">Select unit in 3D viewport</span>
+          </div>
+        </div>
+
+        <!-- Encumbrances / Liens -->
+        <div class="section-box">
+          <div class="section-header">
             <span>Encumbrances & Liens</span>
-            <span class="tag-badge" style="background:rgba(244,63,94,0.2);color:#f43f5e;">CERSAI Lien</span>
+            <span style="color:#b91c1c;font-size:0.68rem;">CERSAI Registry</span>
           </div>
-          <div id="insp-liens-list" style="margin-top:6px;">
-            <span style="color:#10b981;font-size:0.75rem;">Clear Title</span>
+          <div id="insp-liens-list" style="margin-top:4px;">
+            <span style="color:#15803d;font-size:0.75rem;">Clear Title</span>
           </div>
         </div>
 
@@ -200,83 +163,83 @@
   </main>
 
   <!-- Cadastral Action Modal -->
-  <div class="modal-overlay" id="action-modal">
-    <div class="modal-card">
+  <div class="modal-backdrop" id="action-modal">
+    <div class="modal-box">
       
-      <div class="modal-header">
-        <h3>🏛️ Cadastral Transaction & Mutation Engine</h3>
-        <button id="btn-close-modal" style="background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;">✕</button>
+      <div class="modal-header-bar">
+        <h3>Cadastral Mutation & Recording</h3>
+        <button id="btn-close-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;">✕</button>
       </div>
 
-      <div class="modal-tabs">
-        <div class="modal-tab active" id="tab-btn-allot" onclick="switchModalTab('allot')">Allot Occupant</div>
-        <div class="modal-tab" id="tab-btn-transfer" onclick="switchModalTab('transfer')">Strata Resale / Transfer</div>
-        <div class="modal-tab" id="tab-btn-mortgage" onclick="switchModalTab('mortgage')">Stamp Mortgage Lien</div>
+      <div class="tab-bar">
+        <div class="tab-item active" id="tab-btn-allot" onclick="switchModalTab('allot')">Allotment</div>
+        <div class="tab-item" id="tab-btn-transfer" onclick="switchModalTab('transfer')">Title Conveyance</div>
+        <div class="tab-item" id="tab-btn-mortgage" onclick="switchModalTab('mortgage')">Mortgage Lien</div>
       </div>
 
-      <!-- Tab 1: Allot Occupant -->
-      <div class="modal-body tab-content" id="tab-content-allot">
-        <div class="form-group">
+      <!-- Tab 1: Allotment -->
+      <div class="modal-content-area tab-content" id="tab-content-allot">
+        <div class="field-group">
           <label>Target 3D ULPIN</label>
           <input type="text" id="modal-ulpin-input" placeholder="e.g. HSTL01-F1-X01-4S">
         </div>
-        <div class="form-group">
-          <label>Occupant / Citizen ID (Aadhaar / Roll No)</label>
-          <input type="text" id="modal-party-id" placeholder="e.g. BT_ID_PRIYA">
+        <div class="field-group">
+          <label>Party ID (Aadhaar / Roll No / Identity)</label>
+          <input type="text" id="modal-party-id" placeholder="e.g. IN_AADHAAR_9012">
         </div>
-        <div class="form-group">
-          <label>Full Name</label>
+        <div class="field-group">
+          <label>Full Legal Name</label>
           <input type="text" id="modal-party-name" placeholder="e.g. Priya Sharma">
         </div>
       </div>
 
-      <!-- Tab 2: Strata Resale / Transfer -->
-      <div class="modal-body tab-content" id="tab-content-transfer" style="display:none;">
-        <div class="form-group">
+      <!-- Tab 2: Title Conveyance -->
+      <div class="modal-content-area tab-content" id="tab-content-transfer" style="display:none;">
+        <div class="field-group">
           <label>Target 3D ULPIN</label>
           <input type="text" id="transfer-ulpin-input" placeholder="e.g. HSTL01-F1-X01-4S">
         </div>
-        <div class="form-group">
-          <label>Current Titleholder Party ID</label>
+        <div class="field-group">
+          <label>Current Titleholder ID</label>
           <input type="text" id="transfer-from-party" placeholder="e.g. BT_ID_JOHN">
         </div>
-        <div class="form-group">
-          <label>Buyer / Transferee Party ID</label>
-          <input type="text" id="transfer-to-party" placeholder="e.g. IN_AADHAAR_9921_3321">
+        <div class="field-group">
+          <label>Transferee / Buyer ID</label>
+          <input type="text" id="transfer-to-party" placeholder="e.g. IN_AADHAAR_3321">
         </div>
-        <div class="form-group">
-          <label>Buyer Full Name</label>
+        <div class="field-group">
+          <label>Buyer Legal Name</label>
           <input type="text" id="transfer-to-name" placeholder="e.g. Vikramaditya Rathore">
         </div>
-        <div class="form-group">
-          <label>Declared Conveyance Consideration (INR)</label>
+        <div class="field-group">
+          <label>Declared Consideration (INR)</label>
           <input type="number" id="transfer-price" placeholder="e.g. 6500000">
         </div>
       </div>
 
-      <!-- Tab 3: Stamp Bank Mortgage Lien -->
-      <div class="modal-body tab-content" id="tab-content-mortgage" style="display:none;">
-        <div class="form-group">
+      <!-- Tab 3: Mortgage Lien -->
+      <div class="modal-content-area tab-content" id="tab-content-mortgage" style="display:none;">
+        <div class="field-group">
           <label>Target 3D ULPIN</label>
           <input type="text" id="mortgage-ulpin-input" placeholder="e.g. HSTL01-F1-X01-4S">
         </div>
-        <div class="form-group">
-          <label>Lending Financial Institution / Bank</label>
-          <input type="text" id="mortgage-bank" placeholder="e.g. State Bank of India (SBI)">
+        <div class="field-group">
+          <label>Lending Institution</label>
+          <input type="text" id="mortgage-bank" placeholder="e.g. State Bank of India">
         </div>
-        <div class="form-group">
-          <label>Mortgage Sanction Reference (CERSAI Ref)</label>
+        <div class="field-group">
+          <label>Sanction Reference (CERSAI Ref)</label>
           <input type="text" id="mortgage-ref" placeholder="e.g. SBI-HL-2026-99014">
         </div>
-        <div class="form-group">
+        <div class="field-group">
           <label>Sanctioned Loan Amount (INR)</label>
           <input type="number" id="mortgage-amount" placeholder="e.g. 5000000">
         </div>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="if(activeModalTab==='allot') submitAllotment(); else if(activeModalTab==='transfer') submitTransfer(); else submitMortgage();">Execute Cadastral Action</button>
+      <div class="modal-action-bar">
+        <button class="btn btn-subtle" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="if(activeModalTab==='allot') submitAllotment(); else if(activeModalTab==='transfer') submitTransfer(); else submitMortgage();">Submit Transaction</button>
       </div>
 
     </div>
