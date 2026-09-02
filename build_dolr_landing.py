@@ -694,20 +694,20 @@ def build_dolr_official_page():
   <!-- menuWrapper start -->
   <div class="menuWrapper">
     <ul class="main-nav">
-      <li class="nav-item"><a href="#">Home</a></li>
-      <li class="nav-item"><a href="#">Ministry</a></li>
-      <li class="nav-item active"><a href="#">Schemes</a></li>
-      <li class="nav-item"><a href="#">Acts, Rules & Policies</a></li>
-      <li class="nav-item"><a href="#">NAKSHA</a></li>
-      <li class="nav-item"><a href="#">Documents</a></li>
-      <li class="nav-item"><a href="#">Centre of Excellence</a></li>
-      <li class="nav-item"><a href="#">Events</a></li>
-      <li class="nav-item"><a href="#">Media</a></li>
-      <li class="nav-item"><a href="#">Services</a></li>
-      <li class="nav-item"><a href="#">RTI</a></li>
-      <li class="nav-item" style="margin-left:auto;">
-        <a href="3d_cadastre_portal.html" class="nav-btn-highlight">
-          Open Fullscreen 3D Portal
+      <li class="nav-item"><a href="/">← Home (DoLR)</a></li>
+      <li class="nav-item"><a href="/#about">Ministry</a></li>
+      <li class="nav-item active"><a href="/programmes/3d-ulpin">Schemes & Programmes</a></li>
+      <li class="nav-item"><a href="/#acts">Acts, Rules & Policies</a></li>
+      <li class="nav-item"><a href="/#naksha">NAKSHA</a></li>
+      <li class="nav-item"><a href="/#docs">Documents</a></li>
+      <li class="nav-item"><a href="/#services">Services</a></li>
+      <li class="nav-item"><a href="/#rti">RTI</a></li>
+      <li class="nav-item" style="margin-left:auto; display:flex; gap:8px;">
+        <a href="/docs" target="_blank" style="padding:8px 12px; color:#1e293b; font-weight:600; text-decoration:none; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+          API Docs
+        </a>
+        <a href="/app" class="nav-btn-highlight">
+          3D Cadastre Workstation →
         </a>
       </li>
     </ul>
@@ -718,13 +718,11 @@ def build_dolr_official_page():
 <!-- Breadcrumb -->
 <div class="breadcrumb">
   <div>
-    <a href="#">Home</a> &gt; <a href="#">Schemes</a> &gt; <a href="#">Land Reforms Initiatives</a> &gt; <span>Bhu-Aadhar : 3D Unique Land Parcel Identification Number (3D ULPIN)</span>
+    <a href="/">Home</a> &gt; <a href="/#schemes">Programmes & Schemes</a> &gt; <a href="/#reforms">Land Reforms Initiatives</a> &gt; <span>Bhu-Aadhar : 3D Unique Land Parcel Identification Number (3D ULPIN)</span>
   </div>
   <div style="display:flex; gap:8px;">
-    <span>Share:</span>
-    <a href="#" style="color:#1d4ed8;">Facebook</a>
-    <a href="#" style="color:#0f172a;">X</a>
-    <a href="#" style="color:#0284c7;">LinkedIn</a>
+    <span>Standard:</span>
+    <strong style="color:#003366;">ISO 19152 LADM v2</strong>
   </div>
 </div>
 
@@ -733,32 +731,41 @@ def build_dolr_official_page():
 
   <!-- Left Column: Official Scheme Content -->
   <div class="article-col">
-    <h1>Bhu-Aadhar : 3D Unique Land Parcel Identification Number (3D ULPIN)</h1>
+    <h1>Department of Land Resources — 3D Volumetric Cadastre Platform</h1>
 
     <p>
-      The <strong>3D Unique Land Parcel Identification Number (3D ULPIN)</strong> is part of the <strong>Digital India Land Records Modernization Programme (DILRMP)</strong> under the Department of Land Resources, Ministry of Rural Development. It provides a standardized alphanumeric spatial identity for volumetric property units in multi-storey buildings, elevated transit corridors, underground utilities, and multi-owner strata estates.
+      The <strong>Department of Land Resources (भूमि संसाधन विभाग)</strong> under the Ministry of Rural Development presents the <strong>3D Unique Land Parcel Identification Number (3D ULPIN / Bhu-Aadhaar 3D)</strong>. As part of the <strong>Digital India Land Records Modernization Programme (DILRMP)</strong>, this platform introduces standardized volumetric land administration for multi-storey residential towers, institutional complexes, and underground infrastructure.
     </p>
 
     <p>
       While conventional 2D ULPIN defines surface land parcels, the 3D ULPIN framework extends land administration into the third dimension (Z-elevation). Based on <strong>ISO 19152 (Land Administration Domain Model - LADM)</strong> and <strong>OGC CityGML</strong> standards, it assigns a Single Authoritative Source of Truth to vertical and subsurface property rights.
     </p>
 
+    <h2 class="section-h2">Verified Cadastral Pilot Record (Survey 140/1, Waranga)</h2>
+    <p>
+      This pilot implementation is georeferenced to the official Government of Maharashtra Bhunaksha / Mahabhulekh cadastral record:
+    </p>
+    <ul class="ordered-steps" style="list-style: disc; padding-left: 20px;">
+      <li><strong>District:</strong> Nagpur (नागपूर) | <strong>Taluka:</strong> Nagpur Rural (नागपूर ग्रामीण) | <strong>Village:</strong> Waranga (वारंगा)</li>
+      <li><strong>Survey / Gat No:</strong> 140/1 | <strong>Khata No:</strong> 341 | <strong>Tenure:</strong> Sarkar (State Government)</li>
+      <li><strong>State Bhunaksha Parcel ID (pu-id):</strong> <code>33550994106</code></li>
+      <li><strong>Campus Survey Estate:</strong> 4 Campus Buildings (Hostel Block A, Admin Building, Academic Building, Residential Building)</li>
+    </ul>
+
     <h2 class="section-h2">Generation of 3D ULPIN</h2>
     <ol class="ordered-steps">
       <li>
-        <strong>Property Natural Identifier Lot (PNIL):</strong> 
-        The 14-digit base surface parcel ID computed from the georeferenced boundary coordinates of the surface plot.
+        <strong>Master Surface Parcel Reference:</strong> 
+        The authoritative state parcel identifier (pu-id: 33550994106 / Survey 140/1) georeferenced to the WGS84 base boundary.
       </li>
       <li>
-        <strong>Building Sub-Structure Identifier:</strong> 
-        Unique alphanumeric structural code assigned to each multi-storey tower (e.g. <code>HSTL01</code>, <code>ACAD01</code>, <code>TOWER_A</code>).
+        <strong>Building Sub-Structure Code:</strong> Unique alphanumeric structural code assigned to each campus building (e.g. <code>HSTL01</code> for Hostel Block A).
       </li>
       <li>
-        <strong>Property Natural Identifier Unit (PNIU) in 3D:</strong> 
-        Derived from the exact volumetric bounds (X, Y, Z_min, Z_max), vertical floor index (F1 to FN), unit designation, and zoning type:
-        <div style="background:#f1f5f9; padding:8px 12px; border-radius:6px; font-family:'JetBrains Mono', monospace; font-size:12px; margin:6px 0; border:1px solid #cbd5e1;">
-          3D_ULPIN = &lt;SURFACE_ULPIN&gt; - &lt;BUILDING_ID&gt; - &lt;FLOOR&gt; - &lt;UNIT_ID&gt; - &lt;TYPE&gt;<br>
-          <strong style="color:#003366;">Active Example: MH-NGP-IIITN-2026-HSTL01-F3-304-4S</strong>
+        <strong>Property Natural Identifier Unit (PNIU) in 3D:</strong> Derived from the exact volumetric bounds (X, Y, Z_min, Z_max), vertical floor index (F1 to F10), unit designation, and zoning type:
+        <div style="background:#f1f5f9; border-left:3px solid #003366; padding:8px 12px; margin:8px 0; font-family:'JetBrains Mono',monospace; font-size:12px;">
+          3D_ULPIN = &lt;BUILDING_ID&gt;-&lt;FLOOR&gt;-&lt;UNIT_ID&gt;-&lt;TYPE&gt;<br>
+          <span style="color:#003366; font-weight:bold;">Active Example: HSTL01-F3-304-4S</span>
         </div>
       </li>
     </ol>

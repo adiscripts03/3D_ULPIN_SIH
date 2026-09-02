@@ -9,165 +9,285 @@
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- Top Unified Header -->
   <header>
     <div class="brand-section">
+      <a href="/" class="btn btn-subtle" style="font-weight:600; padding:4px 10px; font-size:0.75rem;">← DoLR Home</a>
+      <div style="width:1px; height:20px; background:var(--border-strong); margin:0 4px;"></div>
       <div class="brand-title">
         <h1>National 3D ULPIN Cadastral System</h1>
-        <p>Department of Land Resources | Ministry of Rural Development, Government of India</p>
+        <p>Department of Land Resources | Ministry of Rural Development</p>
       </div>
     </div>
     <div class="header-right">
-      <div class="stat-chip" id="chip-stats">2,744 Parcels | 63,740 m²</div>
-      <div class="stat-chip" style="background:var(--accent-soft);color:var(--accent-primary);font-weight:600;">ISO 19152 LADM v2</div>
-      <a href="/" class="btn btn-subtle">← DoLR Home</a>
       <a href="/programmes/3d-ulpin" class="btn btn-subtle">3D Schemes Page</a>
       <button class="btn btn-subtle" id="btn-run-topology">Topology Audit</button>
       <button class="btn btn-primary" id="btn-open-actions">+ Cadastral Actions</button>
-      <a href="/docs" target="_blank" class="btn btn-subtle">API Docs</a>
     </div>
   </header>
 
-  <!-- Controls Toolbar -->
-  <div class="toolbar">
-    <div class="controls-cluster">
+  <!-- ========================================================
+       PAGE 1: MAHABHULEKH CADASTRAL SEARCH VIEW
+       ======================================================== -->
+  <section id="view-search">
+    <div class="search-portal-card">
       
-      <div class="control-item">
-        <span class="control-label">Estate</span>
-        <select id="institution-select">
-          <option value="">Loading Estates...</option>
-        </select>
+      <div class="portal-card-header">
+        <div class="portal-emblem-title">Government of Maharashtra | महसूल विभाग (Revenue Department)</div>
+        <h2>Mahabhulekh / Bhunaksha 3D Cadastre Search</h2>
+        <p>Digital India Land Records Modernization Programme (DILRMP) | Select Land Parcel</p>
       </div>
 
-      <div class="control-item">
-        <span class="control-label">Building</span>
-        <select id="building-select">
-          <option value="">Loading Buildings...</option>
-        </select>
-      </div>
-
-      <div class="control-item">
-        <span class="control-label">Level</span>
-        <select id="floor-filter">
-          <option value="ALL">All Floors</option>
-        </select>
-      </div>
-
-      <div class="control-item">
-        <span class="control-label">Zoning</span>
-        <select id="type-filter">
-          <option value="ALL">All Units</option>
-          <option value="RESIDENTIAL">Residential Stratum</option>
-          <option value="COMMON">Common Core</option>
-          <option value="MORTGAGED">Mortgaged Units</option>
-        </select>
-      </div>
-
-    </div>
-
-    <div>
-      <button class="btn btn-subtle" id="btn-ingest-cad" title="Re-parse CAD Vector PDF and Update 3D Geometry">Sync CAD Drawing</button>
-    </div>
-  </div>
-
-  <!-- Workspace -->
-  <main class="workspace">
-    
-    <!-- 3D Digital Twin Viewport -->
-    <section class="viewport-panel">
-      <div class="panel-header">
-        <div class="panel-title">Volumetric Strata Cadastre</div>
-        <div class="panel-subtitle">Click any 3D parcel to load title record</div>
-      </div>
-      <div id="plot3d-container"></div>
-    </section>
-
-    <!-- Title Deed & RRR Inspector Panel -->
-    <aside class="inspector-panel">
-      <div class="panel-header">
-        <div class="panel-title">Cadastral Title Record</div>
-        <div class="panel-subtitle">Bhu-Aadhaar 3D Unit Card</div>
-      </div>
-
-      <div class="inspector-body">
+      <div class="cascading-form-grid">
         
-        <!-- Identification -->
-        <div class="section-box">
-          <div class="section-header">
-            <span>Spatial Identification</span>
-            <span style="color:var(--accent-primary);font-size:0.68rem;">LA_SpatialUnit</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">3D ULPIN</span>
-            <span class="data-value" id="insp-ulpin" style="color:var(--accent-primary);">Select parcel</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Classification</span>
-            <span class="data-value" id="insp-type">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Elevation Band</span>
-            <span class="data-value" id="insp-floor">-</span>
-          </div>
+        <div class="search-form-group">
+          <label>District (जिल्हा)</label>
+          <select id="sel-district">
+            <option value="Nagpur" selected>Nagpur (नागपूर)</option>
+          </select>
         </div>
 
-        <!-- Metric Dimensions & Land Share -->
-        <div class="section-box">
-          <div class="section-header">
-            <span>Dimensions & Equity</span>
-            <span style="color:#15803d;font-size:0.68rem;">RERA Standard</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Carpet Area</span>
-            <span class="data-value" id="insp-area">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Enclosed Airspace</span>
-            <span class="data-value" id="insp-volume">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Undivided Land Share (UDS)</span>
-            <span class="data-value" id="insp-uds" style="color:var(--accent-primary);">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Centroid GPS</span>
-            <span class="data-value" id="insp-gps" style="font-size:0.68rem;">-</span>
-          </div>
+        <div class="search-form-group">
+          <label>Taluka (तालुका)</label>
+          <select id="sel-taluka">
+            <option value="Nagpur_Rural" selected>Nagpur Rural (नागपूर ग्रामीण)</option>
+          </select>
         </div>
 
-        <!-- Titleholders / Occupants -->
-        <div class="section-box">
-          <div class="section-header">
-            <span>Rights & Title</span>
-            <span style="color:#0369a1;font-size:0.68rem;">LA_Right</span>
-          </div>
-          <div id="insp-occupants-list" style="margin-top:4px;">
-            <span style="color:var(--text-muted);font-size:0.75rem;">Select unit in 3D viewport</span>
-          </div>
+        <div class="search-form-group">
+          <label>Village (गाव)</label>
+          <select id="sel-village">
+            <option value="Waranga" selected>Waranga (वारंगा)</option>
+          </select>
         </div>
 
-        <!-- Encumbrances / Liens -->
-        <div class="section-box">
-          <div class="section-header">
-            <span>Encumbrances & Liens</span>
-            <span style="color:#b91c1c;font-size:0.68rem;">CERSAI Registry</span>
-          </div>
-          <div id="insp-liens-list" style="margin-top:4px;">
-            <span style="color:#15803d;font-size:0.75rem;">Clear Title</span>
-          </div>
+        <div class="search-form-group">
+          <label>Survey / Gat No. (गट क्र.)</label>
+          <input type="text" id="inp-survey-no" value="140/1" placeholder="e.g. 140/1">
         </div>
 
       </div>
-    </aside>
 
-  </main>
+      <button class="btn btn-primary search-btn-large" onclick="executeSearch()">
+        Search 3D Cadastral Record (भू-अभिलेख शोधा)
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       PAGE 2: RESOLVED PARCEL DETAILS, 4 BUILDINGS & 3D TWIN
+       ======================================================== -->
+  <section id="view-results">
+    
+    <!-- Results Top Bar & Breadcrumb -->
+    <div class="results-top-bar">
+      <button class="btn btn-subtle" onclick="backToSearch()">
+        ← Back to Search (नवीन शोध)
+      </button>
+      <div class="breadcrumb-path">
+        <a href="/" style="color:var(--accent-primary); text-decoration:none;">DoLR Home</a> &gt;
+        <a href="/programmes/3d-ulpin" style="color:var(--text-secondary); text-decoration:none;">Schemes</a> &gt;
+        Maharashtra &gt; Nagpur &gt; Nagpur Rural &gt; Waranga &gt; <strong>Survey 140/1 (pu-id: 33550994106)</strong>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-muted);">
+        Khata No. 341 · Sarkar Tenure
+      </div>
+    </div>
+
+    <!-- Resolved Land Record Summary Banner -->
+    <div class="resolved-record-banner" id="parcel-resolved-card">
+      <div>
+        <div class="record-item-label">State Parcel ID (pu-id)</div>
+        <div class="record-item-val" style="color:var(--accent-primary);">33550994106</div>
+      </div>
+      <div>
+        <div class="record-item-label">Khata / 7-12 Account</div>
+        <div class="record-item-val">Khata No. 341</div>
+      </div>
+      <div>
+        <div class="record-item-label">Land Tenure & Owner</div>
+        <div class="record-item-val">Sarkar (Govt of Maharashtra)</div>
+      </div>
+      <div>
+        <div class="record-item-label">Surveyed Campus Estate</div>
+        <div class="record-item-val">40.47 Ha (~404,685 m²)</div>
+      </div>
+      <div>
+        <div class="record-item-label">Total 3D Parcels</div>
+        <div class="record-item-val" style="color:var(--accent-primary);">700 Volumetric Units</div>
+      </div>
+    </div>
+
+    <!-- 4-Building Selector Cards -->
+    <div class="building-cards-container">
+      <div class="building-cards-header">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:0.04em;">
+          Select Building on Parcel 140/1 to Inspect 3D Stratum
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">
+          4 Campus Buildings
+        </div>
+      </div>
+
+      <div class="building-cards-grid" id="building-cards-grid">
+        
+        <!-- Card 1: Admin Building -->
+        <div class="building-card" id="bldg-card-ADMIN01" onclick="selectBuilding('ADMIN01')">
+          <div class="bldg-card-top">
+            <span class="bldg-card-code">ADMIN01</span>
+          </div>
+          <div class="bldg-card-name">Admin Building</div>
+          <div class="bldg-card-desc">Administrative offices and institute leadership.</div>
+        </div>
+
+        <!-- Card 2: Academic Building -->
+        <div class="building-card" id="bldg-card-ACAD01" onclick="selectBuilding('ACAD01')">
+          <div class="bldg-card-top">
+            <span class="bldg-card-code">ACAD01</span>
+          </div>
+          <div class="bldg-card-name">Academic Building</div>
+          <div class="bldg-card-desc">Classrooms, lecture theaters, and laboratories.</div>
+        </div>
+
+        <!-- Card 3: Hostel Block A (Active) -->
+        <div class="building-card active" id="bldg-card-HSTL01" onclick="selectBuilding('HSTL01')">
+          <div class="bldg-card-top">
+            <span class="bldg-card-code">HSTL01</span>
+          </div>
+          <div class="bldg-card-name">Hostel Block A</div>
+          <div class="bldg-card-desc">10 Floors · 700 Measured 3D Units · Carpet Area 16,979 m²</div>
+        </div>
+
+        <!-- Card 4: Residential Building -->
+        <div class="building-card" id="bldg-card-RES01" onclick="selectBuilding('RES01')">
+          <div class="bldg-card-top">
+            <span class="bldg-card-code">RES01</span>
+          </div>
+          <div class="bldg-card-name">Residential Building</div>
+          <div class="bldg-card-desc">Staff and faculty residential quarters.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Workspace Layout (3D Viewport + Title Inspector) -->
+    <main class="workspace">
+      
+      <!-- Left: 3D Viewport Panel -->
+      <section class="viewport-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="viewport-building-title">Hostel Block A (HSTL01) — Volumetric 3D Twin</div>
+          
+          <!-- Controls for Surveyed Building -->
+          <div id="surveyed-controls" style="display:flex;gap:8px;align-items:center;">
+            <select id="floor-filter" style="font-size:0.74rem;padding:3px 8px;">
+              <option value="ALL">All Floors (10 Floors)</option>
+            </select>
+            <select id="type-filter" style="font-size:0.74rem;padding:3px 8px;">
+              <option value="ALL">All Units (700)</option>
+              <option value="RESIDENTIAL">Residential (560)</option>
+              <option value="COMMON">Common Core (140)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3D Plotly Container -->
+        <div id="plot3d-container">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+      <!-- Right: Title Deed & RRR Inspector Panel -->
+      <aside class="inspector-panel">
+        <div class="panel-header">
+          <div class="panel-title">Cadastral Title Record</div>
+          <div class="panel-subtitle">Bhu-Aadhaar 3D Unit Card</div>
+        </div>
+
+        <div class="inspector-body">
+          
+          <!-- Spatial Identification -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>Spatial Identification</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">3D ULPIN</span>
+              <span class="data-value" id="insp-ulpin" style="color:var(--accent-primary);">HSTL01-F1-X01-4S</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Master Parcel (pu-id)</span>
+              <span class="data-value" style="font-size:0.7rem;">33550994106 (Surv 140/1)</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Classification</span>
+              <span class="data-value" id="insp-type">4S (Private Stratum)</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Vertical Level</span>
+              <span class="data-value" id="insp-floor">Floor 1 (Z: 0.0m to 2.9m)</span>
+            </div>
+          </div>
+
+          <!-- Metric Dimensions & Land Share -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>Dimensions & Land Equity</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">RERA Carpet Area</span>
+              <span class="data-value" id="insp-area">26.40 m²</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Enclosed Airspace</span>
+              <span class="data-value" id="insp-volume">76.56 m³</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Undivided Land Share (UDS)</span>
+              <span class="data-value" id="insp-uds" style="color:var(--accent-primary);">0.15549% of Base Surface</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Centroid Coordinates</span>
+              <span class="data-value" id="insp-gps" style="font-size:0.68rem;">20.949516, 79.030035</span>
+            </div>
+          </div>
+
+          <!-- Titleholders / Rights -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>Rights & Titleholder</span>
+            </div>
+            <div id="insp-occupants-list" style="margin-top:4px;">
+              <span style="color:var(--text-muted);font-size:0.75rem;">Vacant (No active title recorded)</span>
+            </div>
+          </div>
+
+          <!-- Encumbrances / Liens -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>Encumbrances & Liens</span>
+            </div>
+            <div id="insp-liens-list" style="margin-top:4px;">
+              <span style="color:#15803d;font-size:0.75rem;">Clear Title (No Active Encumbrance)</span>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </main>
+
+  </section>
 
   <!-- Cadastral Action Modal -->
   <div class="modal-backdrop" id="action-modal">
     <div class="modal-box">
       
       <div class="modal-header-bar">
-        <h3>Cadastral Mutation & Recording</h3>
+        <div>
+          <h3>Cadastral Mutation & Allotment</h3>
+        </div>
         <button id="btn-close-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;">✕</button>
       </div>
 
@@ -184,12 +304,12 @@
           <input type="text" id="modal-ulpin-input" placeholder="e.g. HSTL01-F1-X01-4S">
         </div>
         <div class="field-group">
-          <label>Party ID (Aadhaar / Roll No / Identity)</label>
-          <input type="text" id="modal-party-id" placeholder="e.g. IN_AADHAAR_9012">
+          <label>Party ID (Citizen / Student ID)</label>
+          <input type="text" id="modal-party-id" placeholder="e.g. BT_ID_ANANYA">
         </div>
         <div class="field-group">
           <label>Full Legal Name</label>
-          <input type="text" id="modal-party-name" placeholder="e.g. Priya Sharma">
+          <input type="text" id="modal-party-name" placeholder="e.g. Ananya Sen">
         </div>
       </div>
 
@@ -205,7 +325,7 @@
         </div>
         <div class="field-group">
           <label>Transferee / Buyer ID</label>
-          <input type="text" id="transfer-to-party" placeholder="e.g. IN_AADHAAR_3321">
+          <input type="text" id="transfer-to-party" placeholder="e.g. IN_DEMO_3321">
         </div>
         <div class="field-group">
           <label>Buyer Legal Name</label>
@@ -229,7 +349,7 @@
         </div>
         <div class="field-group">
           <label>Sanction Reference (CERSAI Ref)</label>
-          <input type="text" id="mortgage-ref" placeholder="e.g. SBI-HL-2026-99014">
+          <input type="text" id="mortgage-ref" placeholder="e.g. SBI-DEMO-2026-99014">
         </div>
         <div class="field-group">
           <label>Sanctioned Loan Amount (INR)</label>

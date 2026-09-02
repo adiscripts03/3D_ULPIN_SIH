@@ -1,8 +1,7 @@
 import os
 import json
 import csv
-from backend.database import init_db, get_db_connection
-from backend.services.cadastral_engine import extract_units_from_cad
+from backend.database import init_db, get_db_connection, DB_PATH
 from backend.services.rights_manager import allot_occupant_to_unit, stamp_bank_mortgage_lien
 
 REGISTRY_FILE = "config/institutional_registry.json"
@@ -10,12 +9,21 @@ DATA_FILE_CSV = "data/room_labels_all_floors_final.csv"
 OCCUPANCY_DB_FILE = "data/occupancy_db.json"
 
 def seed_database():
-    print("🚀 Initializing 3D Cadastre Database & Tables...")
+    print("🚀 Initializing Verified 3D Cadastre Database & Tables...")
+    
+    # Remove old DB file if it exists to ensure a clean slate
+    if os.path.exists(DB_PATH):
+        try:
+            os.remove(DB_PATH)
+            print("🧹 Removed previous database file for fresh verified seed.")
+        except Exception as e:
+            print(f"Notice: {e}")
+
     init_db()
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. Ingest Institutional Registry
+    # 1. Ingest Real Institutional Registry (Bhunaksha Survey 140/1, Waranga)
     if os.path.exists(REGISTRY_FILE):
         with open(REGISTRY_FILE, "r") as f:
             registry = json.load(f)
@@ -25,48 +33,56 @@ def seed_database():
             cursor.execute("""
             INSERT INTO institutions (
                 institution_id, institution_name, institution_code, category,
-                master_surface_ulpin, bhu_aadhaar_id, survey_number, village,
-                taluka, district, state, pincode, campus_anchor_lat, campus_anchor_lon,
-                total_plot_area_sqm
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(institution_id) DO UPDATE SET
-                institution_name=excluded.institution_name,
-                master_surface_ulpin=excluded.master_surface_ulpin,
-                total_plot_area_sqm=excluded.total_plot_area_sqm
+                state_parcel_id_puid, tenure_type, khata_number, master_surface_ulpin,
+                survey_number, village, taluka, district, state, pincode,
+                campus_anchor_lat, campus_anchor_lon, total_plot_area_sqm,
+                master_surface_reference_note
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 inst["institution_id"], inst["institution_name"], inst["institution_code"], inst["category"],
-                inst["master_surface_ulpin"], inst.get("bhu_aadhaar_id"), loc.get("survey_number"),
-                loc.get("village"), loc.get("taluka"), loc.get("district"), loc.get("state"),
-                loc.get("pincode"), loc.get("campus_anchor_lat", 20.9495556),
-                loc.get("campus_anchor_lon", 79.0294722), loc.get("total_plot_area_sqm", 404685.64)
+                inst.get("state_parcel_id_puid", "33550994106"),
+                inst.get("tenure_type", "Sarkar (Government of Maharashtra)"),
+                inst.get("khata_number", "341"),
+                inst.get("state_parcel_id_puid", "33550994106"),
+                loc.get("survey_number", "140/1"),
+                loc.get("village", "Waranga (वारंगा)"),
+                loc.get("taluka", "Nagpur Rural (नागपूर ग्रामीण)"),
+                loc.get("district", "Nagpur (नागपूर)"),
+                loc.get("state", "Maharashtra"),
+                loc.get("pincode", "441108"),
+                loc.get("campus_anchor_lat", 20.9495556),
+                loc.get("campus_anchor_lon", 79.0294722),
+                loc.get("total_plot_area_sqm", 404685.64),
+                inst.get("master_surface_reference_note", "State Bhunaksha Parcel ID pu-id: 33550994106")
             ))
 
+            # Ingest exactly 4 campus buildings
             for b in inst.get("buildings", []):
                 cursor.execute("""
                 INSERT INTO buildings (
-                    building_id, institution_id, building_name, category, total_floors,
-                    floor_pitch_m, room_clear_height_m, slab_thickness_m, anchor_lat,
-                    anchor_lon, floor_plan_source
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(building_id) DO UPDATE SET
-                    building_name=excluded.building_name,
-                    total_floors=excluded.total_floors,
-                    anchor_lat=excluded.anchor_lat,
-                    anchor_lon=excluded.anchor_lon
+                    building_id, institution_id, building_name, category, data_status,
+                    total_floors, floor_pitch_m, room_clear_height_m, slab_thickness_m,
+                    anchor_lat, anchor_lon, floor_plan_source, description
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     b["building_id"], inst["institution_id"], b["building_name"], b["category"],
-                    b.get("total_floors", 10), b.get("floor_pitch_m", 3.4),
-                    b.get("room_clear_height_m", 2.9), b.get("slab_thickness_m", 0.5),
-                    b.get("anchor_lat", 20.9495556), b.get("anchor_lon", 79.0294722),
-                    b.get("floor_plan_source", "data/floor_plan.pdf")
+                    b.get("data_status", "not_yet_surveyed"),
+                    b.get("total_floors", 0),
+                    b.get("floor_pitch_m", 3.4),
+                    b.get("room_clear_height_m", 2.9),
+                    b.get("slab_thickness_m", 0.5),
+                    b.get("anchor_lat", 20.9495556),
+                    b.get("anchor_lon", 79.0294722),
+                    b.get("floor_plan_source", None),
+                    b.get("description", "")
                 ))
 
         conn.commit()
-        print("✅ Institutions & Buildings successfully registered.")
+        print("✅ Real Institution (Survey 140/1, Khata 341, Waranga, pu-id: 33550994106) & 4 Buildings registered.")
 
-    # 2. Ingest 3D Parcels from CSV (or CAD extraction)
+    # 2. Ingest 3D Parcels ONLY for Hostel Block A (HSTL01) - Genuine Measured Dataset
     if os.path.exists(DATA_FILE_CSV):
-        print(f"📦 Loading 3D Volumetric Parcels from {DATA_FILE_CSV}...")
+        print(f"📦 Loading Genuine Measured 3D Volumetric Parcels from {DATA_FILE_CSV}...")
         total_building_carpet_area = 0.0
         rows = []
         with open(DATA_FILE_CSV, "r") as f:
@@ -110,24 +126,19 @@ def seed_database():
                 real_width_m, real_depth_m, real_x_start_m, real_x_end_m, real_y_start_m, real_y_end_m,
                 latitude, longitude, carpet_area_sqm, gross_volume_cbm, undivided_share_land, is_common_property
             ) VALUES (?, 'HSTL01', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(ulpin_3d) DO UPDATE SET
-                carpet_area_sqm=excluded.carpet_area_sqm,
-                gross_volume_cbm=excluded.gross_volume_cbm,
-                undivided_share_land=excluded.undivided_share_land,
-                is_common_property=excluded.is_common_property
             """, (
                 ulpin, fl, r["room_id"], ptype, z0, z1, zs, w, d, x0, x1, y0, y1,
                 lat, lon, carpet, volume, uds, 1 if is_common else 0
             ))
 
         conn.commit()
-        print(f"✅ Ingested {len(rows)} 3D Volumetric Parcels for HSTL01.")
+        print(f"✅ Ingested exactly {len(rows)} genuine 3D Volumetric Parcels for Hostel Block A (HSTL01).")
 
     conn.close()
 
-    # 3. Ingest Pre-existing Occupancy & Titles
+    # 3. Seed Sample Demonstration Titles (SIMULATED DATA FOR RRR DEMONSTRATION)
     if os.path.exists(OCCUPANCY_DB_FILE):
-        print(f"👥 Seeding Occupancy & Strata Titles from {OCCUPANCY_DB_FILE}...")
+        print("👥 Seeding Sample Demonstration Occupancy & Titles (SIMULATED DATA)...")
         with open(OCCUPANCY_DB_FILE, "r") as f:
             occ_db = json.load(f)
 
@@ -135,22 +146,22 @@ def seed_database():
             for occ in occupants:
                 allot_occupant_to_unit(ulpin_3d=ulpin, party_id=occ, name=f"Occupant {occ}")
 
-    # 4. Seed Sample Bank Encumbrances (Mortgage Liens)
-    print("🏦 Seeding Sample Bank Mortgage Liens (CERSAI Registry)...")
+    # 4. Seed Sample Demonstration Mortgage Liens (SIMULATED DATA FOR CERSAI DEMONSTRATION)
+    print("🏦 Seeding Sample Demonstration Mortgage Liens (SIMULATED DATA)...")
     stamp_bank_mortgage_lien(
         ulpin_3d="HSTL01-F1-X01-4S",
-        mortgagee_name="State Bank of India (SBI)",
-        sanction_ref="SBI-HL-2026-90412",
+        mortgagee_name="State Bank of India (Demo Branch)",
+        sanction_ref="SBI-DEMO-2026-90412",
         loan_amount_inr=4500000.0
     )
     stamp_bank_mortgage_lien(
-        ulpin_3d="HSTL01-F2-201-4S",
-        mortgagee_name="HDFC Bank",
-        sanction_ref="HDFC-MORT-882109",
-        loan_amount_inr=5200000.0
+        ulpin_3d="HSTL01-F2-X07-2S",
+        mortgagee_name="Bank of Maharashtra (Demo Branch)",
+        sanction_ref="BOM-DEMO-2026-11029",
+        loan_amount_inr=2800000.0
     )
 
-    print("🎉 3D Cadastral Database Seeding Completed Successfully!")
+    print("🎉 Verified 3D Cadastral Database Seeding Completed Successfully!")
 
 if __name__ == "__main__":
     seed_database()

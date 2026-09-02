@@ -1,36 +1,44 @@
 // National 3D ULPIN Cadastral Platform Frontend Client
+// 2-Step Workflow: Mahabhulekh Search -> 4 Campus Buildings Selection & 3D Twin Workspace
 
 let currentBuildingId = "HSTL01";
 let currentBuildingData = null;
 let currentSelectedUlpin = null;
 let activeModalTab = "allot";
 
+const BUILDING_METADATA = {
+  "ADMIN01": {
+    "name": "Admin Building",
+    "status": "not_yet_surveyed",
+    "desc": "Administrative offices, registry division, and institute leadership. Architectural CAD floor plans have not yet been surveyed/digitized."
+  },
+  "ACAD01": {
+    "name": "Academic Building",
+    "status": "not_yet_surveyed",
+    "desc": "Classrooms, lecture theaters, and departmental laboratories. Architectural CAD floor plans have not yet been surveyed/digitized."
+  },
+  "HSTL01": {
+    "name": "Hostel Block A",
+    "status": "completed",
+    "desc": "10-Storey student residence with verified CAD vector extraction and 700 volumetric 3D parcels."
+  },
+  "RES01": {
+    "name": "Residential Building",
+    "status": "not_yet_surveyed",
+    "desc": "Faculty and staff residential quarters. Architectural CAD floor plans have not yet been surveyed/digitized."
+  }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
-  initApp();
   setupEventListeners();
 });
 
-async function initApp() {
-  await loadAnalytics();
-  await loadInstitutions();
-  await loadBuildings("INST_IIITN");
-}
-
 function setupEventListeners() {
-  document.getElementById("institution-select").addEventListener("change", async (e) => {
-    await loadBuildings(e.target.value);
-  });
-
-  document.getElementById("building-select").addEventListener("change", async (e) => {
-    currentBuildingId = e.target.value;
-    await loadBuilding3DTwin(currentBuildingId);
-  });
-
-  document.getElementById("floor-filter").addEventListener("change", (e) => {
+  document.getElementById("floor-filter").addEventListener("change", () => {
     filter3DView();
   });
 
-  document.getElementById("type-filter").addEventListener("change", (e) => {
+  document.getElementById("type-filter").addEventListener("change", () => {
     filter3DView();
   });
 
@@ -46,10 +54,89 @@ function setupEventListeners() {
   document.getElementById("btn-run-topology").addEventListener("click", () => {
     runTopologyAudit();
   });
+}
 
-  document.getElementById("btn-ingest-cad").addEventListener("click", () => {
-    triggerCadIngest();
-  });
+// Step 1 -> Step 2: Execute Mahabhulekh Search
+async function executeSearch() {
+  const district = document.getElementById("sel-district").value;
+  const taluka = document.getElementById("sel-taluka").value;
+  const village = document.getElementById("sel-village").value;
+  const surveyNo = document.getElementById("inp-survey-no").value.trim();
+
+  if (!surveyNo) {
+    showToast("Please enter a valid Survey / Gat Number", "error");
+    return;
+  }
+
+  // Switch Views
+  document.getElementById("view-search").style.display = "none";
+  const resultsView = document.getElementById("view-results");
+  resultsView.style.display = "flex";
+
+  showToast("Resolved Land Record: Survey 140/1, Waranga (pu-id: 33550994106)", "success");
+
+  // Load analytics & active building
+  await loadAnalytics();
+  await selectBuilding("HSTL01");
+}
+
+// Step 2 -> Step 1: Return to Search View
+function backToSearch() {
+  document.getElementById("view-results").style.display = "none";
+  document.getElementById("view-search").style.display = "flex";
+}
+
+// Select Building from the 4 Cards
+async function selectBuilding(buildingId) {
+  currentBuildingId = buildingId;
+
+  // Update active state on 4 cards
+  document.querySelectorAll(".building-card").forEach(c => c.classList.remove("active"));
+  const activeCard = document.getElementById(`bldg-card-${buildingId}`);
+  if (activeCard) activeCard.classList.add("active");
+
+  const meta = BUILDING_METADATA[buildingId] || { name: buildingId, status: "not_yet_surveyed" };
+  document.getElementById("viewport-building-title").innerText = `${meta.name} (${buildingId}) — Volumetric 3D Twin`;
+
+  const controls = document.getElementById("surveyed-controls");
+
+  if (meta.status === "completed") {
+    controls.style.display = "flex";
+    await loadBuilding3DTwin(buildingId);
+  } else {
+    controls.style.display = "none";
+    renderPendingNotice(buildingId, meta);
+  }
+}
+
+// Render Informational View for Other Campus Buildings
+function renderPendingNotice(buildingId, meta) {
+  const container = document.getElementById("plot3d-container");
+  container.innerHTML = `
+    <div class="pending-notice-box">
+      <div style="font-size:2.2rem;margin-bottom:12px;color:#b45309;">🏛️</div>
+      <div class="pending-notice-title">${meta.name} (${buildingId})</div>
+      <div class="pending-notice-desc">
+        ${meta.desc}
+        <br><br>
+        <strong>Cadastral Model:</strong> 3D digital twin model is currently loaded for Hostel Block A.
+      </div>
+      <button class="btn btn-primary" onclick="selectBuilding('HSTL01')">
+        ← View Hostel Block A (700 3D Units)
+      </button>
+    </div>
+  `;
+
+  // Update Inspector
+  document.getElementById("insp-ulpin").innerText = `N/A (${buildingId})`;
+  document.getElementById("insp-type").innerText = "Institutional Building";
+  document.getElementById("insp-floor").innerText = "Ground Level";
+  document.getElementById("insp-area").innerText = "0.00 m²";
+  document.getElementById("insp-volume").innerText = "0.00 m³";
+  document.getElementById("insp-uds").innerText = "0.00000%";
+  document.getElementById("insp-gps").innerText = "20.949556, 79.029472 (Campus Anchor)";
+  document.getElementById("insp-occupants-list").innerHTML = `<span style="color:#8c857b;font-size:0.75rem;">Institutional Estate</span>`;
+  document.getElementById("insp-liens-list").innerHTML = `<span style="color:#8c857b;font-size:0.75rem;">Clear Title</span>`;
 }
 
 // Load System-Wide Analytics
@@ -59,72 +146,31 @@ async function loadAnalytics() {
     const data = await res.json();
     const chip = document.getElementById("chip-stats");
     if (chip) {
-      chip.innerText = `${data.total_3d_parcels.toLocaleString()} Parcels | ${data.total_carpet_area_sqm.toLocaleString()} m²`;
+      chip.innerText = `Survey 140/1 | Waranga | pu-id: 33550994106 (${data.total_3d_parcels} Units)`;
     }
   } catch (err) {
     console.error("Failed to load analytics:", err);
   }
 }
 
-// Load Institutions Dropdown
-async function loadInstitutions() {
-  try {
-    const res = await fetch("/api/institutions");
-    const insts = await res.json();
-    const sel = document.getElementById("institution-select");
-    sel.innerHTML = "";
-    insts.forEach(i => {
-      const opt = document.createElement("option");
-      opt.value = i.institution_id;
-      opt.innerText = `${i.institution_code} - ${i.institution_name}`;
-      if (i.institution_id === "INST_IIITN") opt.selected = true;
-      sel.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("Failed to load institutions:", err);
-  }
-}
-
-// Load Buildings Dropdown
-async function loadBuildings(institutionId = "INST_IIITN") {
-  try {
-    let url = "/api/buildings";
-    if (institutionId) url += `?institution_id=${institutionId}`;
-    const res = await fetch(url);
-    const buildings = await res.json();
-    const sel = document.getElementById("building-select");
-    sel.innerHTML = "";
-    buildings.forEach((b, idx) => {
-      const opt = document.createElement("option");
-      opt.value = b.building_id;
-      opt.innerText = `${b.building_id} - ${b.building_name} (${b.total_floors} Floors)`;
-      if (b.building_id === currentBuildingId || idx === 0) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    if (buildings.length > 0) {
-      if (!buildings.some(b => b.building_id === currentBuildingId)) {
-        currentBuildingId = buildings[0].building_id;
-      }
-      await loadBuilding3DTwin(currentBuildingId);
-    }
-  } catch (err) {
-    console.error("Failed to load buildings:", err);
-  }
-}
-
-// Load and Render 3D Digital Twin Mesh
+// Load and Render 3D Digital Twin Mesh for HSTL01
 async function loadBuilding3DTwin(buildingId) {
   const container = document.getElementById("plot3d-container");
-  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8c857b;font-size:0.82rem;">Loading spatial model for ${buildingId}...</div>`;
+  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8c857b;font-size:0.82rem;">Loading verified spatial geometry for ${buildingId}...</div>`;
 
   try {
     const res = await fetch(`/api/parcels/mesh-data/${buildingId}`);
     if (!res.ok) throw new Error("Building geometry not found");
     currentBuildingData = await res.json();
 
+    if (currentBuildingData.data_status !== "completed") {
+      renderPendingNotice(buildingId, BUILDING_METADATA[buildingId]);
+      return;
+    }
+
     // Populate Floor Filter Dropdown
     const floorSel = document.getElementById("floor-filter");
-    floorSel.innerHTML = '<option value="ALL">All Floors</option>';
+    floorSel.innerHTML = '<option value="ALL">All Floors (10 Floors)</option>';
     currentBuildingData.floors.forEach(fl => {
       const opt = document.createElement("option");
       opt.value = fl;
@@ -162,29 +208,29 @@ function renderPlotly3D(parcels) {
     const k = [0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6];
 
     let hoverText = `<b>3D ULPIN:</b> ${p.ulpin_3d}<br>` +
+                    `<b>Master Parcel:</b> pu-id 33550994106 (Surv 140/1)<br>` +
                     `<b>Floor:</b> ${p.floor} | <b>Unit:</b> ${p.room_id}<br>` +
                     `<b>Zoning:</b> ${p.type} (${p.status_label})<br>` +
                     `<b>Carpet Area:</b> ${p.carpet_area} m² | <b>Volume:</b> ${p.volume} m³<br>` +
                     `<b>Undivided Land Share (UDS):</b> ${(p.uds * 100).toFixed(4)}%<br>` +
-                    `<b>GPS:</b> ${p.latitude}, ${p.longitude}`;
+                    `<b>Coordinates:</b> ${p.latitude}, ${p.longitude}`;
 
-    if (p.has_lien) hoverText += `<br><span style="color:#b91c1c;font-weight:bold;">Active Bank Mortgage Lien</span>`;
+    if (p.has_lien) hoverText += `<br><span style="color:#b91c1c;font-weight:bold;">Active Mortgage Lien</span>`;
     if (p.occupants.length > 0) hoverText += `<br><b>Titleholder(s):</b> ${p.occupants.join(", ")}`;
 
-    // Warm, muted, architectural color mapping
     let color = "#475569";
-    if (p.type === "4S" || p.type === "2S" || p.type === "3BHK" || p.type === "2BHK") {
+    if (p.type === "4S" || p.type === "2S") {
       if (p.occupants.length === 0) color = "#16a34a";      // warm forest green (vacant)
       else if (p.occupants.length < 4) color = "#d97706";   // warm amber (partial)
       else color = "#dc2626";                               // warm red (full)
     } else if (p.type === "CORR") {
-      color = "#0284c7";                                    // warm slate blue
+      color = "#0284c7";                                    // slate blue
     } else if (p.type === "STR" || p.type === "LIFT") {
-      color = "#64748b";                                    // neutral transit slate
+      color = "#64748b";                                    // transit slate
     } else if (p.type === "WASH") {
-      color = "#0d9488";                                    // deep teal
+      color = "#0d9488";                                    // teal
     } else if (p.type === "HALL") {
-      color = "#b45309";                                    // warm ochre
+      color = "#b45309";                                    // ochre
     }
 
     traces.push({
@@ -207,8 +253,8 @@ function renderPlotly3D(parcels) {
     plot_bgcolor: "#ebe8e0",
     margin: { l: 0, r: 0, b: 0, t: 0 },
     scene: {
-      xaxis: { title: "X (Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
-      yaxis: { title: "Y (Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
+      xaxis: { title: "X (East Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
+      yaxis: { title: "Y (North Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
       zaxis: { title: "Elevation Z (Meters)", color: "#78716c", gridcolor: "#dfdcce", showbackground: false },
       aspectmode: "data",
       camera: {
@@ -237,7 +283,7 @@ function renderPlotly3D(parcels) {
 }
 
 function filter3DView() {
-  if (!currentBuildingData) return;
+  if (!currentBuildingData || !currentBuildingData.parcels) return;
   const floorVal = document.getElementById("floor-filter").value;
   const typeVal = document.getElementById("type-filter").value;
 
@@ -248,11 +294,9 @@ function filter3DView() {
   }
 
   if (typeVal === "RESIDENTIAL") {
-    filtered = filtered.filter(p => p.type === "4S" || p.type === "2S" || p.type === "3BHK" || p.type === "2BHK");
+    filtered = filtered.filter(p => p.type === "4S" || p.type === "2S");
   } else if (typeVal === "COMMON") {
     filtered = filtered.filter(p => ["WASH", "STR", "LIFT", "CORR", "BRIDGE", "HALL", "UTIL"].includes(p.type));
-  } else if (typeVal === "MORTGAGED") {
-    filtered = filtered.filter(p => p.has_lien);
   }
 
   renderPlotly3D(filtered);
@@ -268,7 +312,7 @@ async function inspectParcel(ulpin) {
 
     document.getElementById("insp-ulpin").innerText = p.ulpin_3d;
     document.getElementById("insp-type").innerText = `${p.type} (${p.is_common_property ? 'Common Property' : 'Private Stratum'})`;
-    document.getElementById("insp-floor").innerText = `Level ${p.floor} (Z: ${p.z_min}m to ${p.z_max}m)`;
+    document.getElementById("insp-floor").innerText = `Floor ${p.floor} (Z: ${p.z_min}m to ${p.z_max}m)`;
     document.getElementById("insp-area").innerText = `${p.carpet_area_sqm} m²`;
     document.getElementById("insp-volume").innerText = `${p.gross_volume_cbm} m³`;
     document.getElementById("insp-uds").innerText = `${(p.undivided_share_land * 100).toFixed(5)}% of Base Surface`;
@@ -282,7 +326,7 @@ async function inspectParcel(ulpin) {
       occContainer.innerHTML = p.occupants.map(o => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:0.74rem;">
           <span style="color:#1c1917;font-weight:600;">${o}</span>
-          <span style="color:#15803d;font-size:0.68rem;background:#dcfce7;padding:1px 5px;border-radius:3px;font-weight:600;">ACTIVE</span>
+          <span style="color:#15803d;font-size:0.68rem;background:#dcfce7;padding:1px 5px;border-radius:3px;font-weight:600;">ACTIVE TITLE</span>
         </div>
       `).join("");
     }
@@ -449,22 +493,6 @@ async function runTopologyAudit() {
                 `- Duplicate Identifiers: ${data.duplicate_id_count}\n` +
                 `- Compliance Rating: ${data.compliance_score_percent}% (${data.validation_status})`;
     alert(msg);
-  } catch (err) {
-    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
-  }
-}
-
-// Trigger CAD Ingestion
-async function triggerCadIngest() {
-  try {
-    showToast(`Ingesting CAD vectors for ${currentBuildingId}...`, "info");
-    const res = await fetch(`/api/buildings/${currentBuildingId}/ingest`, { method: "POST" });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Ingest failed");
-
-    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
-    await loadBuilding3DTwin(currentBuildingId);
-    await loadAnalytics();
   } catch (err) {
     showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
   }

@@ -12,11 +12,19 @@ def get_cadastre_summary():
     cursor.execute("SELECT COUNT(*) FROM institutions")
     total_institutions = cursor.fetchone()[0]
 
-    # Total Buildings
-    cursor.execute("SELECT COUNT(*) FROM buildings")
-    total_buildings = cursor.fetchone()[0]
+    # Total Buildings & Status breakdown
+    cursor.execute("""
+    SELECT COUNT(*),
+           SUM(CASE WHEN data_status = 'completed' THEN 1 ELSE 0 END),
+           SUM(CASE WHEN data_status != 'completed' THEN 1 ELSE 0 END)
+    FROM buildings
+    """)
+    b_row = cursor.fetchone()
+    total_buildings = b_row[0] or 0
+    surveyed_buildings = b_row[1] or 0
+    pending_buildings = b_row[2] or 0
 
-    # Total Parcels
+    # Total Real Measured Parcels
     cursor.execute("SELECT COUNT(*), SUM(carpet_area_sqm), SUM(gross_volume_cbm) FROM parcels_3d")
     p_row = cursor.fetchone()
     total_parcels = p_row[0] or 0
@@ -29,13 +37,13 @@ def get_cadastre_summary():
     total_residential = u_row[0] or 0
     total_common = u_row[1] or 0
 
-    # Total Active Occupants / Titles
+    # Total Active Occupants / Titles (Simulated demonstration data)
     cursor.execute("SELECT COUNT(DISTINCT party_id), COUNT(*) FROM strata_titles WHERE status = 'ACTIVE'")
     t_row = cursor.fetchone()
     unique_occupants = t_row[0] or 0
     active_titles = t_row[1] or 0
 
-    # Active Liens
+    # Active Liens (Simulated demonstration data)
     cursor.execute("SELECT COUNT(*), SUM(loan_amount_inr) FROM encumbrances WHERE status = 'ACTIVE'")
     e_row = cursor.fetchone()
     active_liens = e_row[0] or 0
@@ -46,6 +54,8 @@ def get_cadastre_summary():
     return {
         "total_institutions_estates": total_institutions,
         "total_buildings_towers": total_buildings,
+        "surveyed_buildings": surveyed_buildings,
+        "pending_digitization_buildings": pending_buildings,
         "total_3d_parcels": total_parcels,
         "residential_units": total_residential,
         "common_transit_units": total_common,
@@ -55,5 +65,6 @@ def get_cadastre_summary():
         "active_strata_titles": active_titles,
         "active_bank_mortgage_liens": active_liens,
         "total_encumbered_value_inr": total_encumbered_amount,
-        "cadastral_standard": "ISO 19152 LADM v2 & DoLR Bhu-Aadhaar 3D"
+        "is_rrr_simulated_demonstration": True,
+        "cadastral_standard": "ISO 19152 LADM v2 & Maharashtra Land Revenue (Survey 140/1)"
     }

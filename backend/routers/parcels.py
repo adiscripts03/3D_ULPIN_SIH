@@ -78,9 +78,28 @@ def get_building_3d_mesh(building_id: str):
     """
     Returns pre-computed 3D bounding boxes and color states for all parcels in a building,
     ready for WebGL / Plotly / Three.js 3D rendering in the frontend.
+    For non-digitized buildings, returns an honest pending status.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM buildings WHERE building_id = ?", (building_id,))
+    b = cursor.fetchone()
+    if not b:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"Building {building_id} not found in registry.")
+
+    if b["data_status"] != "completed":
+        conn.close()
+        return {
+            "building_id": building_id,
+            "building_name": b["building_name"],
+            "data_status": b["data_status"],
+            "message": "Floor plan and room data for this building has not been digitized yet - pilot volumetric data is currently only surveyed and available for Hostel Block A (HSTL01).",
+            "total_units": 0,
+            "floors": [],
+            "parcels": []
+        }
 
     cursor.execute("""
     SELECT p.*,
@@ -97,9 +116,6 @@ def get_building_3d_mesh(building_id: str):
     rows = cursor.fetchall()
     conn.close()
 
-    if not rows:
-        raise HTTPException(status_code=404, detail="No 3D parcels found for this building.")
-
     boxes = []
     floors = sorted(list(set(r["floor"] for r in rows)))
 
@@ -114,22 +130,22 @@ def get_building_3d_mesh(building_id: str):
 
         # Assign Hex Color
         if r["is_common_property"]:
-            if "WASH" in ptype: color = "#00BCD4"
-            elif "STR" in ptype or "LIFT" in ptype: color = "#78909C"
-            elif "HALL" in ptype: color = "#FFB300"
-            elif "BRIDGE" in ptype: color = "#8E24AA"
-            elif "CORR" in ptype: color = "#42A5F5"
-            else: color = "#9E9E9E"
+            if "WASH" in ptype: color = "#0d9488"
+            elif "STR" in ptype or "LIFT" in ptype: color = "#64748b"
+            elif "HALL" in ptype: color = "#b45309"
+            elif "BRIDGE" in ptype: color = "#7c3aed"
+            elif "CORR" in ptype: color = "#0284c7"
+            else: color = "#94a3b8"
             status_label = f"Common Area ({ptype})"
         else:
             if occ_count == 0:
-                color = "#2ECC71"  # Green
+                color = "#16a34a"  # Green
                 status_label = f"Vacant (0/{cap})"
             elif occ_count < cap:
-                color = "#F39C12"  # Amber
+                color = "#d97706"  # Amber
                 status_label = f"Partial ({occ_count}/{cap})"
             else:
-                color = "#E74C3C"  # Red
+                color = "#dc2626"  # Red
                 status_label = f"Full ({occ_count}/{cap})"
 
         boxes.append({
@@ -156,6 +172,8 @@ def get_building_3d_mesh(building_id: str):
 
     return {
         "building_id": building_id,
+        "building_name": b["building_name"],
+        "data_status": "completed",
         "total_units": len(boxes),
         "floors": floors,
         "parcels": boxes

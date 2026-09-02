@@ -1,23 +1,26 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
-# --- Institution / Estate Models ---
+# --- Institution / Estate Models (Aligned with Bhunaksha / Mahabhulekh) ---
 class InstitutionBase(BaseModel):
     institution_id: str
     institution_name: str
     institution_code: str
     category: str
-    master_surface_ulpin: str
-    bhu_aadhaar_id: Optional[str] = None
-    survey_number: Optional[str] = None
-    village: Optional[str] = None
-    taluka: Optional[str] = None
-    district: Optional[str] = None
-    state: Optional[str] = None
-    pincode: Optional[str] = None
-    campus_anchor_lat: float
-    campus_anchor_lon: float
-    total_plot_area_sqm: float
+    state_parcel_id_puid: str = "33550994106"
+    tenure_type: str = "Sarkar (Government of Maharashtra)"
+    khata_number: str = "341"
+    master_surface_ulpin: Optional[str] = "33550994106"
+    survey_number: str = "140/1"
+    village: str = "Waranga (वारंगा)"
+    taluka: str = "Nagpur Rural (नागपूर ग्रामीण)"
+    district: str = "Nagpur (नागपूर)"
+    state: str = "Maharashtra"
+    pincode: Optional[str] = "441108"
+    campus_anchor_lat: float = 20.9495556
+    campus_anchor_lon: float = 79.0294722
+    total_plot_area_sqm: float = 404685.64
+    master_surface_reference_note: Optional[str] = None
 
 class InstitutionCreate(InstitutionBase):
     pass
@@ -25,22 +28,26 @@ class InstitutionCreate(InstitutionBase):
 class InstitutionResponse(InstitutionBase):
     total_buildings: int = 0
     total_parcels: int = 0
+    surveyed_buildings: int = 0
+    pending_buildings: int = 0
     created_at: Optional[str] = None
 
 
-# --- Building Models ---
+# --- Building Models (4 Genuine Campus Buildings) ---
 class BuildingBase(BaseModel):
     building_id: str
     institution_id: str
     building_name: str
     category: str
-    total_floors: int
+    data_status: str = "not_yet_surveyed"  # "completed" or "not_yet_surveyed"
+    total_floors: int = 0
     floor_pitch_m: float = 3.4
     room_clear_height_m: float = 2.9
     slab_thickness_m: float = 0.5
-    anchor_lat: float
-    anchor_lon: float
+    anchor_lat: float = 20.9495556
+    anchor_lon: float = 79.0294722
     floor_plan_source: Optional[str] = None
+    description: Optional[str] = None
 
 class BuildingCreate(BuildingBase):
     pass
@@ -52,7 +59,7 @@ class BuildingResponse(BuildingBase):
     created_at: Optional[str] = None
 
 
-# --- 3D Parcel Models ---
+# --- 3D Parcel Models (Hostel Block A 700 Genuine Units) ---
 class Parcel3DBase(BaseModel):
     ulpin_3d: str
     building_id: str
@@ -86,7 +93,7 @@ class Parcel3DResponse(Parcel3DBase):
     active_encumbrances: List[Dict[str, Any]] = []
 
 
-# --- Party Models ---
+# --- Party Models (Simulated Demonstration Data) ---
 class PartyBase(BaseModel):
     party_id: str
     name: str
@@ -94,12 +101,13 @@ class PartyBase(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     aadhaar_masked: Optional[str] = None
+    is_simulated: bool = True
 
 class PartyCreate(PartyBase):
     pass
 
 
-# --- Strata Title / RRR Models ---
+# --- Strata Title / RRR Models (Simulated Demonstration Data) ---
 class StrataTitleBase(BaseModel):
     ulpin_3d: str
     party_id: str
@@ -107,6 +115,7 @@ class StrataTitleBase(BaseModel):
     right_type: str = "ALLOTMENT"  # STRATA_FREEHOLD, LEASEHOLD, ALLOTMENT
     status: str = "ACTIVE"
     max_capacity: int = 4
+    is_simulated: bool = True
 
 class AllotmentRequest(BaseModel):
     ulpin_3d: str
@@ -123,7 +132,7 @@ class TitleTransferRequest(BaseModel):
     deed_registration_ref: Optional[str] = None
 
 
-# --- Encumbrance / Mortgage Models ---
+# --- Encumbrance / Mortgage Models (Simulated Demonstration Data) ---
 class EncumbranceCreate(BaseModel):
     ulpin_3d: str
     encumbrance_type: str = "BANK_MORTGAGE_LIEN"
@@ -139,6 +148,7 @@ class EncumbranceResponse(BaseModel):
     sanction_reference: str
     loan_amount_inr: float
     status: str
+    is_simulated: bool = True
     created_at: str
 
 

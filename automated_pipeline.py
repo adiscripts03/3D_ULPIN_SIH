@@ -335,7 +335,7 @@ def generate_full_building_cadastre(
 
 def main():
     parser = argparse.ArgumentParser(description="IIIT Nagpur 3D ULPIN Automated Pipeline")
-    parser.add_argument("--building", default="HSTL01", help="Building ID (e.g. HSTL01, HSTL02, ACAD01)")
+    parser.add_argument("--building", default="HSTL01", help="Building ID (e.g. HSTL01, ADMIN01, ACAD01, RES01)")
     parser.add_argument("--pdf", default="data/floor_plan.pdf", help="Path to architectural CAD PDF plan")
     parser.add_argument("--floors", type=int, default=10, help="Total number of floors to stack")
     parser.add_argument("--lat", type=float, default=DEFAULT_ANCHOR_LAT, help="Building anchor latitude")

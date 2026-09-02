@@ -12,6 +12,8 @@ def list_institutions():
     cursor.execute("""
     SELECT i.*, 
            COUNT(DISTINCT b.building_id) as total_buildings,
+           COUNT(DISTINCT CASE WHEN b.data_status = 'completed' THEN b.building_id END) as surveyed_buildings,
+           COUNT(DISTINCT CASE WHEN b.data_status != 'completed' THEN b.building_id END) as pending_buildings,
            COUNT(DISTINCT p.ulpin_3d) as total_parcels
     FROM institutions i
     LEFT JOIN buildings b ON i.institution_id = b.institution_id
@@ -29,6 +31,8 @@ def get_institution(institution_id: str):
     cursor.execute("""
     SELECT i.*, 
            COUNT(DISTINCT b.building_id) as total_buildings,
+           COUNT(DISTINCT CASE WHEN b.data_status = 'completed' THEN b.building_id END) as surveyed_buildings,
+           COUNT(DISTINCT CASE WHEN b.data_status != 'completed' THEN b.building_id END) as pending_buildings,
            COUNT(DISTINCT p.ulpin_3d) as total_parcels
     FROM institutions i
     LEFT JOIN buildings b ON i.institution_id = b.institution_id
@@ -50,15 +54,17 @@ def create_institution(payload: InstitutionCreate):
         cursor.execute("""
         INSERT INTO institutions (
             institution_id, institution_name, institution_code, category,
-            master_surface_ulpin, bhu_aadhaar_id, survey_number, village,
-            taluka, district, state, pincode, campus_anchor_lat, campus_anchor_lon,
-            total_plot_area_sqm
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            state_parcel_id_puid, tenure_type, khata_number, master_surface_ulpin,
+            survey_number, village, taluka, district, state, pincode,
+            campus_anchor_lat, campus_anchor_lon, total_plot_area_sqm,
+            master_surface_reference_note
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             payload.institution_id, payload.institution_name, payload.institution_code, payload.category,
-            payload.master_surface_ulpin, payload.bhu_aadhaar_id, payload.survey_number, payload.village,
-            payload.taluka, payload.district, payload.state, payload.pincode, payload.campus_anchor_lat,
-            payload.campus_anchor_lon, payload.total_plot_area_sqm
+            payload.state_parcel_id_puid, payload.tenure_type, payload.khata_number, payload.master_surface_ulpin,
+            payload.survey_number, payload.village, payload.taluka, payload.district, payload.state,
+            payload.pincode, payload.campus_anchor_lat, payload.campus_anchor_lon, payload.total_plot_area_sqm,
+            payload.master_surface_reference_note
         ))
         conn.commit()
     except Exception as e:
