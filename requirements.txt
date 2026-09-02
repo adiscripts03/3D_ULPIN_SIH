@@ -10,6 +10,12 @@ pandas>=2.0.0
 geopandas>=1.0.0
 pyproj>=3.6.0
 
+# Enterprise FastAPI Backend & REST APIs
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+
 # Computer Vision & OCR (for scanned drawings / imagery)
 opencv-python>=4.8.0
 pytesseract>=0.3.10
