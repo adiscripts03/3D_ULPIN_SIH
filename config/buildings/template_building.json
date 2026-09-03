@@ -1,0 +1,54 @@
+{
+  "building_id": "ADMIN01",
+  "building_name": "Admin Building",
+  "category": "Administrative Complex",
+  "description": "Administrative offices and institute leadership.",
+  "floor_plan_source": "data/admin_floor_plan.pdf",
+  "floor_plan_type": "auto",
+  "anchor_lat": 20.9495556,
+  "anchor_lon": 79.0294722,
+  "total_floors": 3,
+  "floor_pitch_m": 3.6,
+  "room_clear_height_m": 3.0,
+  "slab_thickness_m": 0.6,
+  "scale_x": 0.1,
+  "x_offset_cad": 0.0,
+  "flip_horizontal": false,
+  "room_type_rules": [
+    {
+      "rule_id": "r_offices",
+      "label_pattern": "(OFFICE|A0|DEAN|DIRECTOR).*",
+      "type": "OFFICE",
+      "is_common": false,
+      "depth_m": 6.0
+    },
+    {
+      "rule_id": "r_conference",
+      "label_pattern": ".*(CONF|MEETING|BOARD).*",
+      "type": "CONF",
+      "is_common": true,
+      "depth_m": 8.0
+    },
+    {
+      "rule_id": "r_washroom",
+      "label_pattern": ".*(WASH|TOILET|RESTROOM).*",
+      "type": "WASH",
+      "is_common": true,
+      "prop_id_prefix": "WASHROOM"
+    },
+    {
+      "rule_id": "r_stairs",
+      "label_pattern": ".*(STAIR|STR|LIFT|ELEVATOR).*",
+      "type": "STR",
+      "is_common": true,
+      "prop_id_prefix": "STAIRS"
+    },
+    {
+      "rule_id": "r_corridor",
+      "label_pattern": ".*(CORR|HALLWAY|PASSAGE).*",
+      "type": "CORR",
+      "is_common": true,
+      "prop_id_prefix": "CORRIDOR_"
+    }
+  ]
+}

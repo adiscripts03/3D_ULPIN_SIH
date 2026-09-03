@@ -3,9 +3,11 @@ from typing import List, Optional
 import os
 from backend.database import get_db_connection
 from backend.models import BuildingResponse, BuildingCreate
-from backend.services.cadastral_engine import extract_units_from_cad
+from backend.services.cadastral_config import BuildingConfig
+from backend.services.cadastral_engine import run_cadastral_pipeline
 
 router = APIRouter(prefix="/api/buildings", tags=["Buildings & Towers"])
+
 
 @router.get("", response_model=List[BuildingResponse])
 def list_buildings(institution_id: Optional[str] = Query(None, description="Filter by institution")):
@@ -81,61 +83,36 @@ def ingest_building_cad(building_id: str):
 
     cursor.execute("SELECT * FROM buildings WHERE building_id = ?", (building_id,))
     b = cursor.fetchone()
+    conn.close()
     if not b:
-        conn.close()
         raise HTTPException(status_code=404, detail="Building not found")
 
-    pdf_source = b["floor_plan_source"]
-    if not pdf_source or not os.path.exists(pdf_source):
-        # Fallback to default CAD PDF if not set
-        pdf_source = "data/floor_plan.pdf"
-
     try:
-        parcels = extract_units_from_cad(
-            pdf_path=pdf_source,
-            building_id=b["building_id"],
-            total_floors=b["total_floors"],
-            floor_pitch_m=b["floor_pitch_m"],
-            clear_height_m=b["room_clear_height_m"],
-            slab_thickness_m=b["slab_thickness_m"],
-            anchor_lat=b["anchor_lat"],
-            anchor_lon=b["anchor_lon"]
-        )
+        try:
+            config = BuildingConfig.load_by_building_id(building_id)
+        except FileNotFoundError:
+            pdf_source = b["floor_plan_source"] if b["floor_plan_source"] and os.path.exists(b["floor_plan_source"]) else "data/floor_plan.pdf"
+            config = BuildingConfig(
+                building_id=b["building_id"],
+                building_name=b["building_name"],
+                category=b["category"],
+                total_floors=b["total_floors"],
+                floor_pitch_m=b["floor_pitch_m"],
+                room_clear_height_m=b["room_clear_height_m"],
+                slab_thickness_m=b["slab_thickness_m"],
+                anchor_lat=b["anchor_lat"],
+                anchor_lon=b["anchor_lon"],
+                floor_plan_source=pdf_source
+            )
 
-        # Upsert into parcels_3d
-        for p in parcels:
-            cursor.execute("""
-            INSERT INTO parcels_3d (
-                ulpin_3d, building_id, floor, room_id, type, z_min, z_max, z_slab_top,
-                real_width_m, real_depth_m, real_x_start_m, real_x_end_m, real_y_start_m, real_y_end_m,
-                latitude, longitude, carpet_area_sqm, gross_volume_cbm, undivided_share_land, is_common_property
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(ulpin_3d) DO UPDATE SET
-                floor=excluded.floor, room_id=excluded.room_id, type=excluded.type,
-                z_min=excluded.z_min, z_max=excluded.z_max, z_slab_top=excluded.z_slab_top,
-                real_width_m=excluded.real_width_m, real_depth_m=excluded.real_depth_m,
-                real_x_start_m=excluded.real_x_start_m, real_x_end_m=excluded.real_x_end_m,
-                real_y_start_m=excluded.real_y_start_m, real_y_end_m=excluded.real_y_end_m,
-                latitude=excluded.latitude, longitude=excluded.longitude,
-                carpet_area_sqm=excluded.carpet_area_sqm, gross_volume_cbm=excluded.gross_volume_cbm,
-                undivided_share_land=excluded.undivided_share_land, is_common_property=excluded.is_common_property
-            """, (
-                p["ulpin_3d"], p["building_id"], p["floor"], p["room_id"], p["type"],
-                p["z_min"], p["z_max"], p["z_slab_top"], p["real_width_m"], p["real_depth_m"],
-                p["real_x_start_m"], p["real_x_end_m"], p["real_y_start_m"], p["real_y_end_m"],
-                p["latitude"], p["longitude"], p["carpet_area_sqm"], p["gross_volume_cbm"],
-                p["undivided_share_land"], 1 if p["is_common_property"] else 0
-            ))
-
-        conn.commit()
-        conn.close()
-
+        res = run_cadastral_pipeline(config, persist_db=True)
         return {
             "success": True,
-            "message": f"✅ Successfully ingested {len(parcels)} 3D parcels for building {building_id}.",
-            "total_parcels": len(parcels),
-            "building_id": building_id
+            "message": f"✅ Successfully ingested {res['total_units']} 3D parcels for building {building_id}.",
+            "total_parcels": res["total_units"],
+            "building_id": building_id,
+            "extraction_method": res["extraction_method"]
         }
     except Exception as e:
-        conn.close()
         raise HTTPException(status_code=500, detail=str(e))
+

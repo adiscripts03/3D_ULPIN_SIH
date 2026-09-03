@@ -29,32 +29,46 @@ const BUILDING_METADATA = {
   }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupEventListeners);
+} else {
   setupEventListeners();
-});
+}
 
 function setupEventListeners() {
-  document.getElementById("floor-filter").addEventListener("change", () => {
-    filter3DView();
-  });
+  const floorFilter = document.getElementById("floor-filter");
+  if (floorFilter) {
+    floorFilter.addEventListener("change", () => { filter3DView(); });
+  }
 
-  document.getElementById("type-filter").addEventListener("change", () => {
-    filter3DView();
-  });
+  const typeFilter = document.getElementById("type-filter");
+  if (typeFilter) {
+    typeFilter.addEventListener("change", () => { filter3DView(); });
+  }
 
-  // Action Buttons
-  document.getElementById("btn-open-actions").addEventListener("click", () => {
-    openModal();
-  });
+  const btnOpenActions = document.getElementById("btn-open-actions");
+  if (btnOpenActions) {
+    btnOpenActions.addEventListener("click", () => { openModal(); });
+  }
 
-  document.getElementById("btn-close-modal").addEventListener("click", () => {
-    closeModal();
-  });
+  const btnCloseModal = document.getElementById("btn-close-modal");
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener("click", () => { closeModal(); });
+  }
 
-  document.getElementById("btn-run-topology").addEventListener("click", () => {
-    runTopologyAudit();
-  });
+  const btnRunTopology = document.getElementById("btn-run-topology");
+  if (btnRunTopology) {
+    btnRunTopology.addEventListener("click", () => { runTopologyAudit(); });
+  }
+
+  const btnIngest = document.getElementById("btn-open-ingestion");
+  if (btnIngest) {
+    btnIngest.addEventListener("click", () => {
+      openIngestModal(currentBuildingId || "ADMIN01");
+    });
+  }
 }
+
 
 // Step 1 -> Step 2: Execute Mahabhulekh Search
 async function executeSearch() {
@@ -119,11 +133,16 @@ function renderPendingNotice(buildingId, meta) {
       <div class="pending-notice-desc">
         ${meta.desc}
         <br><br>
-        <strong>Cadastral Model:</strong> 3D digital twin model is currently loaded for Hostel Block A.
+        <strong>Cadastral Status:</strong> Survey data pending ingestion. Field surveyors can upload CAD drawings or scanned plans through the Ingestion Engine.
       </div>
-      <button class="btn btn-primary" onclick="selectBuilding('HSTL01')">
-        ← View Hostel Block A (700 3D Units)
-      </button>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+        <button class="btn btn-primary" onclick="openIngestModal('${buildingId}')" style="background:#0284c7;">
+          ⚡ Ingest & Survey ${meta.name}
+        </button>
+        <button class="btn btn-subtle" onclick="selectBuilding('HSTL01')">
+          ← View Hostel Block A (700 Units)
+        </button>
+      </div>
     </div>
   `;
 
@@ -138,6 +157,7 @@ function renderPendingNotice(buildingId, meta) {
   document.getElementById("insp-occupants-list").innerHTML = `<span style="color:#8c857b;font-size:0.75rem;">Institutional Estate</span>`;
   document.getElementById("insp-liens-list").innerHTML = `<span style="color:#8c857b;font-size:0.75rem;">Clear Title</span>`;
 }
+
 
 // Load System-Wide Analytics
 async function loadAnalytics() {
@@ -506,3 +526,307 @@ function showToast(message, type = "info") {
   container.appendChild(toast);
   setTimeout(() => { toast.remove(); }, 3500);
 }
+
+// ========================================================
+// FIELD SURVEYOR INGESTION PORTAL LOGIC
+// ========================================================
+let lastIngestedBuildingId = null;
+
+function openIngestModal(buildingId = "ADMIN01") {
+  const modal = document.getElementById("ingest-modal");
+  if (!modal) return;
+
+  // Sanitize buildingId if called from event handler
+  if (typeof buildingId !== "string" || !buildingId) {
+    buildingId = (typeof currentBuildingId === "string" && currentBuildingId) ? currentBuildingId : "ADMIN01";
+  }
+
+  const meta = BUILDING_METADATA[buildingId] || { name: `${buildingId} Building`, desc: "" };
+  
+  const bldgIdInput = document.getElementById("inp-ingest-bldg-id");
+  const bldgNameInput = document.getElementById("inp-ingest-bldg-name");
+  const categorySel = document.getElementById("sel-ingest-category");
+  const floorsInput = document.getElementById("inp-ingest-floors");
+
+  if (bldgIdInput) bldgIdInput.value = buildingId;
+  if (bldgNameInput) bldgNameInput.value = meta.name;
+  
+  if (buildingId.includes("ACAD")) {
+    if (categorySel) categorySel.value = "Academic & Laboratories";
+    if (floorsInput) floorsInput.value = "4";
+    loadRulePreset("academic");
+  } else if (buildingId.includes("RES")) {
+    if (categorySel) categorySel.value = "Staff & Faculty Housing";
+    if (floorsInput) floorsInput.value = "10";
+    loadRulePreset("residential");
+  } else if (buildingId.includes("HSTL")) {
+    if (categorySel) categorySel.value = "Student Housing / Residential Stratum";
+    if (floorsInput) floorsInput.value = "10";
+    loadRulePreset("hostel");
+  } else {
+    if (categorySel) categorySel.value = "Administrative Complex";
+    if (floorsInput) floorsInput.value = "3";
+    loadRulePreset("admin");
+  }
+
+  // Reset results
+  const resultsBox = document.getElementById("ingest-results-box");
+  if (resultsBox) resultsBox.style.display = "none";
+  modal.style.display = "flex";
+}
+
+
+function closeIngestModal() {
+  const modal = document.getElementById("ingest-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function handlePlanFileSelected(input) {
+  const badge = document.getElementById("badge-plan-file");
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    badge.innerText = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+function handlePointCloudFileSelected(input) {
+  const badge = document.getElementById("badge-pointcloud-file");
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    badge.innerText = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+function addRuleRow(pattern = "", type = "ROOM", depth = "", isCommon = false) {
+  const tbody = document.getElementById("rules-table-body");
+  const tr = document.createElement("tr");
+  tr.className = "rule-row";
+  tr.innerHTML = `
+    <td><input type="text" class="rule-pattern" value="${pattern}" placeholder="e.g. OFFICE* or A0[1-6]"></td>
+    <td>
+      <select class="rule-type">
+        <option value="OFFICE" ${type === "OFFICE" ? "selected" : ""}>OFFICE (Private Stratum)</option>
+        <option value="CLASS" ${type === "CLASS" ? "selected" : ""}>CLASS (Classroom)</option>
+        <option value="LAB" ${type === "LAB" ? "selected" : ""}>LAB (Laboratory)</option>
+        <option value="4S" ${type === "4S" ? "selected" : ""}>4S (4-Seater Res)</option>
+        <option value="2S" ${type === "2S" ? "selected" : ""}>2S (2-Seater Res)</option>
+        <option value="3BHK" ${type === "3BHK" ? "selected" : ""}>3BHK (Residential)</option>
+        <option value="2BHK" ${type === "2BHK" ? "selected" : ""}>2BHK (Residential)</option>
+        <option value="HALL" ${type === "HALL" ? "selected" : ""}>HALL (Common Hall)</option>
+        <option value="CONF" ${type === "CONF" ? "selected" : ""}>CONF (Conference)</option>
+        <option value="WASH" ${type === "WASH" ? "selected" : ""}>WASH (Common Washroom)</option>
+        <option value="STR" ${type === "STR" ? "selected" : ""}>STR (Common Stairs)</option>
+        <option value="LIFT" ${type === "LIFT" ? "selected" : ""}>LIFT (Vertical Core)</option>
+        <option value="CORR" ${type === "CORR" ? "selected" : ""}>CORR (Corridor)</option>
+        <option value="BRIDGE" ${type === "BRIDGE" ? "selected" : ""}>BRIDGE (Skybridge)</option>
+        <option value="UTIL" ${type === "UTIL" ? "selected" : ""}>UTIL (Utility / Plant)</option>
+      </select>
+    </td>
+    <td><input type="number" step="0.5" class="rule-depth" value="${depth}" placeholder="Auto (m)"></td>
+    <td style="text-align:center;"><input type="checkbox" class="rule-common" ${isCommon ? "checked" : ""}></td>
+    <td style="text-align:center;"><button type="button" class="btn-del-rule" onclick="deleteRuleRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function deleteRuleRow(btn) {
+  const tr = btn.closest("tr");
+  if (tr) tr.remove();
+}
+
+function loadRulePreset(presetName) {
+  const tbody = document.getElementById("rules-table-body");
+  tbody.innerHTML = "";
+
+  if (presetName === "admin") {
+    addRuleRow(".*(OFFICE|DIR|DEAN|REG).*", "OFFICE", "6.0", false);
+    addRuleRow(".*(CONF|MEET|BOARD).*", "CONF", "8.0", true);
+    addRuleRow(".*(WASH|TOILET).*", "WASH", "3.0", true);
+    addRuleRow(".*(STR|STAIR|LIFT).*", "STR", "4.0", true);
+    addRuleRow(".*(CORR|LOBBY).*", "CORR", "2.5", true);
+  } else if (presetName === "academic") {
+    addRuleRow(".*(CLASS|CR|LH|AUDI).*", "CLASS", "9.0", false);
+    addRuleRow(".*(LAB|WORKSHOP).*", "LAB", "12.0", false);
+    addRuleRow(".*(FACULTY|DEPT).*", "OFFICE", "5.0", false);
+    addRuleRow(".*(WASH|TOILET).*", "WASH", "3.5", true);
+    addRuleRow(".*(STR|LIFT).*", "STR", "4.5", true);
+    addRuleRow(".*(CORR).*", "CORR", "3.0", true);
+  } else if (presetName === "hostel") {
+    addRuleRow("^X0[1-6]$", "4S", "8.8", false);
+    addRuleRow("^X(0[7-9]|1[0-8])$", "2S", "4.0", false);
+    addRuleRow(".*(Common|Hall).*", "HALL", "17.2", true);
+    addRuleRow(".*Washroom.*", "WASH", "6.4", true);
+    addRuleRow(".*(Stairs|LIFT).*", "STR", "4.8", true);
+    addRuleRow(".*", "CORR", "2.0", true);
+  } else if (presetName === "residential") {
+    addRuleRow(".*(3BHK|FLAT_A).*", "3BHK", "12.0", false);
+    addRuleRow(".*(2BHK|FLAT_B).*", "2BHK", "9.5", false);
+    addRuleRow(".*(LIFT|ELEVATOR).*", "LIFT", "3.0", true);
+    addRuleRow(".*(STR|STAIR).*", "STR", "4.0", true);
+    addRuleRow(".*(LOBBY|CORR).*", "CORR", "2.5", true);
+  }
+}
+
+async function submitIngestionPipeline() {
+  const bldgId = document.getElementById("inp-ingest-bldg-id").value.trim().toUpperCase();
+  const bldgName = document.getElementById("inp-ingest-bldg-name").value.trim();
+  const category = document.getElementById("sel-ingest-category").value;
+  const lat = parseFloat(document.getElementById("inp-ingest-lat").value);
+  const lon = parseFloat(document.getElementById("inp-ingest-lon").value);
+  const floors = parseInt(document.getElementById("inp-ingest-floors").value, 10);
+  const pitch = parseFloat(document.getElementById("inp-ingest-pitch").value);
+  const clearHeight = parseFloat(document.getElementById("inp-ingest-clear-height").value);
+  const slab = parseFloat(document.getElementById("inp-ingest-slab").value);
+  const flip = document.getElementById("sel-ingest-flip").value === "true";
+
+  const fileInput = document.getElementById("file-ingest-plan");
+  const pcInput = document.getElementById("file-ingest-pointcloud");
+
+  if (!bldgId || !bldgName) {
+    showToast("Please provide a Building ID and Name", "error");
+    return;
+  }
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    showToast("Please select a floor plan file (PDF or scanned image)", "error");
+    return;
+  }
+
+  // Collect rules from table
+  const ruleRows = document.querySelectorAll("#rules-table-body .rule-row");
+  const rules = [];
+  ruleRows.forEach((row, idx) => {
+    const pattern = row.querySelector(".rule-pattern").value.trim();
+    const type = row.querySelector(".rule-type").value;
+    const depth = parseFloat(row.querySelector(".rule-depth").value) || null;
+    const isCommon = row.querySelector(".rule-common").checked;
+    if (pattern || type) {
+      rules.push({
+        rule_id: `rule_${idx + 1}`,
+        label_pattern: pattern || ".*",
+        type: type,
+        depth_m: depth,
+        is_common: isCommon
+      });
+    }
+  });
+
+  const submitBtn = document.getElementById("btn-run-ingestion");
+  const origText = submitBtn.innerText;
+  submitBtn.disabled = true;
+  submitBtn.innerText = "⏳ Executing Cadastral Ingestion Pipeline...";
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+  if (pcInput.files && pcInput.files.length > 0) {
+    formData.append("point_cloud", pcInput.files[0]);
+  }
+  formData.append("building_id", bldgId);
+  formData.append("building_name", bldgName);
+  formData.append("category", category);
+  formData.append("total_floors", floors);
+  formData.append("floor_pitch_m", pitch);
+  formData.append("room_clear_height_m", clearHeight);
+  formData.append("slab_thickness_m", slab);
+  formData.append("anchor_lat", lat);
+  formData.append("anchor_lon", lon);
+  formData.append("flip_horizontal", flip);
+  formData.append("rules_json", JSON.stringify(rules));
+
+  try {
+    const res = await fetch("/api/ingestion/run", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || "Ingestion pipeline failed.");
+    }
+
+    lastIngestedBuildingId = bldgId;
+
+    // Update Local Metadata & Status
+    BUILDING_METADATA[bldgId] = {
+      name: bldgName,
+      status: "completed",
+      desc: `${floors} Floors · ${data.total_units} 3D Volumetric Units · Carpet Area ${data.total_carpet_area_sqm} m²`
+    };
+
+    // Render Diagnostics Results Box
+    const resultsBox = document.getElementById("ingest-results-box");
+    resultsBox.style.display = "flex";
+
+    document.getElementById("diag-status-icon").innerText = data.topology_validation.passed ? "✅" : "⚠️";
+    document.getElementById("diag-title").innerText = `${bldgName} (${bldgId}) Ingested Successfully`;
+    document.getElementById("diag-method-badge").innerText = data.extraction_method.toUpperCase();
+
+    document.getElementById("diag-total-parcels").innerText = data.total_units;
+    document.getElementById("diag-res-parcels").innerText = data.residential_units;
+    document.getElementById("diag-common-parcels").innerText = data.common_units;
+    document.getElementById("diag-carpet-area").innerText = `${data.total_carpet_area_sqm.toLocaleString()} m²`;
+
+    // Point Cloud Banner
+    const droneBanner = document.getElementById("diag-drone-banner");
+    const pc = data.point_cloud_audit;
+    if (pc && pc.status === "VERIFIED") {
+      droneBanner.style.display = "block";
+      droneBanner.style.background = "#f0fdf4";
+      droneBanner.style.color = "#166534";
+      droneBanner.style.borderColor = "#bbf7d0";
+      droneBanner.innerHTML = `<strong>🚁 Drone ML Height Validation:</strong> ${pc.message}`;
+    } else if (pc && pc.status === "DISCREPANCY_FLAGGED") {
+      droneBanner.style.display = "block";
+      droneBanner.style.background = "#fffbeb";
+      droneBanner.style.color = "#92400e";
+      droneBanner.style.borderColor = "#fde68a";
+      droneBanner.innerHTML = `<strong>⚠️ Drone ML Height Validation:</strong> ${pc.message}`;
+    } else {
+      droneBanner.style.display = "none";
+    }
+
+    // OCR Warnings
+    const ocrContainer = document.getElementById("diag-ocr-container");
+    const ocrList = document.getElementById("diag-ocr-list");
+    ocrList.innerHTML = "";
+
+    if (data.ocr_diagnostics && data.ocr_diagnostics.low_confidence_units_count > 0) {
+      ocrContainer.style.display = "block";
+      data.ocr_diagnostics.low_confidence_warnings.slice(0, 4).forEach(w => {
+        const item = document.createElement("div");
+        item.className = "ocr-warning-item";
+        item.innerText = `• Unit [${w.unit_id}]: Confidence ${w.confidence_score}% (OCR: "${w.ocr_text || 'Blank'}") — ${w.warning}`;
+        ocrList.appendChild(item);
+      });
+    } else {
+      ocrContainer.style.display = "none";
+    }
+
+    showToast(`Successfully ingested ${data.total_units} 3D parcels for ${bldgName}!`, "success");
+    await loadAnalytics();
+
+  } catch (err) {
+    showToast(err.message, "error");
+    alert(`Ingestion Error: ${err.message}`);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = origText;
+  }
+}
+
+async function inspectIngestedBuilding() {
+  if (lastIngestedBuildingId) {
+    closeIngestModal();
+    // Switch to search or results view if not already visible
+    document.getElementById("view-search").style.display = "none";
+    document.getElementById("view-results").style.display = "flex";
+    await selectBuilding(lastIngestedBuildingId);
+  }
+}
+

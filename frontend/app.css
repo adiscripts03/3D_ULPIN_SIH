@@ -479,11 +479,12 @@ header {
   width: 100vw;
   height: 100vh;
   background: rgba(28, 25, 23, 0.5);
-  z-index: 100;
+  z-index: 10000;
   display: none;
   align-items: center;
   justify-content: center;
 }
+
 
 .modal-box {
   background: var(--bg-card);
@@ -607,3 +608,248 @@ header {
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================================
+   FIELD SURVEYOR INGESTION PORTAL STYLES
+   ======================================================== */
+.ingest-modal-box {
+  background: var(--bg-card);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 880px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-strong);
+  overflow: hidden;
+}
+
+.ingest-modal-header {
+  padding: 14px 20px;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #1e293b;
+}
+
+.ingest-modal-header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ingest-modal-header p {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.ingest-modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg-card);
+}
+
+.ingest-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 14px;
+  background: var(--bg-card-subtle);
+}
+
+.ingest-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.file-dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-dropzone:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+
+.file-dropzone input[type="file"] {
+  display: none;
+}
+
+.file-dropzone-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.file-selected-badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: #0284c7;
+  font-weight: 600;
+  background: #e0f2fe;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Preset & Rule Table */
+.presets-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-preset {
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-preset:hover {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+}
+
+.rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.rules-table th {
+  background: #f1f5f9;
+  text-align: left;
+  padding: 6px 8px;
+  font-size: 0.7rem;
+  color: #475569;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.rules-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+}
+
+.rules-table input, .rules-table select {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 0.74rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+}
+
+.btn-del-rule {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-del-rule:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* Diagnostics Output Box */
+.diag-box {
+  border-radius: 6px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diag-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.diag-metric-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.diag-metric-label {
+  font-size: 0.68rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.diag-metric-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.ocr-warning-item {
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: #92400e;
+  border-radius: 0 4px 4px 0;
+  margin-top: 4px;
+}
+

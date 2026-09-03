@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D ULPIN Cadastral Management System | DoLR</title>
-  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/app.css?v=2.2">
   <script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
 </head>
 <body>
@@ -21,10 +21,13 @@
     </div>
     <div class="header-right">
       <a href="/programmes/3d-ulpin" class="btn btn-subtle">3D Schemes Page</a>
-      <button class="btn btn-subtle" id="btn-run-topology">Topology Audit</button>
-      <button class="btn btn-primary" id="btn-open-actions">+ Cadastral Actions</button>
+      <button class="btn btn-subtle" id="btn-run-topology" onclick="runTopologyAudit()">Topology Audit</button>
+      <button class="btn btn-primary" id="btn-open-ingestion" onclick="openIngestModal(currentBuildingId)" style="background:#0284c7;color:white;font-weight:600;">⚡ Field Ingestion</button>
+      <button class="btn btn-primary" id="btn-open-actions" onclick="openModal()">+ Cadastral Actions</button>
     </div>
   </header>
+
+
 
   <!-- ========================================================
        PAGE 1: MAHABHULEKH CADASTRAL SEARCH VIEW
@@ -365,9 +368,216 @@
     </div>
   </div>
 
+  <!-- ========================================================
+       FIELD SURVEYOR INGESTION MODAL
+       ======================================================== -->
+  <div class="modal-backdrop" id="ingest-modal" style="display:none;">
+    <div class="ingest-modal-box">
+      
+      <!-- Modal Header -->
+      <div class="ingest-modal-header">
+        <div>
+          <h3>🏛️ Field Surveyor 3D Ingestion Portal</h3>
+          <p>Zero-Friction Cadastral Ingestion Engine | Vector CAD & CV/OCR Dual Extraction | Drone Height ML Validation</p>
+        </div>
+        <button onclick="closeIngestModal()" style="background:none;border:none;color:#94a3b8;font-size:1.3rem;cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="ingest-modal-body">
+        
+        <!-- Section 1: Building Identity & Spatial Anchors -->
+        <div class="ingest-section">
+          <div class="ingest-section-title">
+            <span>1. Building Profile & Cadastral Reference</span>
+            <span style="font-size:0.7rem;color:var(--text-muted);">ISO 19152 LADM v2 Spatial Unit</span>
+          </div>
+          
+          <div class="form-grid-3">
+            <div class="field-group">
+              <label>Building ID (Code)</label>
+              <input type="text" id="inp-ingest-bldg-id" placeholder="e.g. ADMIN01, ACAD01, RES01" value="ADMIN01">
+            </div>
+            <div class="field-group">
+              <label>Building Name</label>
+              <input type="text" id="inp-ingest-bldg-name" placeholder="e.g. Admin Building" value="Admin Building">
+            </div>
+            <div class="field-group">
+              <label>Category</label>
+              <select id="sel-ingest-category">
+                <option value="Administrative Complex">Administrative Complex</option>
+                <option value="Academic & Laboratories">Academic & Laboratories</option>
+                <option value="Student Housing / Residential Stratum">Student Housing</option>
+                <option value="Staff & Faculty Housing">Staff & Faculty Housing</option>
+                <option value="Commercial / Multi-Use Stratum">Commercial / Multi-Use</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-4" style="margin-top:10px;">
+            <div class="field-group">
+              <label>Anchor Latitude</label>
+              <input type="number" step="0.0000001" id="inp-ingest-lat" value="20.9495556">
+            </div>
+            <div class="field-group">
+              <label>Anchor Longitude</label>
+              <input type="number" step="0.0000001" id="inp-ingest-lon" value="79.0294722">
+            </div>
+            <div class="field-group">
+              <label>Total Floors</label>
+              <input type="number" min="1" max="100" id="inp-ingest-floors" value="3">
+            </div>
+            <div class="field-group">
+              <label>Floor Pitch (m)</label>
+              <input type="number" step="0.1" id="inp-ingest-pitch" value="3.4">
+            </div>
+          </div>
+
+          <div class="form-grid-3" style="margin-top:10px;">
+            <div class="field-group">
+              <label>Room Clear Height (m)</label>
+              <input type="number" step="0.1" id="inp-ingest-clear-height" value="2.9">
+            </div>
+            <div class="field-group">
+              <label>Slab / Beam Thickness (m)</label>
+              <input type="number" step="0.1" id="inp-ingest-slab" value="0.5">
+            </div>
+            <div class="field-group">
+              <label>Facade Alignment (Flip X)</label>
+              <select id="sel-ingest-flip">
+                <option value="false">Standard Orientation</option>
+                <option value="true">Flipped (Entrance Facade)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: File Uploads (Floor Plan + Drone Point Cloud) -->
+        <div class="ingest-section">
+          <div class="ingest-section-title">
+            <span>2. Floor Plan Drawing & Drone Photogrammetry Scan</span>
+            <span style="font-size:0.7rem;color:var(--text-muted);">Vector PDF / Scanned Image / Drone Point Cloud</span>
+          </div>
+
+          <div class="form-grid-2">
+            <!-- Floor Plan Dropzone -->
+            <div class="file-dropzone" onclick="document.getElementById('file-ingest-plan').click()">
+              <input type="file" id="file-ingest-plan" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp" onchange="handlePlanFileSelected(this)">
+              <div style="font-size:1.8rem;margin-bottom:4px;">📐</div>
+              <div class="file-dropzone-label">Upload Floor Plan Drawing</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Vector CAD PDF or Scanned Photo (Auto CV/OCR)</div>
+              <div id="badge-plan-file" class="file-selected-badge" style="display:none;"></div>
+            </div>
+
+            <!-- Point Cloud Dropzone -->
+            <div class="file-dropzone" onclick="document.getElementById('file-ingest-pointcloud').click()">
+              <input type="file" id="file-ingest-pointcloud" accept=".ply,.xyz,.las,.laz,.obj" onchange="handlePointCloudFileSelected(this)">
+              <div style="font-size:1.8rem;margin-bottom:4px;">🚁</div>
+              <div class="file-dropzone-label">Drone Photogrammetry Scan (Optional)</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Point Cloud (.ply, .xyz, .las) for ML Height Audit</div>
+              <div id="badge-pointcloud-file" class="file-selected-badge" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Room Classification Rules -->
+        <div class="ingest-section">
+          <div class="ingest-section-title">
+            <span>3. Intelligent Room Classification Rules</span>
+            <button class="btn btn-subtle" onclick="addRuleRow()" style="padding:2px 8px;font-size:0.72rem;">+ Add Rule</button>
+          </div>
+
+          <!-- Presets -->
+          <div class="presets-bar">
+            <span style="font-size:0.7rem;font-weight:700;color:var(--text-muted);">Quick Presets:</span>
+            <button class="btn-preset" onclick="loadRulePreset('admin')">🏢 Administrative Complex</button>
+            <button class="btn-preset" onclick="loadRulePreset('academic')">🎓 Academic & Labs</button>
+            <button class="btn-preset" onclick="loadRulePreset('hostel')">🏠 Student Residence / Hostel</button>
+            <button class="btn-preset" onclick="loadRulePreset('residential')">🏘️ Staff Housing</button>
+          </div>
+
+          <!-- Rules Table -->
+          <table class="rules-table">
+            <thead>
+              <tr>
+                <th style="width:30%;">Label Regex / Pattern</th>
+                <th style="width:25%;">Cadastral Zone Type</th>
+                <th style="width:20%;">Depth (m)</th>
+                <th style="width:15%;">Common Core?</th>
+                <th style="width:10%;"></th>
+              </tr>
+            </thead>
+            <tbody id="rules-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 4: Diagnostics Results Box (Hidden until execution) -->
+        <div id="ingest-results-box" class="diag-box" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-weight:700;font-size:0.85rem;color:#0f172a;display:flex;align-items:center;gap:6px;">
+              <span id="diag-status-icon">✅</span>
+              <span id="diag-title">3D Cadastral Ingestion Completed</span>
+            </div>
+            <span id="diag-method-badge" class="stat-chip" style="background:#e0f2fe;color:#0369a1;font-weight:700;">VECTOR CAD</span>
+          </div>
+
+          <div class="diag-metric-grid">
+            <div class="diag-metric-card">
+              <div class="diag-metric-label">3D Parcels Generated</div>
+              <div class="diag-metric-value" id="diag-total-parcels" style="color:#0284c7;">0</div>
+            </div>
+            <div class="diag-metric-card">
+              <div class="diag-metric-label">Private Units</div>
+              <div class="diag-metric-value" id="diag-res-parcels">0</div>
+            </div>
+            <div class="diag-metric-card">
+              <div class="diag-metric-label">Common Core Units</div>
+              <div class="diag-metric-value" id="diag-common-parcels">0</div>
+            </div>
+            <div class="diag-metric-card">
+              <div class="diag-metric-label">Total Carpet Area</div>
+              <div class="diag-metric-value" id="diag-carpet-area">0 m²</div>
+            </div>
+          </div>
+
+          <!-- ML Drone Audit Banner -->
+          <div id="diag-drone-banner" style="background:#f0fdf4;border:1px solid #bbf7d0;padding:8px 12px;border-radius:4px;font-size:0.74rem;color:#166534;">
+            <!-- Injected via JS -->
+          </div>
+
+          <!-- OCR Warnings Container -->
+          <div id="diag-ocr-container" style="display:none;">
+            <div style="font-weight:700;font-size:0.72rem;color:#92400e;margin-top:6px;">⚠️ OCR Confidence Review Flags:</div>
+            <div id="diag-ocr-list"></div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+            <button class="btn btn-primary" id="btn-view-ingested-3d" onclick="inspectIngestedBuilding()" style="background:#15803d;">
+              👁️ Inspect Ingested 3D Digital Twin
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer Action Bar -->
+      <div class="modal-action-bar">
+        <button class="btn btn-subtle" onclick="closeIngestModal()">Cancel</button>
+        <button class="btn btn-primary" id="btn-run-ingestion" onclick="submitIngestionPipeline()" style="background:#0284c7;">
+          🚀 Generate 3D Model & Validate
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=2.2"></script>
 </body>
 </html>
+
+

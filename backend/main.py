@@ -12,7 +12,8 @@ from backend.routers import (
     rights,
     encumbrances,
     topology,
-    analytics
+    analytics,
+    ingestion
 )
 
 app = FastAPI(
@@ -41,6 +42,8 @@ app.include_router(rights.router)
 app.include_router(encumbrances.router)
 app.include_router(topology.router)
 app.include_router(analytics.router)
+app.include_router(ingestion.router)
+
 
 # Mount frontend static files
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
