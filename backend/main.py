@@ -13,7 +13,8 @@ from backend.routers import (
     encumbrances,
     topology,
     analytics,
-    ingestion
+    ingestion,
+    ai_pipeline
 )
 
 app = FastAPI(
@@ -43,6 +44,7 @@ app.include_router(encumbrances.router)
 app.include_router(topology.router)
 app.include_router(analytics.router)
 app.include_router(ingestion.router)
+app.include_router(ai_pipeline.router, prefix="/api/ai", tags=["AI Pipeline"])
 
 
 # Mount frontend static files

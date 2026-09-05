@@ -184,7 +184,9 @@
           
           <!-- Controls for Surveyed Building -->
           <div id="surveyed-controls" style="display:flex;gap:8px;align-items:center;">
-            <select id="floor-filter" style="font-size:0.74rem;padding:3px 8px;">
+            <input type="text" id="custom-building-id" placeholder="Search ID (e.g. TEST_001)" style="font-size:0.74rem;padding:3px 8px;border:1px solid #dfdcce;border-radius:4px;width:150px;">
+            <button class="btn btn-subtle" onclick="loadCustomBuilding()" style="padding:2px 8px;font-size:0.75rem;background:#e0f2fe;color:#0369a1;">Visualize AI Twin</button>
+            <select id="floor-filter" style="font-size:0.74rem;padding:3px 8px;margin-left:8px;">
               <option value="ALL">All Floors (10 Floors)</option>
             </select>
             <select id="type-filter" style="font-size:0.74rem;padding:3px 8px;">
@@ -381,6 +383,14 @@
           <p>Zero-Friction Cadastral Ingestion Engine | Vector CAD & CV/OCR Dual Extraction | Drone Height ML Validation</p>
         </div>
         <button onclick="closeIngestModal()" style="background:none;border:none;color:#94a3b8;font-size:1.3rem;cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Microphone AI Bar -->
+      <div style="background:#fef2f2; padding:8px 16px; border-bottom:1px solid #fecaca; display:flex; align-items:center; gap:12px;">
+         <button id="btn-voice-ai" onclick="startVoiceAI()" style="background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            🎙️ AI Voice Architect
+         </button>
+         <span id="voice-ai-status" style="font-size:0.75rem;color:#b91c1c;font-weight:600;">Hold to dictate building layout (e.g., "Create a 5-floor residential apartment...").</span>
       </div>
 
       <!-- Modal Body -->

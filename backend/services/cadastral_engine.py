@@ -45,7 +45,8 @@ def detect_source_type(file_path: str) -> str:
 def run_cadastral_pipeline(
     config: BuildingConfig,
     persist_db: bool = True,
-    output_csv_dir: str = "data"
+    output_csv_dir: str = "data",
+    override_base_units: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
     """
     Generalized End-to-End Cadastral Ingestion Engine:
@@ -68,7 +69,10 @@ def run_cadastral_pipeline(
 
     # 2. Extract Base Floor Units
     ocr_diagnostics = None
-    if resolved_type == "vector_pdf":
+    if override_base_units is not None:
+        base_units = override_base_units
+        resolved_type = "ai_pipeline_override"
+    elif resolved_type == "vector_pdf":
         base_units = extract_units_from_vector_pdf(config)
     else:
         base_units, ocr_diagnostics = extract_units_from_scanned_image(config)
