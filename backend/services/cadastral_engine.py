@@ -175,19 +175,27 @@ def run_cadastral_pipeline(
         half_d = float(r["real_depth_m"]) / 2.0
         y_c = float(r["real_y_center_m"])
         poly = box(float(r["real_x_start_m"]), y_c - half_d, float(r["real_x_end_m"]), y_c + half_d)
-        floor_groups[fl].append({"ulpin": r["ulpin_3d"], "z_min": r["z_min"], "z_max": r["z_max"], "poly": poly})
+        floor_groups[fl].append({"ulpin": r["ulpin_3d"], "z_min": r["z_min"], "z_max": r["z_max"], "poly": poly, "ptype": r["type"]})
+
+    # Common-space types that intentionally overlap (ISO 19152 LADM shared access)
+    EXEMPT_TYPES = {'CORR', 'STR', 'LIFT', 'HALL', 'LOBBY', 'BRIDGE'}
 
     collisions = []
     for fl, group in floor_groups.items():
         for i in range(len(group)):
             for j in range(i + 1, len(group)):
                 p1, p2 = group[i], group[j]
+                # Skip if either parcel is a shared-access common space
+                if p1.get("ptype", "") in EXEMPT_TYPES or p2.get("ptype", "") in EXEMPT_TYPES:
+                    continue
                 if (min(p1["z_max"], p2["z_max"]) - max(p1["z_min"], p2["z_min"])) > 0:
                     inter = p1["poly"].intersection(p2["poly"])
-                    if inter.area > 0.01:
+                    # 0.05m² tolerance for boundary wall thickness adjacency
+                    if inter.area > 0.05:
                         collisions.append((p1["ulpin"], p2["ulpin"], round(inter.area, 3)))
 
     topology_passed = len(dup_errors) == 0 and len(collisions) == 0
+
 
     # 5. Point Cloud Photogrammetry ML Validation
     point_cloud_audit = validate_point_cloud_against_config(

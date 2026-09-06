@@ -21,6 +21,12 @@ opencv-python>=4.8.0
 pytesseract>=0.3.10
 Pillow>=10.0.0
 
+# Deep Learning — YOLO Room & Exterior Detection (YOLOv8)
+ultralytics>=8.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
 # Drone Photogrammetry & ML Height Validation
 scikit-learn>=1.6.0
 scipy>=1.13.0
