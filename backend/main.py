@@ -90,6 +90,14 @@ def twin_view():
         return FileResponse(twin_html)
     return RedirectResponse(url="/")
 
+@app.get("/ai-pipeline", include_in_schema=False)
+@app.get("/ai", include_in_schema=False)
+def ai_pipeline_view():
+    ai_html = os.path.join(frontend_dir, "ai_pipeline.html")
+    if os.path.exists(ai_html):
+        return FileResponse(ai_html)
+    return RedirectResponse(url="/app")
+
 @app.get("/health", tags=["System Health"])
 def health_check():
     return {
