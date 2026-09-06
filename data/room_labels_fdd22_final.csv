@@ -1,0 +1,2 @@
+ulpin_3d,room_id,building_id,floor,type,z_min,z_max,z_slab_top,real_width_m,real_depth_m,real_x_start_m,real_x_end_m,real_y_start_m,real_y_end_m,real_y_center_m,latitude,longitude
+FDD22-F1-101-ROOM,101,FDD22,1,ROOM,0.0,6.0,5.3,98.21,61.3,5.31,103.52,10.35,71.65,41.0,20.94918649,79.02999612
