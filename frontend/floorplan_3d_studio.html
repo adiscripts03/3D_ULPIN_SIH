@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Floor Plan → 3D Architecture & Ownership Cadastre Studio | 3D ULPIN</title>
+  <meta name="description" content="AI Testing Studio for converting 2D floor plans into 3D architecture, distinguishing distinct flats and owners in multi-storey buildings using ResNet34-UNet and FloorPlanTo3D." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <!-- Three.js + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-card: #1e293b;
+      --surface-hover: #27354f;
+      --border: #24344d;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation */
+    header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .brand-text h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .nav-btn {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: var(--surface-card);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
+    }
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 18px 24px;
+      max-width: 1800px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Purpose Notice Banner */
+    .hero-banner {
+      background: linear-gradient(90deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .hero-banner-content h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-banner-content p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      max-width: 950px;
+      line-height: 1.45;
+    }
+    .model-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+    .chip.highlight {
+      border-color: var(--accent);
+      color: #93c5fd;
+    }
+
+    /* Grid Layout: Controls & Workspace */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr 420px;
+      gap: 16px;
+      align-items: stretch;
+      min-height: 720px;
+    }
+
+    @media (max-width: 1450px) {
+      .studio-grid { grid-template-columns: 300px 1fr; }
+      .right-cadastre-panel { grid-column: 1 / -1; }
+    }
+    @media (max-width: 1024px) {
+      .studio-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Panel Card */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .panel-header {
+      padding: 12px 16px;
+      background: rgba(30, 41, 59, 0.5);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Left Control Panel Elements */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(30, 41, 59, 0.25);
+      transition: all 0.2s;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.08);
+    }
+    .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .upload-text {
+      font-size: 0.84rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .upload-hint {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .form-label span.val {
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .form-input {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+
+    .range-slider {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .sample-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .sample-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 0.74rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+    }
+    .sample-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .sample-btn.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent);
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+    }
+
+    /* Center Visualizer Area */
+    .center-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .view-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover {
+      background: var(--surface-card);
+      color: var(--text);
+    }
+    .tab-btn.active {
+      background: var(--surface-card);
+      color: var(--accent);
+      border-color: var(--border);
+    }
+
+    .viewer-container {
+      position: relative;
+      flex: 1;
+      min-height: 540px;
+      background: #060913;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #three-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Blank Screen Empty State Overlay */
+    .empty-state-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 10;
+      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.85) 0%, rgba(6, 9, 19, 0.95) 70%);
+      pointer-events: none;
+      text-align: center;
+      padding: 24px;
+    }
+    .empty-state-icon {
+      font-size: 3.2rem;
+      color: var(--accent);
+      animation: float-icon 3s ease-in-out infinite alternate;
+    }
+    @keyframes float-icon { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+    .empty-state-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .empty-state-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.5;
+    }
+
+    /* 3D Floating Toolbar */
+    .viewer-toolbar {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      display: none;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 6px;
+      border-radius: 8px;
+      z-index: 20;
+    }
+    .tool-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tool-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Floor Selector Bar */
+    .floor-selector-bar {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      right: 14px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .floor-pills {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+    }
+    .floor-pill {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .floor-pill:hover { background: var(--surface-hover); color: var(--text); }
+    .floor-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* 2D Prediction Side-by-side */
+    .preview-2d-container {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      background: var(--surface);
+      z-index: 15;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .preview-2d-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      height: 100%;
+    }
+    .preview-box {
+      background: #060913;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-box-header {
+      padding: 8px 12px;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .preview-box-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+    }
+    .preview-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* Right Cadastre & Flat Owner Table */
+    .cadastre-table-container {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #080d18;
+    }
+    .cadastre-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.74rem;
+      text-align: left;
+    }
+    .cadastre-table th {
+      position: sticky;
+      top: 0;
+      background: var(--surface-card);
+      padding: 8px 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      z-index: 2;
+    }
+    .cadastre-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(36, 52, 77, 0.4);
+      color: var(--text);
+    }
+    .cadastre-table tr:hover {
+      background: rgba(59, 130, 246, 0.08);
+      cursor: pointer;
+    }
+    .cadastre-table tr.selected {
+      background: rgba(59, 130, 246, 0.22);
+      outline: 1px solid var(--accent);
+    }
+    .color-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Metric Badges */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .metric-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      font-family: var(--font-mono);
+    }
+    .metric-label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Export buttons */
+    .export-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .export-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .export-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(59, 130, 246, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <a href="/frontend/index.html" class="brand">
+      <div class="brand-badge">🏛️</div>
+      <div class="brand-text">
+        <h1>Floor Plan → 3D Architecture & Ownership Cadastre</h1>
+        <p>National 3D ULPIN Platform (PS 26011)</p>
+      </div>
+    </a>
+    <div class="header-links">
+      <span class="status-pill">
+        <span class="dot"></span>
+        <span id="model-status-text">ResNet34-UNet (Apple MPS Active)</span>
+      </span>
+      <a href="/frontend/ai_pipeline.html" class="nav-btn">AI Pipeline</a>
+      <a href="/frontend/3d_cadastre_portal.html" class="nav-btn">3D Cadastre Portal</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Purpose Banner -->
+    <section class="hero-banner">
+      <div class="hero-banner-content">
+        <h2>🏢 Multi-Storey Residential Ownership Decomposition</h2>
+        <p>
+          Upload your 2D residential floor plan (PNG, JPG, PDF, SVG). The neural network isolates the structural walls, cuts out common corridors, and identifies the <strong>distinct flats belonging to different owners across every floor</strong> of the multi-storey building with statutory 3D ULPIN identifiers.
+        </p>
+      </div>
+      <div class="model-chips">
+        <span class="chip highlight">Model 1: ResNet34-UNet (CubiCasa5k)</span>
+        <span class="chip highlight">Model 2: FloorPlanTo3D Geometry</span>
+        <span class="chip">Standard: ISO 19152 LADM v2</span>
+      </div>
+    </section>
+
+    <!-- Studio Grid -->
+    <div class="studio-grid">
+
+      <!-- LEFT: Upload & Controls -->
+      <aside class="panel">
+        <div class="panel-header">
+          <h3>⚙️ Upload & Parameters</h3>
+        </div>
+        <div class="panel-body">
+          
+          <!-- Upload Area -->
+          <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div class="upload-icon">📂</div>
+            <div class="upload-text" id="upload-label">Upload Floor Plan</div>
+            <div class="upload-hint">Drag & drop PNG, JPG, PDF, SVG</div>
+            <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.webp,.pdf,.svg" style="display: none;" onchange="handleFileSelect(event)" />
+          </div>
+
+          <!-- Verified Real Samples -->
+          <div class="form-group">
+            <label class="form-label">Or Pick a Verified Sample Plan:</label>
+            <div class="sample-btn-group">
+              <button class="sample-btn" onclick="selectSample('sample_2bhk', this)">🏢 2BHK Apartment</button>
+              <button class="sample-btn" onclick="selectSample('sample_multi_unit', this)">🏘️ Multi-Flat Floor</button>
+              <button class="sample-btn" onclick="selectSample('sample_cad', this)">📐 CAD Blueprint</button>
+              <button class="sample-btn" onclick="selectSample('sample_hostel_pdf', this)">📄 Hostel Wing (PDF)</button>
+              <button class="sample-btn" onclick="selectSample('sample_fdd22', this)">🏙️ Tower Block</button>
+            </div>
+          </div>
+
+          <!-- Building Name -->
+          <div class="form-group">
+            <label class="form-label">Building Name:</label>
+            <input type="text" id="building-name-input" class="form-input" value="Surya Heights Residency" />
+          </div>
+
+          <!-- Multi-Storey Floors Slider -->
+          <div class="form-group">
+            <label class="form-label">
+              Total Floors (Multi-Storey):
+              <span class="val" id="floors-display">5 Floors</span>
+            </label>
+            <input type="range" id="floors-slider" class="range-slider" min="1" max="15" value="5" oninput="onFloorSliderChange(this.value)" />
+          </div>
+
+          <!-- Wall Height Slider -->
+          <div class="form-group">
+            <label class="form-label">
+              Ceiling / Wall Height:
+              <span class="val" id="height-display">3.0 m</span>
+            </label>
+            <input type="range" id="height-slider" class="range-slider" min="1.5" max="5.0" step="0.1" value="3.0" oninput="onHeightSliderChange(this.value)" />
+          </div>
+
+          <!-- Run Button -->
+          <button class="primary-btn" id="generate-btn" onclick="triggerPipeline()">
+            <span>🚀</span> Generate 3D Architecture & Flats
+          </button>
+
+          <!-- Status Indicator -->
+          <div style="font-size: 0.72rem; color: var(--text-dim); text-align: center;" id="status-hint">
+            Ready to process uploaded floor plan
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- CENTER: 3D Architecture Canvas -->
+      <section class="panel center-workspace">
+        <div class="tab-bar">
+          <div class="view-tabs">
+            <button class="tab-btn active" id="tab-3d" onclick="switchView('3d')">🏛️ 3D Architecture Model</button>
+            <button class="tab-btn" id="tab-2d" onclick="switchView('2d')">📐 2D Prediction & Blueprint</button>
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-dim);" id="view-status-msg">
+            Left Click: Orbit • Right Click: Pan • Scroll: Zoom
+          </div>
+        </div>
+
+        <div class="viewer-container" id="viewer-container">
+          
+          <!-- Blank Screen Initial State Overlay -->
+          <div class="empty-state-overlay" id="empty-state">
+            <div class="empty-state-icon">🏛️</div>
+            <div class="empty-state-title">3D Architecture Workspace</div>
+            <div class="empty-state-desc">
+              Upload a 2D floor plan on the left or select a sample plan above.<br/>
+              The neural network will build the 3D building and detect distinct flats belonging to different owners.
+            </div>
+          </div>
+
+          <!-- Loading Spinner Overlay -->
+          <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <div style="font-size: 0.85rem; font-weight: 600; color: #93c5fd;" id="loading-text">
+              Running ResNet34-UNet Inference & Extracting Flats...
+            </div>
+          </div>
+
+          <!-- Three.js Canvas -->
+          <canvas id="three-canvas"></canvas>
+
+          <!-- 3D Toolbar (Shown once loaded) -->
+          <div class="viewer-toolbar" id="viewer-toolbar">
+            <button class="tool-btn active" id="btn-mode-owners" onclick="toggleColorMode('owners')">🎨 Owner Colors</button>
+            <button class="tool-btn" id="btn-mode-arch" onclick="toggleColorMode('arch')">🏢 Solid White</button>
+            <button class="tool-btn" id="btn-xray" onclick="toggleXRay()">🩻 X-Ray</button>
+            <button class="tool-btn" onclick="resetCamera()">🔄 Reset View</button>
+          </div>
+
+          <!-- Floor Filter Bar (Shown once loaded) -->
+          <div class="floor-selector-bar" id="floor-bar">
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Floor Filter:</span>
+            <div class="floor-pills" id="floor-pills">
+              <button class="floor-pill active" onclick="filterFloor('all', this)">All Floors</button>
+            </div>
+            <span style="font-size: 0.7rem; color: var(--text-dim);" id="floor-count-label">5 Storeys</span>
+          </div>
+
+          <!-- 2D Prediction Side-by-side Overlay -->
+          <div class="preview-2d-container" id="preview-2d">
+            <div class="preview-2d-grid">
+              <div class="preview-box">
+                <div class="preview-box-header">
+                  <span>UPLOADED 2D FLOOR PLAN</span>
+                  <span id="orig-res-label">--</span>
+                </div>
+                <div class="preview-box-body">
+                  <img id="orig-plan-img" class="preview-img" alt="Floor Plan" />
+                </div>
+              </div>
+              <div class="preview-box">
+                <div class="preview-box-header">
+                  <span>RESNET34-UNET SEGMENTATION</span>
+                  <span>Walls & Openings</span>
+                </div>
+                <div class="preview-box-body">
+                  <img id="seg-mask-img" class="preview-img" alt="Segmentation" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- RIGHT: Flat Ownership Cadastre -->
+      <aside class="panel right-cadastre-panel">
+        <div class="panel-header">
+          <h3>🏷️ Flat Ownership Cadastre</h3>
+          <span style="font-size: 0.7rem; color: var(--text-dim);" id="flat-total-badge">-- Units</span>
+        </div>
+        <div class="panel-body">
+
+          <!-- Key Metrics -->
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-value" id="stat-flats">--</div>
+              <div class="metric-label">Total Flats</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="stat-area">-- m²</div>
+              <div class="metric-label">Carpet Area</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="stat-volume">-- m³</div>
+              <div class="metric-label">Air Volume</div>
+            </div>
+          </div>
+
+          <!-- Flat Owners Table -->
+          <div class="form-group" style="flex: 1; min-height: 280px; display: flex; flex-direction: column;">
+            <label class="form-label">Click a Flat to Highlight Owner's Unit in 3D:</label>
+            <div class="cadastre-table-container">
+              <table class="cadastre-table">
+                <thead>
+                  <tr>
+                    <th>Flat #</th>
+                    <th>Owner Name</th>
+                    <th>Floor</th>
+                    <th>Area (m²)</th>
+                    <th>3D ULPIN</th>
+                  </tr>
+                </thead>
+                <tbody id="cadastre-table-body">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
+                      No floor plan loaded yet.<br/>Upload a floor plan on the left to detect flats and owners.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Export Actions -->
+          <div class="form-group">
+            <label class="form-label">Export 3D Model & Cadastre:</label>
+            <div class="export-row">
+              <button class="export-btn" onclick="downloadExport('obj')">
+                <span>📥</span> Download .OBJ
+              </button>
+              <button class="export-btn" onclick="downloadExport('unity')">
+                <span>🎮</span> Unity JSON
+              </button>
+            </div>
+            <button class="export-btn" style="margin-top: 6px;" onclick="downloadExport('cadastre')">
+              <span>📄</span> Download 3D ULPIN Ownership Registry
+            </button>
+          </div>
+
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <script>
+    // State
+    let currentSessionId = null;
+    let currentPipelineResult = null;
+    let selectedSampleId = null;
+    let activeColorMode = "owners"; // "owners" or "arch"
+    let isXRay = false;
+    let selectedFlatUlpin = null;
+
+    // Three.js State
+    let scene, camera, renderer, controls;
+    let planGroup, underlayMesh;
+    let flatMeshes = [];
+    let wallMeshes = [];
+
+    const TARGET_PLAN_SIZE = 14.0; // World units
+    let currentScale = 1.0;
+    let currentCx = 0;
+    let currentCy = 0;
+
+    // Initialize on load with BLANK state
+    window.addEventListener("DOMContentLoaded", () => {
+      initThree();
+      checkModelStatus();
+      // DO NOT call loadSample here - keep it blank as requested!
+    });
+
+    function initThree() {
+      const container = document.getElementById("viewer-container");
+      const canvas = document.getElementById("three-canvas");
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x060913);
+
+      camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(22, 26, 32);
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      controls = new THREE.OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.maxPolarAngle = Math.PI / 2 - 0.02;
+
+      // Lights
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.65);
+      scene.add(hemi);
+
+      const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+      sun.position.set(25, 45, 20);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      scene.add(sun);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+      // Subtle Ground Grid
+      const grid = new THREE.GridHelper(60, 60, 0x1e293b, 0x0f172a);
+      grid.position.y = -0.005;
+      scene.add(grid);
+
+      planGroup = new THREE.Group();
+      scene.add(planGroup);
+
+      window.addEventListener("resize", onWindowResize);
+      animate();
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById("viewer-container");
+      if (!container || !renderer) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls) controls.update();
+      if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+
+    function resetCamera() {
+      camera.position.set(22, 26, 32);
+      controls.target.set(0, 3, 0);
+      controls.update();
+    }
+
+    async function checkModelStatus() {
+      try {
+        const res = await fetch("/api/ai/floorplan-3d/status");
+        const data = await res.json();
+        const pillText = document.getElementById("model-status-text");
+        if (data.resnet_unet && data.resnet_unet.available) {
+          pillText.textContent = `ResNet34-UNet (${data.resnet_unet.device.toUpperCase()} Active)`;
+        }
+      } catch (e) {
+        console.warn("Status error:", e);
+      }
+    }
+
+    function selectSample(sampleId, btn) {
+      selectedSampleId = sampleId;
+      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+      document.getElementById("upload-label").textContent = `Selected: ${btn.textContent.trim()}`;
+      executePipeline(sampleId);
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedSampleId = null;
+      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("upload-label").textContent = file.name;
+      executePipeline();
+    }
+
+    // Drag & Drop
+    const dropZone = document.getElementById("drop-zone");
+    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => { dropZone.classList.remove("dragover"); });
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        selectedSampleId = null;
+        document.getElementById("file-input").files = e.dataTransfer.files;
+        document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+        document.getElementById("upload-label").textContent = file.name;
+        executePipeline();
+      }
+    });
+
+    function triggerPipeline() {
+      executePipeline(selectedSampleId);
+    }
+
+    async function executePipeline(sampleIdToUse) {
+      const overlay = document.getElementById("loading-overlay");
+      overlay.style.display = "flex";
+      document.getElementById("loading-text").textContent = "Running ResNet34-UNet Inference & Extracting Flats...";
+
+      const formData = new FormData();
+      const fileInput = document.getElementById("file-input");
+      const sample = sampleIdToUse || selectedSampleId;
+
+      if (fileInput.files.length > 0 && !sample) {
+        formData.append("floor_plan", fileInput.files[0]);
+      } else if (sample) {
+        formData.append("sample_id", sample);
+      } else {
+        alert("Please choose a sample plan or upload a floor plan image first!");
+        overlay.style.display = "none";
+        return;
+      }
+
+      const buildingName = document.getElementById("building-name-input").value || "Surya Heights";
+      const floors = document.getElementById("floors-slider").value || 5;
+      const wallHeight = document.getElementById("height-slider").value || 3.0;
+
+      formData.append("building_name", buildingName);
+      formData.append("floors", floors);
+      formData.append("wall_height", wallHeight);
+
+      try {
+        const res = await fetch("/api/ai/floorplan-3d/generate", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Pipeline execution failed");
+        }
+
+        const data = await res.json();
+        currentPipelineResult = data;
+        currentSessionId = data.session_id;
+
+        // Hide empty state overlay now that we have real content
+        document.getElementById("empty-state").style.display = "none";
+        document.getElementById("viewer-toolbar").style.display = "flex";
+        document.getElementById("floor-bar").style.display = "flex";
+
+        renderStudio(data);
+      } catch (err) {
+        alert("Error: " + err.message);
+        console.error(err);
+      } finally {
+        overlay.style.display = "none";
+      }
+    }
+
+    // ── Build Accurate 3D Geometry ───────────────────────────────────────────
+    function buildShape(outer, holes, scale, cx, cy) {
+      const shape = new THREE.Shape();
+      outer.forEach(([x, y], i) => {
+        const sx = (x - cx) * scale;
+        const sy = -(y - cy) * scale; // Invert Y so 2D image coordinates match 3D world Z correctly
+        if (i === 0) shape.moveTo(sx, sy);
+        else shape.lineTo(sx, sy);
+      });
+      shape.closePath();
+
+      for (const hole of holes ?? []) {
+        const path = new THREE.Path();
+        hole.forEach(([hx, hy], i) => {
+          const sx = (hx - cx) * scale;
+          const sy = -(hy - cy) * scale;
+          if (i === 0) path.moveTo(sx, sy);
+          else path.lineTo(sx, sy);
+        });
+        path.closePath();
+        shape.holes.push(path);
+      }
+      return shape;
+    }
+
+    function renderStudio(data) {
+      // 1. Update Metrics
+      const bldg = data.building_summary || {};
+      const flats = data.flats_list || (data.architecture_3d && data.architecture_3d.flats_3d) || [];
+      const totalFlats = bldg.total_flats || flats.length;
+      const totalFloors = bldg.total_floors || (data.architecture_3d && data.architecture_3d.floors) || 5;
+
+      document.getElementById("stat-flats").textContent = totalFlats;
+      document.getElementById("stat-area").textContent = `${Math.round(bldg.carpet_area_total_sqm || 0)} m²`;
+      document.getElementById("stat-volume").textContent = `${Math.round(bldg.airspace_volume_total_m3 || 0)} m³`;
+      document.getElementById("flat-total-badge").textContent = `${totalFlats} Volumetric Units`;
+      document.getElementById("floor-count-label").textContent = `${totalFloors} Storeys`;
+
+      // 2. Floor Filter Pills
+      const pills = document.getElementById("floor-pills");
+      pills.innerHTML = `<button class="floor-pill active" onclick="filterFloor('all', this)">All Floors</button>`;
+      for (let f = 1; f <= totalFloors; f++) {
+        pills.innerHTML += `<button class="floor-pill" onclick="filterFloor(${f}, this)">Floor ${f}</button>`;
+      }
+
+      // 3. 2D Previews
+      if (data.input_image_b64) {
+        document.getElementById("orig-plan-img").src = "data:image/png;base64," + data.input_image_b64;
+        document.getElementById("seg-mask-img").src = "data:image/png;base64," + data.input_image_b64;
+        document.getElementById("orig-res-label").textContent = (data.pipeline_metadata && data.pipeline_metadata.resolution) || "--";
+      }
+
+      // 4. Cadastre Table
+      renderTable(flats);
+
+      // 5. Build 3D Architecture
+      build3D(data);
+    }
+
+    function renderTable(flats) {
+      const tbody = document.getElementById("cadastre-table-body");
+      tbody.innerHTML = "";
+
+      flats.forEach(f => {
+        const tr = document.createElement("tr");
+        tr.id = `row-${f.ulpin_3d}`;
+        tr.onclick = () => selectFlat(f.ulpin_3d);
+
+        tr.innerHTML = `
+          <td><span class="color-swatch" style="background: ${f.color};"></span><strong>${f.flat_number}</strong></td>
+          <td>${f.owner_name}</td>
+          <td>Fl ${f.floor_level}</td>
+          <td>${f.carpet_area_sqm} m²</td>
+          <td style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">${f.ulpin_3d.split('-').slice(-2).join('-')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function build3D(data) {
+      // Clear previous
+      while (planGroup.children.length > 0) {
+        const obj = planGroup.children[0];
+        if (obj.geometry) obj.geometry.dispose();
+        planGroup.remove(obj);
+      }
+      flatMeshes = [];
+      wallMeshes = [];
+
+      // Safe extraction of polygons and flats from any response schema
+      const bldg = data.building_summary || {};
+      const polygons = data.polygons || (data.preview_2d && data.preview_2d.raw_polygons) || {};
+      const allWalls = (polygons && polygons.wall) || (data.architecture_3d && data.architecture_3d.wall_polygons) || [];
+      const flatsList = data.flats_list || (data.architecture_3d && data.architecture_3d.flats_3d) || [];
+
+      const totalFloors = bldg.total_floors || (data.architecture_3d && data.architecture_3d.floors) || 5;
+      const wallHeight = data.wall_height_m || (data.architecture_3d && data.architecture_3d.wall_height_m) || 3.0;
+      const slabThickness = 0.25;
+      const floorPitch = wallHeight + slabThickness;
+
+      // Compute bounding box over walls to center the model
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      allWalls.forEach(p => {
+        (p.outer || []).forEach(([x, y]) => {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        });
+      });
+
+      // If walls didn't provide bounds, check flats
+      if (!isFinite(minX)) {
+        flatsList.forEach(f => {
+          (f.polygon || []).forEach(([x, y]) => {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          });
+        });
+      }
+
+      if (!isFinite(minX)) {
+        const cSize = (bldg.canvas_size) || (data.preview_2d && [data.preview_2d.width, data.preview_2d.height]) || [800, 600];
+        minX = 0; minY = 0;
+        maxX = cSize[0] || 800;
+        maxY = cSize[1] || 600;
+      }
+
+      const bw = Math.max(maxX - minX, 1);
+      const bh = Math.max(maxY - minY, 1);
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const scale = TARGET_PLAN_SIZE / Math.max(bw, bh);
+
+      currentScale = scale;
+      currentCx = cx;
+      currentCy = cy;
+
+      // 1. Blueprint Underlay on Ground Plane
+      if (data.input_image_b64) {
+        const img = new Image();
+        img.onload = () => {
+          const tex = new THREE.Texture(img);
+          tex.needsUpdate = true;
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.flipY = false;
+
+          const [W, H] = data.building_summary.canvas_size;
+          const planeGeom = new THREE.PlaneGeometry(W * scale, H * scale);
+          planeGeom.rotateX(-Math.PI / 2);
+          const planeMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.75, depthWrite: false });
+          underlayMesh = new THREE.Mesh(planeGeom, planeMat);
+          underlayMesh.position.set(0, 0.01, 0);
+          planGroup.add(underlayMesh);
+        };
+        img.src = "data:image/png;base64," + data.input_image_b64;
+      }
+
+      // Materials
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: 0xf1f5f9,
+        roughness: 0.6,
+        metalness: 0.05,
+        transparent: isXRay,
+        opacity: isXRay ? 0.35 : 1.0,
+      });
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.85 });
+
+      // Multi-Storey Stacking
+      for (let fl = 1; fl <= totalFloors; fl++) {
+        const floorBaseY = (fl - 1) * floorPitch;
+
+        // Concrete Floor Slab for this floor
+        const slabGeom = new THREE.BoxGeometry(bw * scale * 1.04, slabThickness, bh * scale * 1.04);
+        const slabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const slabMesh = new THREE.Mesh(slabGeom, slabMat);
+        slabMesh.position.set(0, floorBaseY + slabThickness / 2, 0);
+        slabMesh.receiveShadow = true;
+        slabMesh.userData = { floorLevel: fl, isSlab: true };
+        planGroup.add(slabMesh);
+
+        // Extrude Real Architectural Walls
+        allWalls.forEach(p => {
+          if ((p.outer || []).length < 3) return;
+          const shape = buildShape(p.outer, p.holes, scale, cx, cy);
+          const geom = new THREE.ExtrudeGeometry(shape, {
+            depth: wallHeight,
+            bevelEnabled: false,
+          });
+          const mesh = new THREE.Mesh(geom, wallMat);
+          mesh.rotation.x = -Math.PI / 2;
+          mesh.position.y = floorBaseY + slabThickness;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+
+          // Crisp edge crease lines
+          const edges = new THREE.EdgesGeometry(geom, 14);
+          mesh.add(new THREE.LineSegments(edges, edgeMat));
+
+          mesh.userData = { floorLevel: fl, isWall: true };
+          planGroup.add(mesh);
+          wallMeshes.push(mesh);
+        });
+
+        // Extrude Distinct Colored Floor Parcels for Flats on this Floor
+        const flatsOnThisFloor = data.flats_list.filter(f => f.floor_level === fl);
+        flatsOnThisFloor.forEach(flat => {
+          if (!flat.polygon || flat.polygon.length < 3) return;
+
+          const flatShape = buildShape(flat.polygon, [], scale, cx, cy);
+          const flatGeom = new THREE.ExtrudeGeometry(flatShape, {
+            depth: 0.08, // Thin floor slab tinting
+            bevelEnabled: false,
+          });
+
+          const parcelColor = new THREE.Color(flat.color);
+          const flatMat = new THREE.MeshStandardMaterial({
+            color: parcelColor,
+            roughness: 0.4,
+            metalness: 0.1,
+            transparent: true,
+            opacity: activeColorMode === "owners" ? 0.75 : 0.15,
+          });
+
+          const flatMesh = new THREE.Mesh(flatGeom, flatMat);
+          flatMesh.rotation.x = -Math.PI / 2;
+          flatMesh.position.y = floorBaseY + slabThickness + 0.02;
+
+          const flatEdges = new THREE.EdgesGeometry(flatGeom, 14);
+          flatMesh.add(new THREE.LineSegments(flatEdges, new THREE.LineBasicMaterial({ color: parcelColor, linewidth: 2 })));
+
+          flatMesh.userData = {
+            ulpin_3d: flat.ulpin_3d,
+            flat_number: flat.flat_number,
+            owner_name: flat.owner_name,
+            color: flat.color,
+            floorLevel: fl,
+            isFlat: true,
+          };
+
+          planGroup.add(flatMesh);
+          flatMeshes.push(flatMesh);
+        });
+      }
+
+      // Camera Focus on Building Center
+      const totalHeight = totalFloors * floorPitch;
+      controls.target.set(0, totalHeight / 2, 0);
+      camera.position.set(22, totalHeight + 12, 28);
+      controls.update();
+    }
+
+    // ── Interactive Highlights & Filters ──────────────────────────────────────
+    function selectFlat(ulpin) {
+      selectedFlatUlpin = ulpin;
+
+      document.querySelectorAll(".cadastre-table tr").forEach(r => r.classList.remove("selected"));
+      const row = document.getElementById(`row-${ulpin}`);
+      if (row) {
+        row.classList.add("selected");
+        row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      // Highlight in 3D
+      flatMeshes.forEach(m => {
+        if (m.userData.ulpin_3d === ulpin) {
+          m.material.opacity = 0.95;
+          m.material.emissive = new THREE.Color(m.userData.color);
+          m.material.emissiveIntensity = 0.5;
+        } else {
+          m.material.opacity = 0.25;
+          m.material.emissiveIntensity = 0.0;
+        }
+      });
+    }
+
+    function filterFloor(floor, btn) {
+      document.querySelectorAll(".floor-pill").forEach(p => p.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+
+      planGroup.children.forEach(obj => {
+        if (obj === underlayMesh) return;
+        const fl = obj.userData.floorLevel;
+        if (floor === "all" || fl == floor) {
+          obj.visible = true;
+        } else {
+          obj.visible = false;
+        }
+      });
+    }
+
+    function toggleColorMode(mode) {
+      activeColorMode = mode;
+      document.getElementById("btn-mode-owners").classList.toggle("active", mode === "owners");
+      document.getElementById("btn-mode-arch").classList.toggle("active", mode === "arch");
+
+      flatMeshes.forEach(m => {
+        if (mode === "owners") {
+          m.material.opacity = (selectedFlatUlpin && m.userData.ulpin_3d !== selectedFlatUlpin) ? 0.25 : 0.75;
+          m.material.color = new THREE.Color(m.userData.color);
+        } else {
+          m.material.opacity = 0.08;
+          m.material.color = new THREE.Color(0xffffff);
+        }
+      });
+    }
+
+    function toggleXRay() {
+      isXRay = !isXRay;
+      document.getElementById("btn-xray").classList.toggle("active", isXRay);
+      wallMeshes.forEach(m => {
+        m.material.transparent = true;
+        m.material.opacity = isXRay ? 0.25 : 1.0;
+      });
+    }
+
+    function onFloorSliderChange(val) {
+      document.getElementById("floors-display").textContent = `${val} Floors`;
+      if (currentPipelineResult) {
+        executePipeline();
+      }
+    }
+
+    function onHeightSliderChange(val) {
+      document.getElementById("height-display").textContent = `${val} m`;
+      if (currentPipelineResult) {
+        executePipeline();
+      }
+    }
+
+    function switchView(view) {
+      document.getElementById("tab-3d").classList.toggle("active", view === "3d");
+      document.getElementById("tab-2d").classList.toggle("active", view === "2d");
+
+      document.getElementById("three-canvas").style.display = view === "3d" ? "block" : "none";
+      document.getElementById("preview-2d").style.display = view === "2d" ? "block" : "none";
+    }
+
+    function downloadExport(type) {
+      if (!currentSessionId) {
+        alert("Please upload and generate a 3D building first!");
+        return;
+      }
+      if (type === "obj") {
+        window.location.href = `/api/ai/floorplan-3d/export-obj/${currentSessionId}`;
+      } else if (type === "unity") {
+        window.open(`/api/ai/floorplan-3d/export-unity/${currentSessionId}`, "_blank");
+      } else if (type === "cadastre") {
+        window.open(`/api/ai/floorplan-3d/export-cadastre/${currentSessionId}`, "_blank");
+      }
+    }
+  </script>
+</body>
+</html>

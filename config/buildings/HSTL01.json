@@ -7,7 +7,7 @@
   "floor_plan_type": "auto",
   "anchor_lat": 20.9495556,
   "anchor_lon": 79.0294722,
-  "total_floors": 10,
+  "total_floors": 1,
   "floor_pitch_m": 3.4,
   "room_clear_height_m": 2.9,
   "slab_thickness_m": 0.5,

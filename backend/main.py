@@ -96,7 +96,14 @@ def ai_pipeline_view():
     ai_html = os.path.join(frontend_dir, "ai_pipeline.html")
     if os.path.exists(ai_html):
         return FileResponse(ai_html)
-    return RedirectResponse(url="/app")
+@app.get("/studio", include_in_schema=False)
+@app.get("/floorplan-studio", include_in_schema=False)
+@app.get("/floorplan-3d", include_in_schema=False)
+def floorplan_studio_view():
+    studio_html = os.path.join(frontend_dir, "floorplan_3d_studio.html")
+    if os.path.exists(studio_html):
+        return FileResponse(studio_html)
+    return RedirectResponse(url="/ai-pipeline")
 
 @app.get("/health", tags=["System Health"])
 def health_check():
