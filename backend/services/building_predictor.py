@@ -103,14 +103,13 @@ def _generate_mesh_data(pipeline_result: Dict[str, Any]) -> Dict[str, Any]:
         conn.close()
 
         ZONING_COLORS = {
-            '4S': '#4CAF50', '2S': '#8BC34A',
-            '2BHK': '#4CAF50', '3BHK': '#66BB6A', '1BHK': '#A5D6A7',
-            'OFFICE': '#2196F3', 'CABIN': '#42A5F5',
-            'WARD': '#00BCD4', 'ICU': '#EF9A9A',
-            'WASH': '#26C6DA', 'CORR': '#5C6BC0', 'STR': '#78909C',
-            'LIFT': '#AB47BC', 'HALL': '#FF7043', 'LOBBY': '#FF7043',
-            'UTIL': '#9E9E9E', 'CONF': '#29B6F6', 'PARK': '#8D6E63',
-            'BRIDGE': '#FF8F00', 'MISC': '#BDBDBD',
+            'BEDRM': '#4CAF50', 'LIVRM': '#FF7043', 'KITCH': '#FFA726',
+            'WASH': '#00BCD4', 'BALC': '#AB47BC', 'STOR': '#8D6E63',
+            'STR': '#78909C', 'LIFT': '#607D8B', 'CORR': '#42A5F5',
+            'HALL': '#FFB300', 'LOBBY': '#FF7043', 'UTIL': '#8D6E63',
+            'PARK': '#546E7A', 'BRIDGE': '#9C27B0', 'OFFICE': '#2196F3',
+            'CABIN': '#42A5F5', 'CONF': '#29B6F6', 'WARD': '#00BCD4',
+            '4S': '#4CAF50', '2S': '#8BC34A', 'MISC': '#78909C'
         }
         STATUS_COLORS = {'vacant': '#4CAF50', 'partial': '#FFC107', 'full': '#F44336'}
 
@@ -224,7 +223,7 @@ def predict_building(
                     'classification_confidence': cls_result['classification']['confidence'],
                 }
 
-                building_type = text_params.get('building_type', 'hostel') if text_params else 'hostel'
+                building_type = text_params.get('building_type', 'residential') if text_params else 'residential'
 
                 if img_type in (IMAGE_TYPE_FLOOR_PLAN, 'unknown'):
                     # Use YOLO if available, else advanced OpenCV
@@ -322,9 +321,9 @@ def predict_building(
     base_units = fused_params.pop('floor_plan_base_units', None)
     if not base_units:
         base_units, synth_meta = synthesize_floor_plan(
-            rooms_per_floor=fused_params.get('rooms_per_floor', 20),
-            room_types=fused_params.get('room_types', ['4S', '2S']),
-            building_type=fused_params.get('building_type', 'hostel'),
+            rooms_per_floor=fused_params.get('rooms_per_floor', 8),
+            room_types=fused_params.get('room_types', ['LIVRM', 'BEDRM', 'KITCH', 'WASH', 'BALC']),
+            building_type=fused_params.get('building_type', 'residential'),
             building_width_m=fused_params.get('building_width_m'),
             building_depth_m=fused_params.get('building_depth_m'),
             residential_ratio=fused_params.get('residential_ratio', 0.80),
@@ -352,6 +351,20 @@ def predict_building(
 
         # Generate mesh data for 3D rendering
         mesh_data = _generate_mesh_data(pipeline_result) if persist_db else {}
+
+        # Generate full interactive 3D HTML twin
+        try:
+            import visualize_3d as viz
+            html_twin_path = f"frontend/{bid.lower()}_3d_twin.html"
+            viz.generate_3d_twin(
+                csv_file=pipeline_result["output_csv"],
+                output_html=html_twin_path,
+                building_title=f"<b>3D ULPIN Digital Twin — {fused_params.get('building_name', bid)} ({bid})</b><br><sup>{pipeline_result.get('total_units', 0)} Volumetric 3D Parcels across {pipeline_result.get('total_floors', 0)} Floors (Height: {pipeline_result.get('max_elevation_m', 0):.1f}m)</sup>"
+            )
+            report['twin_url'] = f"/static/{bid.lower()}_3d_twin.html"
+            shutil.copyfile(html_twin_path, "frontend/latest_3d_twin.html")
+        except Exception as ve:
+            report['twin_error'] = str(ve)
 
         report['stages']['cadastral_pipeline'] = {
             'status': 'ok',

@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from backend.services.building_predictor import predict_building
 from backend.services.image_analyzer import classify_image, IMAGE_TYPE_FLOOR_PLAN

@@ -20,6 +20,12 @@ from typing import Dict, Any, List, Tuple, Optional
 
 # ── Per-type room dimensions (width × depth in meters) ───────────────────────
 ROOM_SPEC: Dict[str, Dict[str, Any]] = {
+    # Residential Rooms
+    'LIVRM':  {'w': 6.0,  'd': 5.0,  'common': False},
+    'BEDRM':  {'w': 4.5,  'd': 4.0,  'common': False},
+    'KITCH':  {'w': 3.5,  'd': 3.0,  'common': False},
+    'BALC':   {'w': 3.0,  'd': 1.5,  'common': False},
+    'STOR':   {'w': 2.5,  'd': 2.0,  'common': False},
     # Hostel
     '4S':     {'w': 6.0,  'd': 5.0,  'common': False},
     '2S':     {'w': 4.5,  'd': 5.0,  'common': False},

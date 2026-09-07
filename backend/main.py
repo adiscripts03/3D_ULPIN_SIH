@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, FileResponse
+from typing import Optional
 import os
 
 from backend.database import init_db
@@ -14,7 +15,8 @@ from backend.routers import (
     topology,
     analytics,
     ingestion,
-    ai_pipeline
+    ai_pipeline,
+    generator
 )
 
 app = FastAPI(
@@ -45,6 +47,7 @@ app.include_router(topology.router)
 app.include_router(analytics.router)
 app.include_router(ingestion.router)
 app.include_router(ai_pipeline.router, prefix="/api/ai", tags=["AI Pipeline"])
+app.include_router(generator.router)
 
 
 # Mount frontend static files
@@ -84,8 +87,22 @@ def programme_view():
     return RedirectResponse(url="/app")
 
 @app.get("/twin", include_in_schema=False)
-def twin_view():
+def twin_view(building: Optional[str] = None):
+    if building:
+        custom_html = os.path.join(frontend_dir, f"{building.lower()}_3d_twin.html")
+        if os.path.exists(custom_html):
+            return FileResponse(custom_html)
+    latest_html = os.path.join(frontend_dir, "latest_3d_twin.html")
+    if os.path.exists(latest_html):
+        return FileResponse(latest_html)
     twin_html = os.path.join(frontend_dir, "hostel_3d_twin.html")
+    if os.path.exists(twin_html):
+        return FileResponse(twin_html)
+    return RedirectResponse(url="/")
+
+@app.get("/resplan", include_in_schema=False)
+def resplan_view():
+    twin_html = os.path.join(frontend_dir, "resplan_0000_3d_twin.html")
     if os.path.exists(twin_html):
         return FileResponse(twin_html)
     return RedirectResponse(url="/")
@@ -97,6 +114,14 @@ def ai_pipeline_view():
     if os.path.exists(ai_html):
         return FileResponse(ai_html)
     return RedirectResponse(url="/app")
+
+@app.get("/generate", include_in_schema=False)
+@app.get("/generator", include_in_schema=False)
+def generator_view():
+    gen_html = os.path.join(frontend_dir, "simple_generator.html")
+    if os.path.exists(gen_html):
+        return FileResponse(gen_html)
+    return RedirectResponse(url="/")
 
 @app.get("/health", tags=["System Health"])
 def health_check():

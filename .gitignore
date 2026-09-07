@@ -1,15 +1,134 @@
-# Virtual environment
-ulpin_env/
-.env
-env/
-venv/
-
-# Python cache & build files
+# ==============================================================================
+# Python & Environment
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# OS files
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+ulpin_env/
+env.bak/
+venv.bak/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Testing & Linting
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ==============================================================================
+# Large Datasets & Model Weights (>100MB or binary weights)
+# ==============================================================================
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.weights
+*.bin
+*.safetensors
+data/resplan/*.pkl
+data/resplan/*.pickle
+
+# ==============================================================================
+# Runtime Uploads & Temporary Ingestion Storage
+# ==============================================================================
+data/uploads/*
+!data/uploads/.gitkeep
+data/ai_uploads/*
+!data/ai_uploads/.gitkeep
+
+# Generated test & dynamically built 3D ULPIN CSV files
+data/room_labels_bldg_*
+data/room_labels_resplan_*
+data/room_labels_test_*
+data/room_labels_plan_*
+data/room_labels_pred_*
+data/room_labels_ai_*
+data/room_labels_restest*
+data/room_labels_clge_test*
+data/room_labels_final_test*
+data/room_labels_res_dim_test*
+
+# ==============================================================================
+# Dynamically Generated 3D Twin HTML Files
+# ==============================================================================
+frontend/latest_3d_twin.html
+frontend/bldg_*_3d_twin.html
+frontend/resplan_*_3d_twin.html
+frontend/test_*_3d_twin.html
+frontend/plan_*_3d_twin.html
+frontend/pred_*_3d_twin.html
+frontend/ai_*_3d_twin.html
+frontend/res_dim_test_3d_twin.html
+frontend/*_placeholder.json
+
+# ==============================================================================
+# Scratch, Debug, and Local Development Scripts
+# ==============================================================================
+scratch/
+temp/
+tmp/
+*.tmp
+*.temp
+*.log
+logs/
+
+# ==============================================================================
+# Operating System & IDE Files
+# ==============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# IDEs & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace

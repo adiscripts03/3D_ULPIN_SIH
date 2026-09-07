@@ -241,13 +241,13 @@ async def get_building_mesh(building_id: str):
             raise HTTPException(status_code=404, detail=f"Building {building_id} not found.")
 
         ZONING_COLORS = {
-            '4S': '#4CAF50', '2S': '#8BC34A',
-            '2BHK': '#4CAF50', '3BHK': '#66BB6A', '1BHK': '#A5D6A7',
-            'OFFICE': '#2196F3', 'CABIN': '#42A5F5',
-            'WARD': '#00BCD4', 'ICU': '#EF9A9A',
-            'WASH': '#26C6DA', 'CORR': '#5C6BC0', 'STR': '#78909C',
-            'LIFT': '#AB47BC', 'HALL': '#FF7043', 'LOBBY': '#FF7043',
-            'UTIL': '#9E9E9E', 'CONF': '#29B6F6', 'PARK': '#8D6E63',
+            'BEDRM': '#4CAF50', 'LIVRM': '#FF7043', 'KITCH': '#FFA726',
+            'WASH': '#00BCD4', 'BALC': '#AB47BC', 'STOR': '#8D6E63',
+            'STR': '#78909C', 'LIFT': '#607D8B', 'CORR': '#42A5F5',
+            'HALL': '#FFB300', 'LOBBY': '#FF7043', 'UTIL': '#8D6E63',
+            'PARK': '#546E7A', 'BRIDGE': '#9C27B0', 'OFFICE': '#2196F3',
+            'CABIN': '#42A5F5', 'CONF': '#29B6F6', 'WARD': '#00BCD4',
+            '4S': '#4CAF50', '2S': '#8BC34A', 'MISC': '#78909C'
         }
 
         parcels = []
@@ -267,3 +267,161 @@ async def get_building_mesh(building_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/ingest-dataset")
+async def ingest_dataset_plan(
+    plan_index: Optional[int] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    building_id: Optional[str] = Form(None),
+    building_name: Optional[str] = Form(None),
+    total_floors: int = Form(4),
+    floor_pitch_m: float = Form(3.0),
+    room_clear_height_m: float = Form(2.6),
+    anchor_lat: float = Form(20.9495556),
+    anchor_lon: float = Form(79.0294722),
+):
+    """
+    Ingest a plan directly from the ResPlan dataset (by index) or by uploading
+    a .pkl / .json / .geojson floor plan file.
+    """
+    try:
+        from parse_resplan import get_plan, extract_base_units
+        from backend.services.cadastral_config import BuildingConfig
+        from backend.services.cadastral_engine import run_cadastral_pipeline
+        from backend.services.building_predictor import _generate_mesh_data
+
+        plan = None
+        base_units = None
+        bid = (building_id or "").strip().upper()
+
+        if file and file.filename:
+            ext = os.path.splitext(file.filename)[1].lower()
+            fd, temp_path = tempfile.mkstemp(suffix=ext, dir=UPLOAD_DIR)
+            with os.fdopen(fd, 'wb') as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            if ext == ".pkl":
+                import pickle
+                with open(temp_path, "rb") as fh:
+                    pkl_data = pickle.load(fh)
+                if isinstance(pkl_data, list):
+                    plan = pkl_data[plan_index or 0]
+                elif isinstance(pkl_data, dict):
+                    plan = pkl_data
+            elif ext in (".json", ".geojson"):
+                import json
+                with open(temp_path, "r", encoding="utf-8") as fh:
+                    raw_json = json.load(fh)
+                if isinstance(raw_json, list):
+                    plan = raw_json[plan_index or 0]
+                elif isinstance(raw_json, dict):
+                    plan = raw_json
+
+            elif ext in (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff"):
+                import cv2
+                from backend.services.advanced_cv_pipeline import extract_rooms_advanced
+                img = cv2.imread(temp_path)
+                if img is not None:
+                    base_units, _ = extract_rooms_advanced(img, building_type="residential")
+                    if base_units:
+                        plan = {"id": os.path.basename(file.filename), "net_area": sum(u.get('real_width_m', 0) * u.get('real_depth_m', 0) for u in base_units)}
+
+            elif ext == ".pdf":
+                config_temp = BuildingConfig(
+                    building_id=bid or "TMP_PDF",
+                    building_name=building_name or "Uploaded Floor Plan",
+                    floor_plan_source=temp_path,
+                    total_floors=total_floors,
+                    floor_pitch_m=floor_pitch_m,
+                    room_clear_height_m=room_clear_height_m
+                )
+                from backend.services.vector_extractor import extract_units_from_vector_pdf
+                base_units = extract_units_from_vector_pdf(config_temp)
+                if base_units:
+                    plan = {"id": os.path.basename(file.filename), "net_area": sum(u.get('real_width_m', 0) * u.get('real_depth_m', 0) for u in base_units)}
+
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+
+        if plan is None:
+            # Fall back to dataset file
+            pkl_path = "data/resplan/ResPlan.pkl"
+            if not os.path.exists(pkl_path):
+                raise HTTPException(status_code=400, detail="ResPlan.pkl not found at data/resplan/ResPlan.pkl.")
+            idx = plan_index if plan_index is not None else 0
+            plan = get_plan(pkl_path, idx)
+            if not bid:
+                bid = f"RESPLAN_{idx:04d}"
+
+        if not bid:
+            bid = "RESPLAN_AUTO"
+
+        bname = building_name or f"Residential Building {bid}"
+        if not base_units:
+            base_units = extract_base_units(plan)
+
+        config = BuildingConfig(
+            building_id=bid,
+            building_name=bname,
+            category="Residential / Multi-Storey",
+            total_floors=total_floors,
+            floor_pitch_m=floor_pitch_m,
+            room_clear_height_m=room_clear_height_m,
+            anchor_lat=anchor_lat,
+            anchor_lon=anchor_lon,
+            floor_plan_source="data/resplan/ResPlan.pkl",
+        )
+
+        pipeline_result = run_cadastral_pipeline(
+            config=config,
+            persist_db=True,
+            output_csv_dir="data",
+            override_base_units=base_units,
+        )
+
+        # Generate Plotly 3D HTML twin
+        import visualize_3d as viz
+        html_twin_path = f"frontend/{bid.lower()}_3d_twin.html"
+        viz.generate_3d_twin(
+            csv_file=pipeline_result["output_csv"],
+            output_html=html_twin_path,
+            building_title=f"<b>3D ULPIN Digital Twin — {bname} ({bid})</b><br><sup>{pipeline_result.get('total_units', 0)} Volumetric 3D Parcels across {total_floors} Floors (Height: {pipeline_result.get('max_elevation_m', 0):.1f}m)</sup>"
+        )
+
+        # Update latest twin
+        shutil.copyfile(html_twin_path, "frontend/latest_3d_twin.html")
+
+        # Mesh data for client preview
+        mesh_data = _generate_mesh_data(pipeline_result)
+
+        return {
+            "status": "success",
+            "building_id": bid,
+            "building_name": bname,
+            "twin_url": f"/twin?building={bid}",
+            "prediction_result": pipeline_result,
+            "mesh_data": mesh_data,
+            "stages": {
+                "dataset_extraction": {
+                    "status": "ok",
+                    "plan_id": plan.get("id"),
+                    "net_area_m2": plan.get("net_area"),
+                    "rooms_extracted": len(base_units),
+                },
+                "cadastral_pipeline": {
+                    "status": "ok",
+                    "total_units": pipeline_result.get("total_units"),
+                    "total_floors": pipeline_result.get("total_floors"),
+                    "total_carpet_area_sqm": pipeline_result.get("total_carpet_area_sqm"),
+                    "topology_passed": pipeline_result.get("topology_validation", {}).get("passed", False),
+                    "sample_ulpin": pipeline_result.get("sample_ulpin"),
+                }
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Dataset ingestion failed: {str(e)}")
+

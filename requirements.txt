@@ -32,3 +32,6 @@ scikit-learn>=1.6.0
 scipy>=1.13.0
 laspy>=2.6.0
 
+# ResPlan dataset support (floor plan graph + geometry)
+networkx>=3.0
+

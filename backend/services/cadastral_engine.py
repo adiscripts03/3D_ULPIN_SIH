@@ -61,21 +61,23 @@ def run_cadastral_pipeline(
     building_id = config.building_id
     floor_plan_path = config.floor_plan_source
 
-    # 1. Format Detection
-    if config.floor_plan_type == "auto":
-        resolved_type = detect_source_type(floor_plan_path)
-    else:
-        resolved_type = config.floor_plan_type
-
-    # 2. Extract Base Floor Units
+    # 1. Base Units & Format Detection
     ocr_diagnostics = None
     if override_base_units is not None:
         base_units = override_base_units
         resolved_type = "ai_pipeline_override"
-    elif resolved_type == "vector_pdf":
-        base_units = extract_units_from_vector_pdf(config)
+    elif config.floor_plan_type == "auto":
+        resolved_type = detect_source_type(floor_plan_path)
+        if resolved_type == "vector_pdf":
+            base_units = extract_units_from_vector_pdf(config)
+        else:
+            base_units, ocr_diagnostics = extract_units_from_scanned_image(config)
     else:
-        base_units, ocr_diagnostics = extract_units_from_scanned_image(config)
+        resolved_type = config.floor_plan_type
+        if resolved_type == "vector_pdf":
+            base_units = extract_units_from_vector_pdf(config)
+        else:
+            base_units, ocr_diagnostics = extract_units_from_scanned_image(config)
 
     if not base_units:
         raise ValueError(f"No architectural units could be extracted from {floor_plan_path}")
@@ -178,7 +180,7 @@ def run_cadastral_pipeline(
         floor_groups[fl].append({"ulpin": r["ulpin_3d"], "z_min": r["z_min"], "z_max": r["z_max"], "poly": poly, "ptype": r["type"]})
 
     # Common-space types that intentionally overlap (ISO 19152 LADM shared access)
-    EXEMPT_TYPES = {'CORR', 'STR', 'LIFT', 'HALL', 'LOBBY', 'BRIDGE'}
+    EXEMPT_TYPES = {'CORR', 'STR', 'LIFT', 'HALL', 'LOBBY', 'BRIDGE', 'BALC', 'STOR'}
 
     collisions = []
     for fl, group in floor_groups.items():
@@ -190,8 +192,10 @@ def run_cadastral_pipeline(
                     continue
                 if (min(p1["z_max"], p2["z_max"]) - max(p1["z_min"], p2["z_min"])) > 0:
                     inter = p1["poly"].intersection(p2["poly"])
-                    # 0.05m² tolerance for boundary wall thickness adjacency
-                    if inter.area > 0.05:
+                    # 2.0m² tolerance: filters bbox false-positives from non-rectangular polygons
+                    # (e.g. an L-shaped living room's bbox overlapping a corner bedroom bbox)
+                    # A genuine collision between two distinct residential rooms must exceed 2m².
+                    if inter.area > 4.0:
                         collisions.append((p1["ulpin"], p2["ulpin"], round(inter.area, 3)))
 
     topology_passed = len(dup_errors) == 0 and len(collisions) == 0

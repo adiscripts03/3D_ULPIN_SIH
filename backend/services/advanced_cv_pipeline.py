@@ -97,10 +97,12 @@ def correct_perspective(image: np.ndarray) -> Tuple[np.ndarray, bool]:
     # Collect angles of near-horizontal and near-vertical lines
     angles = []
     for ln in lines:
-        x1, y1, x2, y2 = ln[0]
-        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
-        if abs(angle) < 30:  # near-horizontal
-            angles.append(angle)
+        coords = ln.reshape(-1)
+        if len(coords) >= 4:
+            x1, y1, x2, y2 = coords[:4]
+            angle = math.degrees(math.atan2(float(y2 - y1), float(x2 - x1)))
+            if abs(angle) < 30:  # near-horizontal
+                angles.append(angle)
 
     if not angles:
         return image, False
@@ -177,16 +179,24 @@ def extract_wall_mask(preprocessed: Dict[str, np.ndarray],
 # ── Stage 3: Room Boundary Extraction ────────────────────────────────────────
 
 def extract_room_contours_from_mask(wall_mask: np.ndarray,
-                                     total_area: int) -> List[Dict]:
+                                     total_area: int,
+                                     building_type: str = 'residential') -> List[Dict]:
     """
     Find closed room regions from a wall mask using:
     1. Flood-fill inversion (find open spaces, not walls)
-    2. Contour detection on the inverted mask
+    2. Morphological cleaning (removes interior furniture/text lines)
+    3. Contour detection on the inverted mask
     """
     h, w = wall_mask.shape
 
     # Invert: rooms are white (empty space), walls are black
     room_space = cv2.bitwise_not(wall_mask)
+
+    # Morphological cleaning to dissolve interior furniture lines, bed symbols, and text
+    is_residential = building_type in ('residential', 'apartment')
+    k_size = (7, 7) if is_residential else (3, 3)
+    clean_k = cv2.getStructuringElement(cv2.MORPH_RECT, k_size)
+    room_space = cv2.morphologyEx(room_space, cv2.MORPH_OPEN, clean_k)
 
     # Remove border-touching regions (building exterior)
     border_mask = np.zeros((h + 2, w + 2), dtype=np.uint8)
@@ -201,8 +211,8 @@ def extract_room_contours_from_mask(wall_mask: np.ndarray,
                                     cv2.RETR_EXTERNAL,
                                     cv2.CHAIN_APPROX_SIMPLE)
 
-    min_area = total_area * 0.0015
-    max_area = total_area * 0.65
+    min_area = total_area * 0.015 if is_residential else total_area * 0.0015
+    max_area = total_area * 0.55
 
     boxes = []
     for cnt in contours:
@@ -210,11 +220,11 @@ def extract_room_contours_from_mask(wall_mask: np.ndarray,
         if min_area < area < max_area:
             x, y, bw, bh = cv2.boundingRect(cnt)
             aspect = max(bw, bh) / max(min(bw, bh), 1)
-            if aspect <= 18:
-                # Approximate polygon to check rectangularity
+            max_aspect = 8.0 if is_residential else 18.0
+            if aspect <= max_aspect:
                 peri = cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, 0.04 * peri, True)
-                rect_score = min(1.0, 4.0 / max(len(approx), 4))  # more rectangular = higher score
+                rect_score = min(1.0, 4.0 / max(len(approx), 4))
                 boxes.append({
                     'x': x, 'y': y, 'w': bw, 'h': bh,
                     'area': float(area),
@@ -316,20 +326,13 @@ def non_maximum_suppression(boxes: List[Dict], iou_threshold: float = 0.55) -> L
 
 # ── Stage 5: Multi-Strategy Best Pick ────────────────────────────────────────
 
-def detect_rooms_advanced_cv(image: np.ndarray) -> Dict[str, Any]:
+def detect_rooms_advanced_cv(image: np.ndarray, building_type: str = 'residential') -> Dict[str, Any]:
     """
     Master function: tries multiple strategies and returns the best result.
-
-    Strategy priority:
-      1. Flood-fill + contour (best for closed-room floor plans)
-      2. Hough grid intersection (best for CAD-style drawings)  
-      3. Simple adaptive threshold contour (always works)
-
-    Returns:
-      {'boxes': List[Dict], 'strategy': str, 'diagnostics': Dict}
     """
     h, w = image.shape[:2]
     total_area = h * w
+    is_residential = building_type in ('residential', 'apartment')
 
     # Perspective correction
     image, corrected = correct_perspective(image)
@@ -345,11 +348,15 @@ def detect_rooms_advanced_cv(image: np.ndarray) -> Dict[str, Any]:
     for wall_strategy in ['adaptive', 'combined', 'global', 'line_based']:
         try:
             wall_mask = extract_wall_mask(preprocessed, wall_strategy)
-            boxes = extract_room_contours_from_mask(wall_mask, total_area)
-            boxes = non_maximum_suppression(boxes)
-            # Score: prefer 10–200 rooms, penalize too few or too many
+            boxes = extract_room_contours_from_mask(wall_mask, total_area, building_type=building_type)
+            boxes = non_maximum_suppression(boxes, iou_threshold=0.40)
             n = len(boxes)
-            score = n if 5 <= n <= 200 else max(0, 250 - abs(n - 80))
+            if is_residential:
+                # Strongly prefer 4 to 12 rooms for residential flats / villas
+                score = (100 - abs(n - 7) * 4) if 3 <= n <= 25 else max(0, 25 - abs(n - 7))
+            else:
+                score = n if 5 <= n <= 200 else max(0, 250 - abs(n - 80))
+
             if score > best_score:
                 best_score = score
                 best_boxes = boxes
@@ -357,36 +364,37 @@ def detect_rooms_advanced_cv(image: np.ndarray) -> Dict[str, Any]:
         except Exception:
             continue
 
-    # Strategy 2: Hough grid (if flood-fill got <5 rooms)
-    if len(best_boxes) < 5:
+    # Strategy 2: Hough grid (if flood-fill got < 3 rooms)
+    if len(best_boxes) < 3:
         try:
             hough_boxes = extract_rooms_via_hough_grid(image)
-            hough_boxes = non_maximum_suppression(hough_boxes)
+            hough_boxes = non_maximum_suppression(hough_boxes, iou_threshold=0.40)
             if len(hough_boxes) >= len(best_boxes):
                 best_boxes = hough_boxes
                 best_strategy = 'hough_grid'
         except Exception:
             pass
 
-    # Strategy 3: Simple fallback (original cv_extractor approach)
-    if len(best_boxes) < 3:
+    # Strategy 3: Simple fallback
+    if len(best_boxes) < 2:
         try:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             blurred = cv2.GaussianBlur(gray, (5, 5), 0)
             thresh = cv2.adaptiveThreshold(blurred, 255,
                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                             cv2.THRESH_BINARY_INV, 15, 3)
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
             closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations=2)
             cnts, _ = cv2.findContours(closed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             fb = []
+            min_a = total_area * 0.015 if is_residential else total_area * 0.0015
             for cnt in cnts:
                 area = cv2.contourArea(cnt)
-                if total_area * 0.0015 < area < total_area * 0.65:
+                if min_a < area < total_area * 0.65:
                     x, y, bw, bh = cv2.boundingRect(cnt)
-                    if max(bw, bh) / max(min(bw, bh), 1) <= 15:
+                    if max(bw, bh) / max(min(bw, bh), 1) <= 10:
                         fb.append({'x': x, 'y': y, 'w': bw, 'h': bh,
-                                   'area': float(area), 'rect_score': 0.5,
+                                   'area': float(area), 'rect_score': 0.6,
                                    'approx_vertices': 4})
             fb = non_maximum_suppression(fb)
             if len(fb) > len(best_boxes):
@@ -416,42 +424,118 @@ def detect_rooms_advanced_cv(image: np.ndarray) -> Dict[str, Any]:
 # ── Stage 6: Full Pipeline Entry Point ───────────────────────────────────────
 
 def extract_rooms_advanced(image: np.ndarray, scale_x: float = None,
-                            building_type: str = 'hostel') -> Tuple[List[Dict], Dict]:
+                            building_type: str = 'residential',
+                            known_width_m: Optional[float] = None,
+                            known_depth_m: Optional[float] = None,
+                            known_area_m2: Optional[float] = None) -> Tuple[List[Dict], Dict]:
     """
-    Full advanced CV pipeline entry point.
-
-    Args:
-        image:         BGR image (floor plan)
-        scale_x:       Meters per pixel (auto-computed if None)
-        building_type: Hint for room type classification
-
-    Returns:
-        base_units: List of room dicts for cadastral_engine
-        diagnostics: Extraction metadata
+    Full advanced CV pipeline entry point with residential room categorization and dimension scaling.
     """
-    result = detect_rooms_advanced_cv(image)
+    result = detect_rooms_advanced_cv(image, building_type=building_type)
     boxes = result['boxes']
     diag = result['diagnostics']
-
     h_img, w_img = image.shape[:2]
 
-    # Auto-scale: assume the widest extent ≈ 60m building width
+    # Deduplicate and sort by area
+    boxes = sorted(boxes, key=lambda b: b['area'], reverse=True)
+
+    # Calculate real-world metric scale
     if scale_x is None:
-        max_x = max(b['x'] + b['w'] for b in boxes) if boxes else w_img
-        scale_x = 60.0 / max(max_x, 1)
+        if known_area_m2 and boxes:
+            sum_area_px = sum(b['area'] for b in boxes)
+            scale_x = math.sqrt(known_area_m2 / max(sum_area_px, 1.0))
+        elif known_width_m and boxes:
+            w_span = max(b['x'] + b['w'] for b in boxes) - min(b['x'] for b in boxes)
+            scale_x = known_width_m / max(w_span, 1.0)
+        elif boxes:
+            w_span = max(b['x'] + b['w'] for b in boxes) - min(b['x'] for b in boxes)
+            target_w = 16.0 if building_type in ('residential', 'apartment') else 60.0
+            scale_x = target_w / max(w_span, 1.0)
+        else:
+            scale_x = 0.03
     scale_y = scale_x
 
-    # Room type profiles per building type
-    room_type_map = {
-        'hostel':     ['4S', '2S'],
-        'apartment':  ['2BHK', '3BHK'],
-        'office':     ['OFFICE', 'CABIN'],
-        'hospital':   ['WARD', 'ICU'],
-        'hotel':      ['DBLBED', 'SUITE'],
-        'commercial': ['SHOP', 'RETAIL'],
-    }
-    primary_types = room_type_map.get(building_type, ['4S', '2S'])
+    # If residential / apartment: generate real room classifications
+    if building_type in ('residential', 'apartment'):
+        # Cap at 14 rooms maximum so noisy plans don't produce 100 cubes
+        boxes = boxes[:14]
+        # Re-sort top-to-bottom, left-to-right for consistent numbering
+        boxes.sort(key=lambda b: (b['y'] // 60, b['x']))
 
+        base_units = []
+        bed_count = 0
+        wash_count = 0
+        balc_count = 0
+        kitch_count = 0
+        liv_count = 0
+
+        sorted_by_area = sorted(boxes, key=lambda b: b['area'], reverse=True)
+
+        for idx, b in enumerate(boxes, 1):
+            rx0 = round(b['x'] * scale_x, 2)
+            rx1 = round((b['x'] + b['w']) * scale_x, 2)
+            ry0 = round(b['y'] * scale_y, 2)
+            ry1 = round((b['y'] + b['h']) * scale_y, 2)
+            rw = max(round(rx1 - rx0, 2), 1.2)
+            rd = max(round(ry1 - ry0, 2), 1.2)
+            area_m2 = round(rw * rd, 1)
+            aspect = max(rw, rd) / max(min(rw, rd), 0.1)
+
+            # Hierarchical real-world room assignment
+            if (b == sorted_by_area[0] or area_m2 >= 20.0) and liv_count == 0:
+                ptype = 'LIVRM'
+                liv_count += 1
+                label = 'Living & Dining Room'
+            elif area_m2 >= 9.0 and bed_count < 4:
+                bed_count += 1
+                ptype = 'BEDRM'
+                label = 'Master Bedroom' if bed_count == 1 else f'Bedroom {bed_count}'
+            elif 4.8 <= area_m2 < 10.0 and aspect < 2.0 and kitch_count == 0:
+                kitch_count += 1
+                ptype = 'KITCH'
+                label = 'Kitchen'
+            elif aspect > 2.2 and area_m2 < 12.0:
+                balc_count += 1
+                ptype = 'BALC'
+                label = f'Balcony {balc_count}'
+            elif area_m2 < 6.5:
+                wash_count += 1
+                ptype = 'WASH'
+                label = f'Bathroom {wash_count}'
+            elif bed_count < 4:
+                bed_count += 1
+                ptype = 'BEDRM'
+                label = f'Bedroom {bed_count}'
+            else:
+                ptype = 'STOR'
+                label = f'Store / Utility'
+
+            is_common = ptype in {'WASH', 'STR', 'LIFT', 'CORR', 'HALL', 'UTIL', 'LOBBY', 'CONF', 'PARK', 'BALC'}
+
+            base_units.append({
+                'label': label,
+                'prop_id': f'{ptype}_{idx}',
+                'type': ptype,
+                'is_common_property': 1 if is_common else 0,
+                'real_width_m': rw,
+                'real_depth_m': rd,
+                'real_x_start_m': rx0,
+                'real_x_end_m': rx1,
+                'real_y_start_m': ry0,
+                'real_y_end_m': ry1,
+                'real_y_center_m': round((ry0 + ry1) / 2.0, 2),
+                'extraction_method': f'advanced_cv_residential',
+                'ocr_confidence': round(b.get('rect_score', 0.8) * 100, 1),
+            })
+
+        diag.update({
+            'total_base_units': len(base_units),
+            'scale_x_m_per_px': round(scale_x, 5),
+            'building_type': building_type,
+        })
+        return base_units, diag
+
+    # Fallback for non-residential buildings
     base_units: List[Dict] = []
     for idx, b in enumerate(boxes, 1):
         rx0 = round(b['x'] * scale_x, 2)
@@ -460,21 +544,11 @@ def extract_rooms_advanced(image: np.ndarray, scale_x: float = None,
         ry1 = round((b['y'] + b['h']) * scale_y, 2)
         rw = max(rx1 - rx0, 0.5)
         rd = max(ry1 - ry0, 0.5)
-        area_m2 = rw * rd
-        aspect = rw / max(rd, 0.1)
-
-        # Classify room type
-        ptype = _classify_room_type_advanced(area_m2, aspect, primary_types, b)
-        is_common = ptype in {'WASH', 'STR', 'LIFT', 'CORR', 'HALL', 'UTIL', 'LOBBY', 'CONF', 'PARK'}
-
-        # Quality score based on rectangularity
-        quality = round(b.get('rect_score', 0.5) * 100, 1)
-
         base_units.append({
-            'label': f'ADV_{idx:03d}',
-            'prop_id': f'A{idx:02d}',
-            'type': ptype,
-            'is_common_property': 1 if is_common else 0,
+            'label': f'Unit {idx:02d}',
+            'prop_id': f'U{idx:02d}',
+            'type': 'OFFICE' if building_type == 'office' else '4S',
+            'is_common_property': 0,
             'real_width_m': round(rw, 2),
             'real_depth_m': round(rd, 2),
             'real_x_start_m': rx0,
@@ -483,7 +557,7 @@ def extract_rooms_advanced(image: np.ndarray, scale_x: float = None,
             'real_y_end_m': ry1,
             'real_y_center_m': round((ry0 + ry1) / 2, 2),
             'extraction_method': f'advanced_cv_{result["strategy"]}',
-            'ocr_confidence': quality,
+            'ocr_confidence': 85.0,
         })
 
     diag.update({
@@ -493,38 +567,3 @@ def extract_rooms_advanced(image: np.ndarray, scale_x: float = None,
     })
 
     return base_units, diag
-
-
-def _classify_room_type_advanced(area_m2: float, aspect: float,
-                                   primary_types: List[str],
-                                   box: Dict) -> str:
-    """Advanced room type classification using area, aspect, and position."""
-    # Likely corridors
-    if aspect > 6.0 or (aspect > 4.0 and area_m2 < 8.0):
-        return 'CORR'
-
-    # Very small → utility / washroom
-    if area_m2 < 3.5:
-        return 'WASH' if aspect < 2.0 else 'UTIL'
-
-    # Stairwell-like: squarish medium room
-    if 5.0 <= area_m2 <= 14.0 and 0.6 <= aspect <= 1.6:
-        if box.get('rect_score', 0) > 0.8:
-            return 'STR'
-
-    # Large rooms → primary residential type
-    if area_m2 >= 25.0 and primary_types:
-        return primary_types[0]
-
-    # Medium rooms → secondary type or primary
-    if area_m2 >= 12.0 and len(primary_types) > 1:
-        return primary_types[1]
-
-    if area_m2 >= 8.0 and primary_types:
-        return primary_types[0]
-
-    # Very small corridor
-    if area_m2 < 6.0 and aspect > 2.5:
-        return 'CORR'
-
-    return primary_types[0] if primary_types else '4S'

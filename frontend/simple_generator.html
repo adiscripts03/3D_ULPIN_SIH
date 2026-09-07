@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instant 3D ULPIN Floor Plan Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #131b2e;
+      --card: #1a243d;
+      --border: rgba(255, 255, 255, 0.09);
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .badge {
+      font-size: 0.7rem;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      flex: 1;
+      height: calc(100vh - 65px);
+    }
+    .left-sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+    .right-preview {
+      display: flex;
+      flex-direction: column;
+      background: #060911;
+      position: relative;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #93c5fd;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.08);
+    }
+    .dropzone-icon { font-size: 2rem; margin-bottom: 8px; }
+    .dropzone-text { font-size: 0.85rem; font-weight: 600; }
+    .dropzone-hint { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+    .file-name { font-size: 0.75rem; color: #60a5fa; font-family: 'JetBrains Mono', monospace; margin-top: 8px; word-break: break-all; }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .input-field, .select-field {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .input-field:focus, .select-field:focus {
+      border-color: var(--accent);
+    }
+    .btn-submit {
+      background: linear-gradient(135deg, var(--accent), #1d4ed8);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn-submit:hover { transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    
+    /* Stats Header over preview */
+    .preview-header {
+      padding: 12px 20px;
+      background: rgba(19, 27, 46, 0.9);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .stats-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-lbl {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000;
+    }
+    .empty-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      gap: 16px;
+      background: #070a13;
+    }
+    .empty-icon { font-size: 3.5rem; opacity: 0.4; }
+    .btn-external {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-external:hover { background: rgba(255, 255, 255, 0.15); }
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>🏛️ 3D ULPIN Floor Plan Generator</span>
+      <span class="badge">National Cadastre Engine</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="/portal" style="color:var(--muted); text-decoration:none; font-size:0.8rem; font-weight:500;">🏛️ Cadastre Portal</a>
+      <a href="/ai" style="color:var(--muted); text-decoration:none; font-size:0.8rem; font-weight:500;">⚡ AI Studio</a>
+      <a href="/docs" target="_blank" style="color:var(--muted); text-decoration:none; font-size:0.8rem; font-weight:500;">📄 API Docs</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- LEFT SIDEBAR -->
+    <div class="left-sidebar">
+
+      <!-- SECTION 1: Upload Floor Plan -->
+      <div class="card">
+        <div class="card-title">📁 1. Upload Floor Plan (Any Format)</div>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('file_input').click()">
+          <input type="file" id="file_input" accept=".png,.jpg,.jpeg,.webp,.pdf,.pkl,.json" style="display:none;" onchange="handleFileSelected(this.files[0])" />
+          <div class="dropzone-icon">📐</div>
+          <div class="dropzone-text">Click or Drag & Drop floor plan here</div>
+          <div class="dropzone-hint">Supports PNG, JPG, PDF (with dimensions) or ResPlan .PKL / .JSON</div>
+          <div class="file-name" id="file_display"></div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Dataset Fast Picker -->
+      <div class="card">
+        <div class="card-title">📚 2. Or Select from ResPlan Dataset (17,000 plans)</div>
+        <div class="form-group">
+          <select id="dataset_preset" class="select-field" onchange="handlePresetChange(this.value)">
+            <option value="">-- Choose a real plan --</option>
+            <option value="0">Plan #0 — 3BHK Apartment (95.7 m²)</option>
+            <option value="9">Plan #9 — 3BHK+ with Balcony & Store (108.0 m²)</option>
+            <option value="12">Plan #12 — 3BHK High-Rise Unit (103.5 m²)</option>
+            <option value="42">Plan #42 — 2BHK with Balcony (82.4 m²)</option>
+            <option value="100">Plan #100 — 4BHK Residential Unit (165.2 m²)</option>
+            <option value="custom">Custom Plan Index (0 to 16,999)...</option>
+          </select>
+        </div>
+        <div class="form-group" id="custom_index_group" style="display:none; margin-top:8px;">
+          <input type="number" id="custom_index" class="input-field" placeholder="Enter plan index (0 - 16999)" min="0" max="16999" />
+        </div>
+      </div>
+
+      <!-- SECTION 3: Building Configuration -->
+      <div class="card">
+        <div class="card-title">⚙️ 3. Multi-Storey Building Setup</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Total Floors</label>
+            <input type="number" id="floors" class="input-field" value="6" min="1" max="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Floor Height (m)</label>
+            <input type="number" id="floor_height" class="input-field" value="3.0" step="0.1" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:10px;">
+          <label class="form-label">Building ID (Optional)</label>
+          <input type="text" id="building_id" class="input-field" placeholder="e.g. RES_TOWER_01" />
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px;">
+          <div class="form-group">
+            <label class="form-label">Plan Width (m) <span style="font-weight:400; color:#64748b;">(Optional)</span></label>
+            <input type="number" id="building_width" class="input-field" placeholder="e.g. 16.0" step="0.5" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Floor Area (m²) <span style="font-weight:400; color:#64748b;">(Optional)</span></label>
+            <input type="number" id="floor_area" class="input-field" placeholder="e.g. 105.0" step="1.0" />
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBMIT BUTTON -->
+      <button class="btn-submit" id="btn-generate" onclick="generate3DBuilding()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btn-text">🚀 Generate 3D Building</span>
+      </button>
+
+      <div id="status_msg" style="font-size:0.75rem; color:var(--muted); text-align:center; min-height:16px;"></div>
+
+    </div>
+
+    <!-- RIGHT PREVIEW -->
+    <div class="right-preview">
+      <div class="preview-header" id="preview_header" style="display:none;">
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="stat-val" id="stat_building_id">—</span>
+            <span class="stat-lbl">Building ID</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat_parcels">—</span>
+            <span class="stat-lbl">Total 3D Parcels</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat_carpet">—</span>
+            <span class="stat-lbl">Carpet Area</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat_elevation">—</span>
+            <span class="stat-lbl">Max Elevation</span>
+          </div>
+        </div>
+        <div>
+          <a href="#" target="_blank" class="btn-external" id="btn_fullscreen">↗ Open Fullscreen</a>
+        </div>
+      </div>
+
+      <div class="iframe-container">
+        <div class="empty-placeholder" id="placeholder">
+          <div class="empty-icon">🏗️</div>
+          <p style="font-size:1.1rem; font-weight:600; color:#fff;">No 3D Building Generated Yet</p>
+          <p style="font-size:0.85rem; max-width:340px; text-align:center;">Upload any floor plan on the left or select a dataset plan, then click <strong>Generate 3D Building</strong>.</p>
+        </div>
+        <iframe id="preview_frame" style="display:none;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedFile = null;
+
+    function handleFileSelected(file) {
+      if (!file) return;
+      selectedFile = file;
+      document.getElementById('file_display').textContent = 'Selected: ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+      // Reset dataset dropdown
+      document.getElementById('dataset_preset').value = '';
+      document.getElementById('custom_index_group').style.display = 'none';
+    }
+
+    function handlePresetChange(val) {
+      const customWrap = document.getElementById('custom_index_group');
+      if (val === 'custom') {
+        customWrap.style.display = 'block';
+      } else {
+        customWrap.style.display = 'none';
+      }
+      if (val) {
+        // Clear file input
+        selectedFile = null;
+        document.getElementById('file_input').value = '';
+        document.getElementById('file_display').textContent = '';
+      }
+    }
+
+    // Drag and Drop
+    const dropzone = document.getElementById('dropzone');
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        handleFileSelected(e.dataTransfer.files[0]);
+      }
+    });
+
+    async function generate3DBuilding() {
+      const btn = document.getElementById('btn-generate');
+      const btnText = document.getElementById('btn-text');
+      const spinner = document.getElementById('spinner');
+      const statusMsg = document.getElementById('status_msg');
+
+      const preset = document.getElementById('dataset_preset').value;
+      let datasetIdx = null;
+      if (preset === 'custom') {
+        datasetIdx = parseInt(document.getElementById('custom_index').value || '0', 10);
+      } else if (preset) {
+        datasetIdx = parseInt(preset, 10);
+      }
+
+      if (!selectedFile && datasetIdx === null) {
+        alert('Please either upload a floor plan file or select a plan from the dataset dropdown.');
+        return;
+      }
+
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      btnText.textContent = 'Generating 3D ULPIN Building...';
+      statusMsg.textContent = 'Extracting metric dimensions and stacking floors...';
+
+      const formData = new FormData();
+      if (selectedFile) formData.append('file', selectedFile);
+      if (datasetIdx !== null) formData.append('dataset_plan_index', datasetIdx);
+      
+      const floors = document.getElementById('floors').value || '6';
+      formData.append('floors', floors);
+
+      const floorHeight = document.getElementById('floor_height').value || '3.0';
+      formData.append('floor_height_m', floorHeight);
+
+      const bid = document.getElementById('building_id').value.trim();
+      if (bid) formData.append('building_id', bid);
+
+      const bwidth = document.getElementById('building_width').value.trim();
+      if (bwidth) formData.append('building_width_m', bwidth);
+
+      const farea = document.getElementById('floor_area').value.trim();
+      if (farea) formData.append('total_area_sqm', farea);
+
+      try {
+        const resp = await fetch('/api/generator/build', {
+          method: 'POST',
+          body: formData
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || 'Build failed');
+        }
+        const data = await resp.json();
+
+        // Update stats
+        document.getElementById('stat_building_id').textContent = data.building_id;
+        document.getElementById('stat_parcels').textContent = data.total_parcels + ' Units';
+        document.getElementById('stat_carpet').textContent = data.carpet_area_sqm.toLocaleString() + ' m²';
+        document.getElementById('stat_elevation').textContent = data.max_elevation_m + ' m';
+        document.getElementById('btn_fullscreen').href = data.model_url;
+
+        document.getElementById('preview_header').style.display = 'flex';
+
+        // Load 3D model in iframe
+        const frame = document.getElementById('preview_frame');
+        document.getElementById('placeholder').style.display = 'none';
+        frame.style.display = 'block';
+        frame.src = data.model_url + '?t=' + Date.now();
+
+        statusMsg.textContent = '✓ Successfully generated ' + data.total_parcels + ' volumetric 3D parcels for ' + data.building_id;
+
+      } catch (err) {
+        statusMsg.textContent = '✗ Error: ' + err.message;
+        alert('Generation error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        btnText.textContent = '🚀 Generate 3D Building';
+      }
+    }
+  </script>
+</body>
+</html>

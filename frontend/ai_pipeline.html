@@ -416,6 +416,7 @@
       <a href="/" class="nav-link">Home</a>
       <a href="/app" class="nav-link">Portal</a>
       <a href="/twin" class="nav-link">3D Twin</a>
+      <a href="/generate" class="nav-link" style="color:#60a5fa; font-weight:600;">⚡ Instant 3D Generator</a>
       <a href="/ai-pipeline" class="nav-link active">AI Builder</a>
       <a href="/docs" class="nav-link">API Docs</a>
     </div>
@@ -477,16 +478,55 @@
   <div class="form-grid">
 
     <!-- LEFT: Upload Form -->
+    <!-- LEFT: Upload Form -->
     <div class="form-panel">
-      <div class="section-title">Upload Inputs</div>
+      <div class="section-title">Upload & Ingest Plan</div>
+
+      <!-- ResPlan Dataset Quick Ingestion Card -->
+      <div style="background:rgba(30,58,138,0.25); border:1px solid rgba(59,130,246,0.35); border-radius:10px; padding:14px; margin-bottom:18px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-size:0.75rem; font-weight:700; color:#93c5fd; text-transform:uppercase; letter-spacing:0.04em;">
+            🏛️ ResPlan Dataset (17,000 Plans)
+          </span>
+          <span style="font-size:0.65rem; background:rgba(37,99,235,0.3); color:#bfdbfe; padding:2px 8px; border-radius:4px; font-weight:600;">
+            Real-World Metric 3D
+          </span>
+        </div>
+        <div style="font-size:0.72rem; color:var(--muted); margin-bottom:10px; line-height:1.4;">
+          Pick a plan from the 17,000 real residential floor plans to instantly synthesize a multi-storey 3D building:
+        </div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px; margin-bottom:8px;">
+          <select id="resplan_preset" class="text-field" style="height:36px; font-size:0.75rem; margin:0; background:rgba(15,23,42,0.8);" onchange="onPresetChange(this.value)">
+            <option value="0">Plan #0 — 3BHK Apartment (95.7 m²)</option>
+            <option value="9" selected>Plan #9 — 3BHK+ with Balcony & Store (108.0 m²)</option>
+            <option value="12">Plan #12 — 3BHK High-Rise Unit (103.5 m²)</option>
+            <option value="42">Plan #42 — 2BHK with Balcony (82.4 m²)</option>
+            <option value="100">Plan #100 — 4BHK Residential Unit (165.2 m²)</option>
+            <option value="custom">Custom Plan Index...</option>
+          </select>
+          <input type="number" id="resplan_floors" class="text-field" style="height:36px; font-size:0.75rem; margin:0; background:rgba(15,23,42,0.8);" value="6" min="1" max="100" placeholder="Floors" title="Number of vertical floors" />
+        </div>
+        <div id="custom_index_wrap" style="display:none; margin-bottom:8px;">
+          <input type="number" id="resplan_custom_index" class="text-field" style="height:36px; font-size:0.75rem; margin:0; background:rgba(15,23,42,0.8);" placeholder="Enter plan index (0 to 16999)" min="0" max="16999" />
+        </div>
+        <button type="button" class="btn-predict" id="btn-dataset-ingest" style="background:linear-gradient(135deg, #1d4ed8, #2563eb); margin-top:6px; height:40px; font-size:0.82rem;" onclick="runDatasetIngestion()">
+          <span id="btn-ds-text">⚡ Ingest Dataset Plan & Generate 3D Building</span>
+        </button>
+      </div>
+
+      <div style="display:flex; align-items:center; text-align:center; color:var(--muted); font-size:0.68rem; margin:16px 0; letter-spacing:0.05em;">
+        <div style="flex:1; border-bottom:1px solid rgba(255,255,255,0.08);"></div>
+        <span style="padding:0 10px; font-weight:600; text-transform:uppercase;">OR Upload Custom Files</span>
+        <div style="flex:1; border-bottom:1px solid rgba(255,255,255,0.08);"></div>
+      </div>
 
       <!-- Floor Plan -->
-      <div class="section-title" style="font-size:.65rem; color:var(--muted);">Floor Plan (PDF / PNG / JPG)</div>
+      <div class="section-title" style="font-size:.65rem; color:var(--muted);">Floor Plan File (PDF / PNG / JPG / PKL / JSON)</div>
       <div class="upload-zone" id="zone-floor" ondragover="handleDrag(event,'zone-floor')" ondragleave="clearDrag('zone-floor')" ondrop="handleDrop(event,'floor_plan_image')">
-        <input type="file" id="floor_plan_image" name="floor_plan_image" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp" onchange="onFileChange(this,'zone-floor')" />
+        <input type="file" id="floor_plan_image" name="floor_plan_image" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp,.pkl,.json,.geojson" onchange="onFileChange(this,'zone-floor')" />
         <div class="upload-icon">🗺️</div>
         <div class="upload-label">Drop floor plan here</div>
-        <div class="upload-hint">Supports PDF, PNG, JPG, TIFF — scanned or CAD</div>
+        <div class="upload-hint">Supports PDF, PNG, JPG, ResPlan .PKL, GeoJSON</div>
         <div class="upload-filename" id="fn-floor"></div>
       </div>
 
@@ -655,6 +695,29 @@ function highlightStep(n) {
   document.querySelector(`[data-step="${n}"]`)?.classList.add('active-step');
 }
 
+// ── Global Logger & Progress ──────────────────────────────────
+function log(msg, cls='') {
+  const logArea = document.getElementById('log-area');
+  if (logArea) {
+    logArea.style.display = 'block';
+    const d = document.createElement('div');
+    d.className = 'log-line ' + cls;
+    d.textContent = new Date().toLocaleTimeString('en-IN') + '  ' + msg;
+    logArea.appendChild(d);
+    logArea.scrollTop = logArea.scrollHeight;
+  }
+  console.log('[' + (cls || 'info') + '] ' + msg);
+}
+
+function setProgress(pct) {
+  const wrap = document.getElementById('progress-wrap');
+  const bar = document.getElementById('progress-bar');
+  if (wrap && bar) {
+    wrap.style.display = 'block';
+    bar.style.width = pct + '%';
+  }
+}
+
 // ── Pipeline runner ────────────────────────────────────────────
 let currentBuildingId = null;
 
@@ -684,16 +747,6 @@ async function runPipeline() {
   progressWrap.style.display = 'block';
   logArea.style.display = 'block';
   logArea.innerHTML = '';
-
-  const log = (msg, cls='') => {
-    const d = document.createElement('div');
-    d.className = 'log-line ' + cls;
-    d.textContent = new Date().toLocaleTimeString('en-IN') + '  ' + msg;
-    logArea.appendChild(d);
-    logArea.scrollTop = logArea.scrollHeight;
-  };
-
-  const setProgress = (pct) => { progressBar.style.width = pct + '%'; };
 
   log('▶  Preparing inputs…', 'info');
   setProgress(10);
@@ -727,7 +780,13 @@ async function runPipeline() {
   setProgress(35);
 
   try {
-    const resp = await fetch('/api/ai/predict', {
+    const isDatasetFile = fp && (fp.name.endsWith('.pkl') || fp.name.endsWith('.json') || fp.name.endsWith('.geojson'));
+    const endpoint = isDatasetFile ? '/api/ai/ingest-dataset' : '/api/ai/predict';
+    if (isDatasetFile) {
+      formData.append('file', fp);
+      formData.append('total_floors', 6);
+    }
+    const resp = await fetch(endpoint, {
       method: 'POST',
       body: formData,
     });
@@ -746,6 +805,13 @@ async function runPipeline() {
     await new Promise(r => setTimeout(r, 400));
     renderResults(data);
     currentBuildingId = data.building_id;
+    const btn3d = document.getElementById('btn-view3d');
+    if (btn3d) {
+      btn3d.disabled = false;
+      if (data.twin_url) {
+        btn3d.onclick = () => window.open(data.twin_url, '_blank');
+      }
+    }
 
   } catch (err) {
     log('✗  Error: ' + err.message, 'err');
@@ -940,8 +1006,80 @@ function renderMiniMesh(data) {
     `${limit} of ${parcels.length} parcels shown`;
 }
 
+function onPresetChange(val) {
+  const wrap = document.getElementById('custom_index_wrap');
+  if (val === 'custom') {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+async function runDatasetIngestion() {
+  const btn = document.getElementById('btn-dataset-ingest');
+  const btnText = document.getElementById('btn-ds-text');
+  const presetVal = document.getElementById('resplan_preset').value;
+  let planIdx = presetVal === 'custom'
+    ? parseInt(document.getElementById('resplan_custom_index').value || '0', 10)
+    : parseInt(presetVal, 10);
+  if (isNaN(planIdx) || planIdx < 0) planIdx = 0;
+
+  const floors = parseInt(document.getElementById('resplan_floors').value || '4', 10);
+  const bidInput = document.getElementById('building_id').value.trim();
+  const bid = bidInput || ('RESPLAN_' + String(planIdx).padStart(4, '0'));
+
+  btn.disabled = true;
+  btnText.textContent = '⏳ Parsing Plan #' + planIdx + ' & Stacking ' + floors + ' Floors...';
+  log('⚡ Starting ResPlan Dataset Ingestion (Plan #' + planIdx + ', ' + floors + ' floors)...', 'info');
+
+  const formData = new FormData();
+  formData.append('plan_index', planIdx);
+  formData.append('total_floors', floors);
+  formData.append('building_id', bid);
+  formData.append('building_name', 'ResPlan Residential Tower ' + bid);
+
+  // If a custom file is also picked in the dropzone, send it too
+  const fileInput = document.getElementById('floor_plan_image');
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    formData.append('file', fileInput.files[0]);
+    log('📁 Attached custom floor plan file: ' + fileInput.files[0].name, 'info');
+  }
+
+  try {
+    const resp = await fetch('/api/ai/ingest-dataset', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!resp.ok) {
+      const errData = await resp.json();
+      throw new Error(errData.detail || 'Ingestion failed');
+    }
+    const data = await resp.json();
+    log('✓ 3D Building Generated: ' + data.building_id + ' (' + (data.stages?.cadastral_pipeline?.total_units || 0) + ' parcels across ' + floors + ' floors)', 'ok');
+
+    renderResults(data);
+    currentBuildingId = data.building_id;
+
+    // Enable the full 3D twin button
+    const btn3d = document.getElementById('btn-view3d');
+    if (btn3d) {
+      btn3d.disabled = false;
+      btn3d.onclick = () => window.open(data.twin_url, '_blank');
+    }
+
+  } catch (err) {
+    log('✗ Ingestion Error: ' + err.message, 'err');
+    alert('Ingestion error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '⚡ Ingest Dataset Plan & Generate 3D Building';
+  }
+}
+
 function open3DTwin() {
   if (currentBuildingId) {
+    window.open('/twin?building=' + encodeURIComponent(currentBuildingId), '_blank');
+  } else {
     window.open('/twin', '_blank');
   }
 }
