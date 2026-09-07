@@ -84,38 +84,87 @@ def extract_units_from_vector_pdf(config: BuildingConfig) -> List[Dict[str, Any]
         )
 
         if not eval_result:
-            # Skip unmatched geometric artifacts (e.g. tiny line markers)
-            continue
+            if config.room_type_rules:
+                # Specific rules exist for this building, so skip unmatched geometric artifacts
+                continue
+            # Fallback for generic vector PDFs with no predefined rules:
+            if ur['w'] < 15 or ur['h'] < 15:
+                continue
 
-        prop_id = eval_result["prop_id"]
-        ptype = eval_result["type"]
-        is_common = eval_result["is_common"]
+            lbl_clean = label_text.strip()
+            lbl_upper = lbl_clean.upper()
+            if any(k in lbl_upper for k in ["WASH", "TOILET", "WC", "BATH"]):
+                ptype = "WASH"
+                is_common = True
+            elif any(k in lbl_upper for k in ["STAIR", "STR", "LIFT", "ELEVATOR"]):
+                ptype = "STR"
+                is_common = True
+            elif any(k in lbl_upper for k in ["CORR", "PASSAGE", "HALLWAY"]):
+                ptype = "CORR"
+                is_common = True
+            elif any(k in lbl_upper for k in ["LOBBY", "FOYER", "HALL"]):
+                ptype = "LOBBY"
+                is_common = True
+            elif any(k in lbl_upper for k in ["OFFICE", "CABIN", "CONF"]):
+                ptype = "OFFICE"
+                is_common = False
+            elif any(k in lbl_upper for k in ["BED", "ROOM", "4S", "2S"]):
+                ptype = "ROOM"
+                is_common = False
+            else:
+                ptype = "ROOM"
+                is_common = False
 
-        if eval_result["ry0"] is not None and eval_result["ry1"] is not None:
-            ry0 = eval_result["ry0"]
-            ry1 = eval_result["ry1"]
-        elif eval_result["depth_m"] is not None:
-            raw_y0 = (ur['y0'] - y_offset) * scale_y
-            ry0 = round(raw_y0, 2)
-            ry1 = round(ry0 + eval_result["depth_m"], 2)
-        else:
+            prop_id = lbl_clean if lbl_clean else f"UNIT_{len(base_properties) + 1:02d}"
             raw_y0 = (ur['y0'] - y_offset) * scale_y
             raw_y1 = (ur['y1'] - y_offset) * scale_y
             ry0 = round(raw_y0, 2)
             ry1 = round(raw_y1, 2)
+        else:
+            prop_id = eval_result["prop_id"]
+            ptype = eval_result["type"]
+            is_common = eval_result["is_common"]
+
+            if eval_result["ry0"] is not None and eval_result["ry1"] is not None:
+                ry0 = eval_result["ry0"]
+                ry1 = eval_result["ry1"]
+            elif eval_result["depth_m"] is not None:
+                raw_y0 = (ur['y0'] - y_offset) * scale_y
+                ry0 = round(raw_y0, 2)
+                ry1 = round(ry0 + eval_result["depth_m"], 2)
+            else:
+                raw_y0 = (ur['y0'] - y_offset) * scale_y
+                raw_y1 = (ur['y1'] - y_offset) * scale_y
+                ry0 = round(raw_y0, 2)
+                ry1 = round(raw_y1, 2)
+
+        # Ensure prop_id is unique within base_properties
+        base_pid = prop_id
+        if base_pid in seen_prop_ids:
+            seen_prop_ids[base_pid] += 1
+            prop_id = f"{base_pid}_{seen_prop_ids[base_pid]}"
+        else:
+            seen_prop_ids[base_pid] = 1
+
+        norm_x0 = min(rx0, rx1)
+        norm_x1 = max(rx0, rx1)
+        norm_y0 = min(ry0, ry1)
+        norm_y1 = max(ry0, ry1)
+        real_w = round(max(norm_x1 - norm_x0, 0.5), 2)
+        real_d = round(max(norm_y1 - norm_y0, 0.5), 2)
 
         base_properties.append({
             "label": label_text if label_text else prop_id,
             "prop_id": prop_id,
             "type": ptype,
             "is_common_property": 1 if is_common else 0,
-            "real_width_m": round(rx1 - rx0, 2),
-            "real_depth_m": round(ry1 - ry0, 2),
-            "real_x_start_m": rx0,
-            "real_x_end_m": rx1,
-            "real_y_start_m": round(ry0, 2),
-            "real_y_end_m": round(ry1, 2),
-            "real_y_center_m": round((ry0 + ry1) / 2.0, 2),
+            "real_width_m": real_w,
+            "real_depth_m": real_d,
+            "real_x_start_m": norm_x0,
+            "real_x_end_m": round(norm_x0 + real_w, 2),
+            "real_y_start_m": norm_y0,
+            "real_y_end_m": round(norm_y0 + real_d, 2),
+            "real_y_center_m": round((norm_y0 + norm_y1) / 2.0, 2),
             "extraction_method": "vector_pdf",
             "ocr_confidence": 100.0
         })
