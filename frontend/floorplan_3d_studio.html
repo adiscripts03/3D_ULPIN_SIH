@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D ULPIN | Volumetric Cadastre Studio</title>
-  <meta name="description" content="Professional 3D ULPIN Architecture Studio. Decomposes architectural floor plans into statutory 3D volumetric cadastre units conforming to ISO 19152 LADM v2, UDS land equity, and mortgage lien validation." />
+  <title>3D ULPIN | National Volumetric Cadastre Platform</title>
+  <meta name="description" content="National Volumetric Cadastre Platform. Decomposes architectural floor plans into statutory 3D volumetric parcels conforming to ISO 19152 LADM v2, UDS land equity, and mortgage lien security." />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   
   <!-- Three.js + OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -25,7 +25,7 @@
       --surface-hover: #f1f5f9;
       --border: #e2e8f0;
       --border-subtle: #edf2f7;
-      --border-dark: #334155;
+      --border-dark: #1e293b;
       --text: #0f172a;
       --text-muted: #475569;
       --text-dim: #64748b;
@@ -44,9 +44,10 @@
       --warning-border: #fde68a;
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-      --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+      --shadow-md: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+      --shadow-lg: 0 12px 30px -6px rgba(15, 23, 42, 0.08), 0 8px 12px -6px rgba(15, 23, 42, 0.04);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,8 +55,8 @@
     body {
       background-color: var(--bg);
       background-image: 
-        linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+        linear-gradient(to right, rgba(226, 232, 240, 0.65) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.65) 1px, transparent 1px),
         radial-gradient(circle, #cbd5e1 1px, transparent 1px);
       background-size: 48px 48px, 48px 48px, 24px 24px;
       color: var(--text);
@@ -67,7 +68,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Top Stark Header */
+    /* Top Government Cadastre Header */
     header {
       background: #ffffff;
       border-bottom: 1px solid var(--border);
@@ -78,7 +79,7 @@
       justify-content: space-between;
       flex-shrink: 0;
       z-index: 50;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      box-shadow: var(--shadow-xs);
     }
 
     .header-brand {
@@ -105,9 +106,9 @@
       stroke: #ffffff;
     }
     .brand-meta h1 {
-      font-size: 1.02rem;
+      font-size: 1.05rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.025em;
       color: var(--text);
     }
 
@@ -155,7 +156,7 @@
     /* Main Viewport Container */
     main {
       flex: 1;
-      padding: 12px 24px;
+      padding: 10px 24px 14px;
       max-width: 1880px;
       margin: 0 auto;
       width: 100%;
@@ -165,55 +166,85 @@
       overflow: hidden;
     }
 
-    /* ── LANDING DASHBOARD VIEW ────────────────────────────────────────────── */
+    /* ── LANDING DASHBOARD VIEW (STRIPE / GOV STANDARD) ───────────────────── */
     .landing-dashboard-section {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 40px;
-      gap: 28px;
+      padding: 24px 16px 48px;
+      gap: 32px;
+      scrollbar-width: thin;
     }
+    .landing-dashboard-section::-webkit-scrollbar {
+      width: 6px;
+    }
+    .landing-dashboard-section::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    /* Official Government Sub-Badge */
+    .gov-authority-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      box-shadow: var(--shadow-xs);
+    }
+    .gov-authority-pill svg {
+      width: 13px;
+      height: 13px;
+      stroke: #0f172a;
+    }
+    .gov-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 2px var(--success-border);
+    }
+
+    /* Hero Section */
     .landing-hero {
       text-align: center;
-      max-width: 820px;
+      max-width: 860px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
     }
-    .hero-badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.7rem;
+    .hero-kicker {
       font-family: var(--font-mono);
-      font-weight: 600;
-      color: var(--text-muted);
-      box-shadow: var(--shadow-sm);
-    }
-    .hero-badge-pill svg {
-      width: 12px;
-      height: 12px;
-      stroke: var(--text);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #f1f5f9;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
     }
     .landing-hero h1 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: -0.035em;
       color: var(--text);
-      line-height: 1.15;
+      line-height: 1.12;
     }
     .landing-hero p {
-      font-size: 0.92rem;
+      font-size: 0.96rem;
       color: var(--text-muted);
-      line-height: 1.5;
-      max-width: 660px;
+      line-height: 1.55;
+      max-width: 720px;
     }
     .hero-actions-row {
       display: flex;
@@ -225,9 +256,9 @@
       background: #0f172a;
       color: #ffffff;
       border: 1px solid #0f172a;
-      padding: 10px 22px;
+      padding: 11px 24px;
       border-radius: 8px;
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -239,6 +270,7 @@
     .btn-dash-primary:hover {
       background: #1e293b;
       transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.16);
     }
     .btn-dash-primary svg {
       width: 15px;
@@ -249,16 +281,16 @@
       background: #ffffff;
       color: var(--text);
       border: 1px solid var(--border);
-      padding: 10px 18px;
+      padding: 11px 20px;
       border-radius: 8px;
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       transition: all 0.15s ease;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-xs);
     }
     .btn-dash-secondary:hover {
       background: #f8fafc;
@@ -271,78 +303,54 @@
       stroke: currentColor;
     }
 
-    /* Dashboard Pillars Grid */
-    .dashboard-pillars-grid {
+    /* Institutional Telemetry & National Metrics Bar */
+    .cadastre-metrics-strip {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      max-width: 1060px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      max-width: 1100px;
       width: 100%;
-    }
-    .pillar-card {
       background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px 22px;
+      padding: 16px 20px;
       box-shadow: var(--shadow-sm);
+    }
+    .metric-strip-cell {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      transition: all 0.2s ease;
+      gap: 3px;
+      padding: 0 10px;
+      border-right: 1px solid var(--border);
     }
-    .pillar-card:hover {
-      border-color: #cbd5e1;
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+    .metric-strip-cell:last-child {
+      border-right: none;
     }
-    .pillar-card-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text);
+    .metric-val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0f172a;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
     }
-    .pillar-card-icon svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-    }
-    .pillar-card h3 {
-      font-size: 0.92rem;
+    .metric-title {
+      font-size: 0.74rem;
       font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.01em;
     }
-    .pillar-card p {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-      flex: 1;
-    }
-    .pillar-tag {
-      font-size: 0.68rem;
-      font-family: var(--font-mono);
-      font-weight: 600;
-      color: #059669;
-      background: #ecfdf5;
-      padding: 3px 8px;
-      border-radius: 4px;
-      align-self: flex-start;
-      border: 1px solid #a7f3d0;
+    .metric-sub {
+      font-size: 0.65rem;
+      color: var(--text-dim);
     }
 
-    /* Dashboard Sample Quick-Launch */
+    /* Verified Architectural Datasets Quick-Launch */
     .dashboard-launch-section {
-      max-width: 1060px;
+      max-width: 1100px;
       width: 100%;
       background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px 22px;
+      padding: 22px 24px;
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
@@ -354,7 +362,7 @@
       align-items: center;
     }
     .launch-section-header h4 {
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--text);
       text-transform: uppercase;
@@ -369,7 +377,7 @@
       background: #f8fafc;
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 12px 14px;
+      padding: 14px 14px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -402,6 +410,160 @@
     .launch-card-desc {
       font-size: 0.66rem;
       color: var(--text-dim);
+      line-height: 1.35;
+    }
+
+    /* Stripe-Grade 4 Capabilities Matrix */
+    .capabilities-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 1100px;
+      width: 100%;
+    }
+    .capability-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: all 0.2s ease;
+    }
+    .capability-card:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .capability-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text);
+    }
+    .capability-icon-box svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+    }
+    .capability-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .capability-content h3 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .capability-content p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .capability-tag {
+      font-size: 0.66rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #059669;
+      background: #ecfdf5;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid #a7f3d0;
+    }
+
+    /* 4-Step Pipeline Architecture Section */
+    .pipeline-workflow-card {
+      max-width: 1100px;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .workflow-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .workflow-header h4 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .workflow-steps-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .workflow-step-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .step-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .step-desc {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    /* Trust & Standards Minimal Footer */
+    .landing-footer {
+      max-width: 1100px;
+      width: 100%;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer-links a:hover {
+      color: var(--text);
     }
 
     /* ── STUDIO WORKSPACE VIEW ─────────────────────────────────────────────── */
@@ -425,7 +587,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-xs);
       flex-shrink: 0;
     }
     .mission-info h2 {
@@ -479,7 +641,7 @@
       border-radius: 10px;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-xs);
       min-height: 0;
       height: 100%;
       overflow: hidden;
@@ -1417,7 +1579,7 @@
 </head>
 <body>
 
-  <!-- Top Stark Header -->
+  <!-- Top Government Cadastre Header -->
   <header>
     <a href="javascript:void(0)" onclick="navigateTo('dashboard')" class="header-brand">
       <div class="brand-logo-badge">
@@ -1460,18 +1622,26 @@
   <!-- Main Viewport -->
   <main>
     
-    <!-- ── 1. LANDING DASHBOARD VIEW ────────────────────────────────────────── -->
+    <!-- ── 1. STRIPE / GOV-GRADE LANDING DASHBOARD VIEW ────────────────────── -->
     <section class="landing-dashboard-section" id="view-dashboard">
+      
+      <!-- Official Government Authority Badge -->
+      <div class="gov-authority-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>Department of Land Resources (DoLR) &bull; PS 26011</span>
+        <span style="color: var(--border-subtle);">&bull;</span>
+        <div class="gov-status-dot"></div>
+        <span style="color: var(--success); font-weight: 700;">ISO 19152 Active</span>
+      </div>
+
+      <!-- Hero Section -->
       <div class="landing-hero">
-        <div class="hero-badge-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          National Volumetric Cadastre Platform &bull; PS 26011
-        </div>
-        <h1>Volumetric 3D Cadastre Studio</h1>
+        <div class="hero-kicker">Statutory 3D Volumetric Cadastre Platform</div>
+        <h1>The Volumetric Cadastre Platform for Vertical Land Governance</h1>
         <p>
-          Decompose architectural floor plans into statutory 3D volumetric parcels, compute mathematical Undivided Land Share (UDS), and verify strata titles conforming to ISO 19152 LADM v2.
+          Transform architectural floor plans into immutable 3D ULPIN parcels. Establish statutory spatial boundaries, compute algorithmic Undivided Land Share (UDS), and eliminate multi-bank mortgage fraud across multi-storey real estate.
         </p>
         <div class="hero-actions-row">
           <button class="btn-dash-primary" onclick="navigateTo('studio')">
@@ -1489,52 +1659,35 @@
         </div>
       </div>
 
-      <!-- Feature Pillars -->
-      <div class="dashboard-pillars-grid">
-        <div class="pillar-card">
-          <div class="pillar-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-              <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
-          </div>
-          <h3>3D Volumetric Parcels</h3>
-          <p>Decomposes multi-storey floor plans into vertically stacked strata units with statutory ISO 19152 LADM v2 3D ULPIN identifiers.</p>
-          <span class="pillar-tag">ISO 19152 Compliant</span>
+      <!-- Institutional National Telemetry Bar -->
+      <div class="cadastre-metrics-strip">
+        <div class="metric-strip-cell">
+          <div class="metric-val">14-Digit</div>
+          <div class="metric-title">Base Parcel Anchor</div>
+          <div class="metric-sub">Survey 140/1 Waranga standard</div>
         </div>
-
-        <div class="pillar-card">
-          <div class="pillar-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <line x1="9" y1="21" x2="9" y2="9"></line>
-            </svg>
-          </div>
-          <h3>Automated UDS Calculus</h3>
-          <p>Calculates legal Undivided Share of Land (UDS) dynamically across all vertical storeys based on net carpet area and plot size.</p>
-          <span class="pillar-tag">Real-Time Land Equity</span>
+        <div class="metric-strip-cell">
+          <div class="metric-val">ISO 19152</div>
+          <div class="metric-title">LADM v2 Strata Standard</div>
+          <div class="metric-sub">Spatial Unit &amp; Rights Packages</div>
         </div>
-
-        <div class="pillar-card">
-          <div class="pillar-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <h3>Anti-Fraud Title Security</h3>
-          <p>Enforces automated bank mortgage lien verification and blocks fraudulent resale or unauthorized strata title mutation.</p>
-          <span class="pillar-tag">Lien Mutation Lock</span>
+        <div class="metric-strip-cell">
+          <div class="metric-val">100%</div>
+          <div class="metric-title">Spatial Topology</div>
+          <div class="metric-sub">Non-overlapping Euler polyhedra</div>
+        </div>
+        <div class="metric-strip-cell">
+          <div class="metric-val">40+</div>
+          <div class="metric-title">Volumetric Parcels</div>
+          <div class="metric-sub">Extruded &amp; verified per tower</div>
         </div>
       </div>
 
-      <!-- Quick Launch Architectural Samples -->
+      <!-- Verified Architectural Datasets Quick-Launch -->
       <div class="dashboard-launch-section">
         <div class="launch-section-header">
           <h4>Launch with Verified Sample Blueprints:</h4>
-          <span style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);">5 Architectural Datasets</span>
+          <span style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);">5 Official Architectural Datasets</span>
         </div>
         <div class="launch-grid">
           <button class="launch-card-btn" onclick="quickLaunchSample('sample_2bhk')">
@@ -1583,6 +1736,121 @@
           </button>
         </div>
       </div>
+
+      <!-- Stripe-Grade 4 Capabilities Matrix -->
+      <div class="capabilities-matrix-grid">
+        <div class="capability-card">
+          <div class="capability-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <div class="capability-content">
+            <h3>
+              Volumetric 3D Stratification
+              <span class="capability-tag">ISO 19152</span>
+            </h3>
+            <p>Converts flat 2D architectural drawings into legally bounded 3D volumetric airspace polyhedra ($X, Y, Z_{min}, Z_{max}$ and $m^3$) providing unambiguous vertical title rights for every owner.</p>
+          </div>
+        </div>
+
+        <div class="capability-card">
+          <div class="capability-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+          </div>
+          <div class="capability-content">
+            <h3>
+              Algorithmic UDS Equity Calculus
+              <span class="capability-tag">Real-Time Equity</span>
+            </h3>
+            <p>Computes statutory Undivided Share of Land based on precision net carpet area fractions against the registered plot boundary, guaranteeing proportional land equity in multi-owner developments.</p>
+          </div>
+        </div>
+
+        <div class="capability-card">
+          <div class="capability-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="capability-content">
+            <h3>
+              Anti-Fraud Mortgage &amp; Resale Lock
+              <span class="capability-tag">Bank Lien Protection</span>
+            </h3>
+            <p>Direct integration with institutional mortgage registries to flag active bank liens (SBI, HDFC, BoM) and automatically lock strata titles against fraudulent double-selling or unverified mutation.</p>
+          </div>
+        </div>
+
+        <div class="capability-card">
+          <div class="capability-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div class="capability-content">
+            <h3>
+              BIM &amp; National GIS Interoperability
+              <span class="capability-tag">Multi-Format Exchange</span>
+            </h3>
+            <p>Full machine-readable data exchange supporting .OBJ 3D textured meshes, Unity Digital Twin coordinate graphs, and standard revenue-compliant ISO 19152 ULPIN JSON/CSV ledgers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-Step Cadastral Pipeline Architecture -->
+      <div class="pipeline-workflow-card">
+        <div class="workflow-header">
+          <h4>Standard Statutory 3D Cadastral Pipeline:</h4>
+          <span style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);">End-to-End Workflow</span>
+        </div>
+        <div class="workflow-steps-row">
+          <div class="workflow-step-box">
+            <div class="step-num">01 / INGESTION</div>
+            <div class="step-name">Architectural Blueprint</div>
+            <div class="step-desc">Upload architectural CAD drawings, institutional PDFs, or high-res vector scans.</div>
+          </div>
+          <div class="workflow-step-box">
+            <div class="step-num">02 / SEGMENTATION</div>
+            <div class="step-name">ResNet34-UNet Extraction</div>
+            <div class="step-desc">Extracts bearing walls, common circulation, and distinct private room boundaries.</div>
+          </div>
+          <div class="workflow-step-box">
+            <div class="step-num">03 / EXTRUSION</div>
+            <div class="step-name">3D Volumetric Stacking</div>
+            <div class="step-desc">Stacks vertical storeys, assigns elevation extents (Z_min to Z_max), and computes airspace volume.</div>
+          </div>
+          <div class="workflow-step-box">
+            <div class="step-num">04 / TITLE ISSUANCE</div>
+            <div class="step-name">3D ULPIN Property Deed</div>
+            <div class="step-desc">Stamps statutory 3D Bhu-Aadhaar and enforces real-time bank mortgage anti-fraud locks.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust & Standards Minimal Footer -->
+      <footer class="landing-footer">
+        <div>
+          Conforms to <strong>ISO 19152:2024 LADM v2</strong> &bull; Digital India Land Records Modernization Programme (DILRMP) &bull; Department of Land Resources (DoLR)
+        </div>
+        <div class="footer-links">
+          <a href="/portal">Cadastre Portal</a>
+          <a href="/app">3D Twin App</a>
+          <a href="javascript:void(0)" onclick="navigateTo('studio')">Open Studio</a>
+        </div>
+      </footer>
+
     </section>
 
     <!-- ── 2. STUDIO WORKSPACE VIEW ──────────────────────────────────────────── -->
@@ -1685,7 +1953,7 @@
                 </div>
                 <div class="sample-card-item" onclick="selectSample('sample_fdd22', this)">
                   <div class="sample-card-item-left">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                     <div>
                       <div class="sample-title-text">Tower Block FDD22</div>
                       <div class="sample-desc-text">High-density residential tower</div>
@@ -1959,7 +2227,7 @@
                   .OBJ
                 </button>
                 <button class="btn-export-tile" onclick="downloadExport('unity')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                   Unity
                 </button>
                 <button class="btn-export-tile" onclick="downloadExport('cadastre')">
@@ -2205,9 +2473,12 @@
     function initMotionTransitions() {
       if (window.Motion && window.Motion.animate) {
         const { animate } = window.Motion;
-        animate(".landing-hero", { opacity: [0, 1], y: [12, 0] }, { duration: 0.45, easing: [0.16, 1, 0.3, 1] });
-        animate(".dashboard-pillars-grid", { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: 0.08, easing: [0.16, 1, 0.3, 1] });
-        animate(".dashboard-launch-section", { opacity: [0, 1], y: [20, 0] }, { duration: 0.55, delay: 0.14, easing: [0.16, 1, 0.3, 1] });
+        animate(".gov-authority-pill", { opacity: [0, 1], y: [-6, 0] }, { duration: 0.35, easing: [0.16, 1, 0.3, 1] });
+        animate(".landing-hero", { opacity: [0, 1], y: [12, 0] }, { duration: 0.45, delay: 0.05, easing: [0.16, 1, 0.3, 1] });
+        animate(".cadastre-metrics-strip", { opacity: [0, 1], y: [14, 0] }, { duration: 0.45, delay: 0.1, easing: [0.16, 1, 0.3, 1] });
+        animate(".dashboard-launch-section", { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: 0.15, easing: [0.16, 1, 0.3, 1] });
+        animate(".capabilities-matrix-grid", { opacity: [0, 1], y: [18, 0] }, { duration: 0.55, delay: 0.2, easing: [0.16, 1, 0.3, 1] });
+        animate(".pipeline-workflow-card", { opacity: [0, 1], y: [20, 0] }, { duration: 0.55, delay: 0.25, easing: [0.16, 1, 0.3, 1] });
       }
     }
 
