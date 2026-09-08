@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D ULPIN Cadastral Management System | DoLR</title>
-  <link rel="stylesheet" href="/static/app.css?v=3.2">
+  <link rel="stylesheet" href="/static/app.css?v=3.3">
   <script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
 </head>
 <body>
@@ -267,13 +267,13 @@ Map Report</div>
         <div class="bhunaksha-map-wrapper" id="bhunaksha-map-wrapper">
           <div style="position:relative;display:inline-block;max-width:100%;transition:transform 0.2s ease;" id="map-zoom-target">
             <!-- Village Map Image -->
-            <img id="bhunaksha-map-img" src="/static/map_unhighlighted.png" alt="Waranga Cadastral Map" style="max-width:100%;max-height:72vh;display:block;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.08);cursor:pointer;" onclick="onMapClick(event)">
+            <img id="bhunaksha-map-img" src="/static/map_unhighlighted.png?v=3.3" alt="Waranga Cadastral Map" style="max-width:100%;max-height:74vh;display:block;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;" onclick="onMapClick(event)">
             
             <!-- Clickable hotspot over Plot 140 on the western side of the map -->
-            <div id="plot140-hotspot" onclick="selectPlot140()" style="position:absolute;top:10%;left:22%;width:26%;height:68%;cursor:pointer;border-radius:8px;" title="Plot 140 (Survey 140/1, 140/2, 140/3) - Click to Inspect"></div>
+            <div id="plot140-hotspot" onclick="selectPlot140()" style="position:absolute;top:20%;left:2%;width:30%;height:46%;cursor:pointer;border-radius:8px;" title="Plot 140 (Survey 140/1, 140/2, 140/3) - Click to Inspect"></div>
             
             <!-- Floating badge when 140 is selected -->
-            <div id="plot140-badge" style="display:none;position:absolute;top:24%;left:36%;background:rgba(15,23,42,0.92);color:#ffffff;padding:8px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.25);pointer-events:none;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,0.2);white-space:nowrap;">
+            <div id="plot140-badge" style="display:none;position:absolute;top:28%;left:17%;background:rgba(15,23,42,0.92);color:#ffffff;padding:8px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.25);pointer-events:none;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,0.2);white-space:nowrap;">
               🎯 Plot 140 Selected • Survey 140/1 (pu-id: 33550994106)
             </div>
           </div>
@@ -786,7 +786,7 @@ Map Report</div>
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <script src="/static/app.js?v=3.2"></script>
+  <script src="/static/app.js?v=3.3"></script>
 </body>
 </html>
 

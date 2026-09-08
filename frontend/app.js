@@ -253,7 +253,7 @@ function openVillageMap() {
 
   // Reset Map View State
   const mapImg = document.getElementById("bhunaksha-map-img");
-  if (mapImg) mapImg.src = "/static/map_unhighlighted.png";
+  if (mapImg) mapImg.src = "/static/map_unhighlighted.png?v=3.3";
   const plotInput = document.getElementById("bhu-plot-input");
   if (plotInput) plotInput.value = "";
   const plotSelect = document.getElementById("bhu-plot-select");
@@ -269,8 +269,6 @@ function openVillageMap() {
   const bhuView = document.getElementById("view-bhunaksha");
   bhuView.style.setProperty("display", "flex", "important");
   window.scrollTo({ top: 0, behavior: "smooth" });
-
-  showToast(`Loaded Village Cadastral Map for ${villageText.split(' ')[0]}. Enter Plot No. 140 to inspect.`, "success");
 }
 
 // Bhunaksha Plot Search (triggered on click, enter key, or dropdown)
@@ -286,7 +284,7 @@ function searchBhunakshaPlot() {
   } else {
     // Show realistic dummy data for other plot numbers
     const mapImg = document.getElementById("bhunaksha-map-img");
-    if (mapImg) mapImg.src = "/static/map_unhighlighted.png";
+    if (mapImg) mapImg.src = "/static/map_unhighlighted.png?v=3.3";
     const badge = document.getElementById("plot140-badge");
     if (badge) badge.style.display = "none";
 
@@ -296,7 +294,6 @@ function searchBhunakshaPlot() {
     if (infoText) {
       infoText.innerText = `Survey No. : ${plot}/1\nTotal Area : 12.5000 Ha\nPot kharaba : 1.2000\nOwner Name : खासगी भूधारक (Private Freehold)\nKhata No. : 188\npu-id : 33550994106\n---------------------------\nMap Report`;
     }
-    showToast(`Plot ${plot} searched. Switch to Plot 140 to inspect 3D pilot model, or click button below.`, "info");
   }
 }
 
@@ -317,7 +314,7 @@ function selectPlot140() {
   // Switch image to the highlighted map with Plot 140 colored in dark navy blue
   const mapImg = document.getElementById("bhunaksha-map-img");
   if (mapImg) {
-    mapImg.src = "/static/map_highlighted.png";
+    mapImg.src = "/static/map_highlighted.png?v=3.3";
   }
 
   // Show Plot 140 floating badge
@@ -332,8 +329,6 @@ function selectPlot140() {
   if (infoText) {
     infoText.innerText = `Survey No. : 140/1\nTotal Area : 0.0000\nPot kharaba : 29.0300\nOwner Name : महाराष्ट्र राज्य शासन\nKhata No. : 341\n---------------------------\nSurvey No. : 140/2\nTotal Area : 0.0000\nPot kharaba : 24.0000\nOwner Name : महाराष्ट्र नॅशनल लॉ युनिव्हर्सिटी\nKhata No. : 623\n---------------------------\nSurvey No. : 140/3\nTotal Area : 0.0000\nPot kharaba : 19.8100\nOwner Name : कविकुलगुरू कालिदास संस्कृत विश्वविद्यालय\nKhata No. : 624\n---------------------------\nMap Report`;
   }
-
-  showToast("Plot 140 Selected: 4 Campus Buildings & 700 3D Volumetric Units Detected", "success");
 }
 
 // Step 2 -> Step 3: Enter into the Main Page (where 3D buildings are plotted)
@@ -354,8 +349,6 @@ async function enter3DStratum() {
   if (breadcrumbEl) {
     breadcrumbEl.innerText = `Survey ${surveyNo} (pu-id: 33550994106)`;
   }
-
-  showToast(`Resolved 3D Cadastral Stratum: Survey ${surveyNo}, Waranga (pu-id: 33550994106)`, "success");
 
   // Load analytics & render 3D twin for active building
   await loadAnalytics();
@@ -864,12 +857,8 @@ async function runTopologyAudit() {
 }
 
 function showToast(message, type = "info") {
-  const container = document.getElementById("toast-container");
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.innerText = message;
-  container.appendChild(toast);
-  setTimeout(() => { toast.remove(); }, 3500);
+  // Suppressed on screen per user request (no popup banners or warnings)
+  console.log(`[Toast ${type}]:`, message);
 }
 
 // ========================================================
