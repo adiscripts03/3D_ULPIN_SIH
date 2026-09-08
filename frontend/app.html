@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D ULPIN Cadastral Management System | DoLR</title>
-  <link rel="stylesheet" href="/static/app.css?v=2.2">
+  <link rel="stylesheet" href="/static/app.css?v=3.1">
   <script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
 </head>
 <body>
@@ -29,7 +29,7 @@
   <!-- ========================================================
        PAGE 1: MAHABHULEKH CADASTRAL SEARCH VIEW
        ======================================================== -->
-  <section id="view-search">
+  <section id="view-search" style="display: flex;">
     <div class="search-portal-card">
       
       <div class="portal-card-header">
@@ -146,7 +146,7 @@
   <!-- ========================================================
        PAGE 2: BHUNAKSHA INTERACTIVE VILLAGE CADASTRAL MAP VIEW
        ======================================================== -->
-  <section id="view-bhunaksha">
+  <section id="view-bhunaksha" style="display: none !important;">
     <div class="results-top-bar">
       <button class="btn btn-subtle" onclick="backToSearch()">
         ← Back to District / Taluka Selection (गाव बदला)
@@ -282,7 +282,7 @@ Map Report</div>
   <!-- ========================================================
        PAGE 3: RESOLVED PARCEL DETAILS, 4 BUILDINGS & 3D TWIN
        ======================================================== -->
-  <section id="view-results">
+  <section id="view-results" style="display: none !important;">
     
     <!-- Results Top Bar & Breadcrumb -->
     <div class="results-top-bar">
@@ -783,7 +783,7 @@ Map Report</div>
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <script src="/static/app.js?v=2.2"></script>
+  <script src="/static/app.js?v=3.1"></script>
 </body>
 </html>
 

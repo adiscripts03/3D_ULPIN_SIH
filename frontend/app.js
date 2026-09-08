@@ -36,6 +36,14 @@ if (document.readyState === "loading") {
 }
 
 function setupEventListeners() {
+  // Ensure only Search view is visible on initial load
+  const vSearch = document.getElementById("view-search");
+  const vBhu = document.getElementById("view-bhunaksha");
+  const vRes = document.getElementById("view-results");
+  if (vSearch) vSearch.style.setProperty("display", "flex", "important");
+  if (vBhu) vBhu.style.setProperty("display", "none", "important");
+  if (vRes) vRes.style.setProperty("display", "none", "important");
+
   const floorFilter = document.getElementById("floor-filter");
   if (floorFilter) {
     floorFilter.addEventListener("change", () => { filter3DView(); });
@@ -225,10 +233,11 @@ function openVillageMap() {
   if (badge) badge.style.display = "none";
 
   // Switch from Search Card to Bhunaksha Map
-  document.getElementById("view-search").style.display = "none";
-  document.getElementById("view-results").style.display = "none";
+  document.getElementById("view-search").style.setProperty("display", "none", "important");
+  document.getElementById("view-results").style.setProperty("display", "none", "important");
   const bhuView = document.getElementById("view-bhunaksha");
-  bhuView.style.display = "flex";
+  bhuView.style.setProperty("display", "flex", "important");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   showToast(`Loaded Village Cadastral Map for ${villageText.split(' ')[0]}. Enter Plot No. 140 to inspect.`, "success");
 }
@@ -303,10 +312,11 @@ async function enter3DStratum() {
   const surveyNo = plotVal.includes("/") ? plotVal : `${plotVal}/1`;
 
   // Hide Bhunaksha map & search views, show 3D results workspace
-  document.getElementById("view-search").style.display = "none";
-  document.getElementById("view-bhunaksha").style.display = "none";
+  document.getElementById("view-search").style.setProperty("display", "none", "important");
+  document.getElementById("view-bhunaksha").style.setProperty("display", "none", "important");
   const resultsView = document.getElementById("view-results");
-  resultsView.style.display = "flex";
+  resultsView.style.setProperty("display", "flex", "important");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   // Update breadcrumb
   const breadcrumbEl = document.getElementById("breadcrumb-survey-label") || document.querySelector(".breadcrumb-path strong");
@@ -323,16 +333,20 @@ async function enter3DStratum() {
 
 // Navigation Back to Bhunaksha Map
 function backToBhunakshaMap() {
-  document.getElementById("view-results").style.display = "none";
-  document.getElementById("view-search").style.display = "none";
-  document.getElementById("view-bhunaksha").style.display = "flex";
+  document.getElementById("view-results").style.setProperty("display", "none", "important");
+  document.getElementById("view-search").style.setProperty("display", "none", "important");
+  const bhuView = document.getElementById("view-bhunaksha");
+  bhuView.style.setProperty("display", "flex", "important");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // Navigation Back to Initial Search
 function backToSearch() {
-  document.getElementById("view-results").style.display = "none";
-  document.getElementById("view-bhunaksha").style.display = "none";
-  document.getElementById("view-search").style.display = "flex";
+  document.getElementById("view-results").style.setProperty("display", "none", "important");
+  document.getElementById("view-bhunaksha").style.setProperty("display", "none", "important");
+  const searchView = document.getElementById("view-search");
+  searchView.style.setProperty("display", "flex", "important");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // Bhunaksha Map Zoom Controls
