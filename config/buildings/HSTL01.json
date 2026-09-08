@@ -1,13 +1,13 @@
 {
   "building_id": "HSTL01",
   "building_name": "Hostel Block A",
-  "category": "Institutional Complex",
+  "category": "Student Housing / Residential Stratum",
   "description": "",
-  "floor_plan_source": "data/uploads/HSTL01_floor_plan.pdf",
+  "floor_plan_source": "data/uploads/HSTL01_floor_plan.jpg",
   "floor_plan_type": "auto",
   "anchor_lat": 20.9495556,
   "anchor_lon": 79.0294722,
-  "total_floors": 10,
+  "total_floors": 1,
   "floor_pitch_m": 3.4,
   "room_clear_height_m": 2.9,
   "slab_thickness_m": 0.5,
@@ -15,257 +15,56 @@
   "scale_y": null,
   "x_offset_cad": 0.0,
   "y_offset_cad": 0.0,
-  "flip_horizontal": true,
+  "flip_horizontal": false,
   "flip_vertical": false,
   "point_cloud_source": null,
   "room_type_rules": [
     {
-      "rule_id": "r_4s_bottom_wing",
-      "label_pattern": "^X0[1-6]$",
-      "shape_condition": null,
-      "type": "4S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 0.0,
-        "y_end_m": 8.8
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_2s_bottom_wing",
-      "label_pattern": "^X(0[7-9]|1[0-8])$",
-      "shape_condition": null,
-      "type": "2S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 4.8,
-        "y_end_m": 8.8
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_4s_mid_wing_1",
-      "label_pattern": "^X(31|32)$",
-      "shape_condition": null,
-      "type": "4S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 10.8,
-        "y_end_m": 19.6
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_2s_mid_wing_1",
-      "label_pattern": "^X(19|2[0-9]|30)$",
-      "shape_condition": null,
-      "type": "2S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 10.8,
-        "y_end_m": 14.8
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_4s_mid_wing_2",
-      "label_pattern": "^X(33|34|35|36)$",
-      "shape_condition": null,
-      "type": "4S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 19.2,
-        "y_end_m": 28.0
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_2s_mid_wing_2",
-      "label_pattern": "^X(3[7-9]|4[0-4])$",
-      "shape_condition": null,
-      "type": "2S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 24.0,
-        "y_end_m": 28.0
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_4s_top_wing",
-      "label_pattern": "^X(5[3-6])$",
-      "shape_condition": null,
-      "type": "4S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 30.0,
-        "y_end_m": 38.8
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_2s_top_wing",
-      "label_pattern": "^X(4[5-9]|5[0-2])$",
-      "shape_condition": null,
-      "type": "2S",
-      "is_common": false,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 30.0,
-        "y_end_m": 34.0
-      },
-      "cad_y_bands": null
-    },
-    {
-      "rule_id": "r_common_hall",
+      "rule_id": "rule_1",
       "label_pattern": ".*(Common|Hall).*",
       "shape_condition": null,
       "type": "HALL",
       "is_common": true,
-      "depth_m": null,
-      "prop_id_override": "COMMON_HALL",
+      "depth_m": 17.2,
+      "prop_id_override": null,
       "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 10.8,
-        "y_end_m": 28.0
-      },
+      "y_bounds": null,
       "cad_y_bands": null
     },
     {
-      "rule_id": "r_washrooms",
+      "rule_id": "rule_2",
       "label_pattern": ".*Washroom.*",
       "shape_condition": null,
       "type": "WASH",
       "is_common": true,
-      "depth_m": null,
+      "depth_m": 6.4,
       "prop_id_override": null,
-      "prop_id_prefix": "WASHROOM",
-      "y_bounds": null,
-      "cad_y_bands": [
-        {
-          "max_cad_y": 80.0,
-          "y_start_m": 2.4,
-          "y_end_m": 8.8
-        },
-        {
-          "max_cad_y": 150.0,
-          "y_start_m": 10.8,
-          "y_end_m": 17.2
-        },
-        {
-          "max_cad_y": 9999.0,
-          "y_start_m": 30.0,
-          "y_end_m": 36.4
-        }
-      ]
-    },
-    {
-      "rule_id": "r_lift",
-      "label_pattern": ".*LIFT.*",
-      "shape_condition": null,
-      "type": "LIFT",
-      "is_common": true,
-      "depth_m": null,
-      "prop_id_override": "LIFT_STAIRS1",
       "prop_id_prefix": null,
-      "y_bounds": {
-        "y_start_m": 10.8,
-        "y_end_m": 17.2
-      },
+      "y_bounds": null,
       "cad_y_bands": null
     },
     {
-      "rule_id": "r_stairs",
-      "label_pattern": ".*Stairs.*",
+      "rule_id": "rule_3",
+      "label_pattern": ".*(Stairs|LIFT).*",
       "shape_condition": null,
       "type": "STR",
       "is_common": true,
-      "depth_m": null,
+      "depth_m": 4.8,
       "prop_id_override": null,
-      "prop_id_prefix": "STAIRS",
+      "prop_id_prefix": null,
       "y_bounds": null,
-      "cad_y_bands": [
-        {
-          "max_cad_y": 80.0,
-          "y_start_m": 4.0,
-          "y_end_m": 8.8
-        },
-        {
-          "max_cad_y": 150.0,
-          "y_start_m": 10.8,
-          "y_end_m": 15.6
-        },
-        {
-          "max_cad_y": 220.0,
-          "y_start_m": 23.2,
-          "y_end_m": 28.0
-        },
-        {
-          "max_cad_y": 9999.0,
-          "y_start_m": 30.0,
-          "y_end_m": 34.8
-        }
-      ]
+      "cad_y_bands": null
     },
     {
-      "rule_id": "r_corridors",
-      "label_pattern": null,
-      "shape_condition": "w > 200",
+      "rule_id": "rule_4",
+      "label_pattern": ".*",
+      "shape_condition": null,
       "type": "CORR",
       "is_common": true,
-      "depth_m": null,
+      "depth_m": 2.0,
       "prop_id_override": null,
-      "prop_id_prefix": "CORRIDOR_",
+      "prop_id_prefix": null,
       "y_bounds": null,
-      "cad_y_bands": [
-        {
-          "max_cad_y": 150.0,
-          "y_start_m": 8.8,
-          "y_end_m": 10.8
-        },
-        {
-          "max_cad_y": 9999.0,
-          "y_start_m": 28.0,
-          "y_end_m": 30.0
-        }
-      ]
-    },
-    {
-      "rule_id": "r_bridges",
-      "label_pattern": null,
-      "shape_condition": "h > 80",
-      "type": "BRIDGE",
-      "is_common": true,
-      "depth_m": null,
-      "prop_id_override": null,
-      "prop_id_prefix": "BRIDGE_",
-      "y_bounds": {
-        "y_start_m": 10.8,
-        "y_end_m": 28.0
-      },
       "cad_y_bands": null
     }
   ]

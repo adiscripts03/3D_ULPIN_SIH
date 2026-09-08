@@ -267,3 +267,176 @@ async def get_building_mesh(building_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── FLOOR PLAN → 3D ARCHITECTURE & OWNERSHIP CADASTRE ENDPOINTS ──────────────
+
+@router.get("/floorplan-3d/status")
+async def get_floorplan_3d_status():
+    """Returns availability of the two ML models and 3D architectural pipeline."""
+    from backend.services.floorplan_3d_ml import get_model_status
+    return get_model_status()
+
+
+@router.get("/floorplan-3d/samples")
+async def get_floorplan_3d_samples():
+    """Returns verified real sample floor plans for instant testing."""
+    samples = [
+        {
+            "id": "sample_2bhk",
+            "name": "2BHK Residential Apartment",
+            "description": "Standard 2BHK residential flat with master bedroom, living hall, kitchen, and balcony.",
+            "type": "Residential Flat",
+            "path": "data/clean_sample_floor_plan.png",
+            "format": "PNG",
+        },
+        {
+            "id": "sample_multi_unit",
+            "name": "Multi-Unit Apartment Floor",
+            "description": "Floor plan dividing into distinct private flats of different owners along a central corridor.",
+            "type": "Residential Complex",
+            "path": "data/ideal_sample_floor_plan.png",
+            "format": "PNG",
+        },
+        {
+            "id": "sample_cad",
+            "name": "Architectural CAD Drawing",
+            "description": "High-precision CAD blueprint showing structural wall vectors and partitions.",
+            "type": "CAD Vector Blueprint",
+            "path": "data/sample_cad_floor_plan.png",
+            "format": "PNG",
+        },
+        {
+            "id": "sample_hostel_pdf",
+            "name": "Hostel Multi-Storey Wing (PDF)",
+            "description": "Official 10-floor institutional hostel block layout with 56 rooms per floor (HSTL01).",
+            "type": "Institutional Multi-Storey",
+            "path": "data/uploads/HSTL01_floor_plan.pdf",
+            "format": "PDF",
+        },
+        {
+            "id": "sample_fdd22",
+            "name": "Residential Tower Block (FDD22)",
+            "description": "High-density residential tower layout with symmetrical apartment units.",
+            "type": "Residential Tower",
+            "path": "data/uploads/FDD22_floor_plan.jpg",
+            "format": "JPG",
+        },
+    ]
+
+    # Check existence
+    for s in samples:
+        s["available"] = os.path.exists(s["path"])
+    return {"samples": samples}
+
+
+@router.post("/floorplan-3d/generate")
+async def generate_floorplan_3d(
+    floor_plan: Optional[UploadFile] = File(None),
+    sample_id: Optional[str] = Form(None),
+    building_name: str = Form("Surya Heights Residency"),
+    floors: int = Form(5),
+    wall_height: float = Form(3.0),
+    model_type: str = Form("hybrid"),
+):
+    """
+    Primary endpoint: converts a 2D floor plan into a 3D multi-storey building
+    and identifies the distinct flats of different owners.
+    """
+    from backend.services.floorplan_3d_ml import run_floorplan_3d_pipeline
+
+    file_bytes: Optional[bytes] = None
+    filename = "floor_plan.png"
+
+    if floor_plan and floor_plan.filename:
+        filename = floor_plan.filename
+        file_bytes = await floor_plan.read()
+    elif sample_id:
+        sample_map = {
+            "sample_2bhk": "data/clean_sample_floor_plan.png",
+            "sample_multi_unit": "data/ideal_sample_floor_plan.png",
+            "sample_cad": "data/sample_cad_floor_plan.png",
+            "sample_hostel_pdf": "data/uploads/HSTL01_floor_plan.pdf",
+            "sample_fdd22": "data/uploads/FDD22_floor_plan.jpg",
+        }
+        sample_path = sample_map.get(sample_id)
+        if not sample_path or not os.path.exists(sample_path):
+            raise HTTPException(status_code=404, detail=f"Sample {sample_id} not found on disk.")
+        filename = os.path.basename(sample_path)
+        with open(sample_path, "rb") as f:
+            file_bytes = f.read()
+    else:
+        # Default to clean sample floor plan if nothing provided
+        default_path = "data/clean_sample_floor_plan.png"
+        if os.path.exists(default_path):
+            filename = "clean_sample_floor_plan.png"
+            with open(default_path, "rb") as f:
+                file_bytes = f.read()
+        else:
+            raise HTTPException(status_code=400, detail="Please upload a floor plan file or choose a sample.")
+
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Empty floor plan file provided.")
+
+    try:
+        # Constrain floors between 1 and 25
+        floors = max(1, min(int(floors), 25))
+        wall_height = max(1.0, min(float(wall_height), 6.0))
+
+        result = run_floorplan_3d_pipeline(
+            file_bytes=file_bytes,
+            filename=filename,
+            building_name=building_name,
+            floors=floors,
+            wall_height_m=wall_height,
+            model_type=model_type,
+        )
+        return result
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"3D Architecture Generation Failed: {str(e)}")
+
+
+@router.get("/floorplan-3d/export-obj/{session_id}")
+async def export_floorplan_obj(session_id: str):
+    """Downloads the generated building as a standard Wavefront .OBJ 3D file."""
+    from fastapi.responses import Response
+    from backend.services.floorplan_3d_ml import EXPORT_CACHE
+
+    cached = EXPORT_CACHE.get(session_id)
+    if not cached or "obj" not in cached:
+        raise HTTPException(status_code=404, detail="Session expired or not found. Please re-generate.")
+
+    obj_content = cached["obj"]
+    filename = f"Building_Architecture_{session_id}.obj"
+    return Response(
+        content=obj_content,
+        media_type="text/plain",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
+@router.get("/floorplan-3d/export-unity/{session_id}")
+async def export_floorplan_unity(session_id: str):
+    """Downloads the generated building in FloorPlanTo3D Unity Client JSON format."""
+    from backend.services.floorplan_3d_ml import EXPORT_CACHE
+
+    cached = EXPORT_CACHE.get(session_id)
+    if not cached or "unity" not in cached:
+        raise HTTPException(status_code=404, detail="Session expired or not found. Please re-generate.")
+
+    return cached["unity"]
+
+
+@router.get("/floorplan-3d/export-cadastre/{session_id}")
+async def export_floorplan_cadastre(session_id: str):
+    """Downloads the full 3D ULPIN cadastral flat ownership registry."""
+    from backend.services.floorplan_3d_ml import EXPORT_CACHE
+
+    cached = EXPORT_CACHE.get(session_id)
+    if not cached or "flats" not in cached:
+        raise HTTPException(status_code=404, detail="Session expired or not found. Please re-generate.")
+
+    return cached["flats"]
+

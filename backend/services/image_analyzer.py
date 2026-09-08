@@ -51,10 +51,12 @@ def classify_image(image: np.ndarray) -> Dict[str, Any]:
     h_lines = 0
     if lines is not None:
         for ln in lines:
-            x1, y1, x2, y2 = ln[0]
-            angle = abs(math.degrees(math.atan2(y2 - y1, x2 - x1)))
-            if angle < 12 or angle > 168:
-                h_lines += 1
+            pts = ln[0] if len(ln) == 1 and hasattr(ln[0], '__len__') and len(ln[0]) == 4 else ln
+            if len(pts) >= 4:
+                x1, y1, x2, y2 = pts[0], pts[1], pts[2], pts[3]
+                angle = abs(math.degrees(math.atan2(y2 - y1, x2 - x1)))
+                if angle < 12 or angle > 168:
+                    h_lines += 1
 
     # Feature 5: Rectangular contour count (floor plans have many rectangles)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -262,10 +264,12 @@ def analyze_exterior_photo(image: np.ndarray) -> Dict[str, Any]:
     h_y_vals: List[float] = []
     if lines is not None:
         for ln in lines:
-            x1, y1, x2, y2 = ln[0]
-            ang = abs(math.degrees(math.atan2(y2 - y1, x2 - x1)))
-            if ang < 15 or ang > 165:
-                h_y_vals.append((y1 + y2) / 2.0)
+            pts = ln[0] if len(ln) == 1 and hasattr(ln[0], '__len__') and len(ln[0]) == 4 else ln
+            if len(pts) >= 4:
+                x1, y1, x2, y2 = pts[0], pts[1], pts[2], pts[3]
+                ang = abs(math.degrees(math.atan2(y2 - y1, x2 - x1)))
+                if ang < 15 or ang > 165:
+                    h_y_vals.append((y1 + y2) / 2.0)
 
     # Cluster Y positions → distinct floor lines
     floor_positions: List[float] = []

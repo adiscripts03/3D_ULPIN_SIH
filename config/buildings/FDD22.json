@@ -1,0 +1,83 @@
+{
+  "building_id": "FDD22",
+  "building_name": "dfdfdf",
+  "category": "Commercial / Multi-Use Stratum",
+  "description": "",
+  "floor_plan_source": "data/uploads/FDD22_floor_plan.jpg",
+  "floor_plan_type": "auto",
+  "anchor_lat": 20.9495548,
+  "anchor_lon": 79.0294727,
+  "total_floors": 1,
+  "floor_pitch_m": 5.3,
+  "room_clear_height_m": 6.0,
+  "slab_thickness_m": 0.7,
+  "scale_x": 0.1362088535754824,
+  "scale_y": null,
+  "x_offset_cad": 0.0,
+  "y_offset_cad": 0.0,
+  "flip_horizontal": false,
+  "flip_vertical": false,
+  "point_cloud_source": null,
+  "room_type_rules": [
+    {
+      "rule_id": "rule_1",
+      "label_pattern": ".*(3BHK|FLAT_A).*",
+      "shape_condition": null,
+      "type": "3BHK",
+      "is_common": false,
+      "depth_m": 12.0,
+      "prop_id_override": null,
+      "prop_id_prefix": null,
+      "y_bounds": null,
+      "cad_y_bands": null
+    },
+    {
+      "rule_id": "rule_2",
+      "label_pattern": ".*(2BHK|FLAT_B).*",
+      "shape_condition": null,
+      "type": "2BHK",
+      "is_common": false,
+      "depth_m": 9.5,
+      "prop_id_override": null,
+      "prop_id_prefix": null,
+      "y_bounds": null,
+      "cad_y_bands": null
+    },
+    {
+      "rule_id": "rule_3",
+      "label_pattern": ".*(LIFT|ELEVATOR).*",
+      "shape_condition": null,
+      "type": "LIFT",
+      "is_common": true,
+      "depth_m": 3.0,
+      "prop_id_override": null,
+      "prop_id_prefix": null,
+      "y_bounds": null,
+      "cad_y_bands": null
+    },
+    {
+      "rule_id": "rule_4",
+      "label_pattern": ".*(STR|STAIR).*",
+      "shape_condition": null,
+      "type": "STR",
+      "is_common": true,
+      "depth_m": 4.0,
+      "prop_id_override": null,
+      "prop_id_prefix": null,
+      "y_bounds": null,
+      "cad_y_bands": null
+    },
+    {
+      "rule_id": "rule_5",
+      "label_pattern": ".*(LOBBY|CORR).*",
+      "shape_condition": null,
+      "type": "CORR",
+      "is_common": true,
+      "depth_m": 2.5,
+      "prop_id_override": null,
+      "prop_id_prefix": null,
+      "y_bounds": null,
+      "cad_y_bands": null
+    }
+  ]
+}

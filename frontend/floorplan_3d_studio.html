@@ -1,0 +1,3442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D ULPIN | National Volumetric Cadastre Platform</title>
+  <meta name="description" content="National Volumetric Cadastre Platform. Decomposes architectural floor plans into statutory 3D volumetric parcels conforming to ISO 19152 LADM v2, UDS land equity, and mortgage lien security." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Three.js + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Motion (Framer Motion Web Runtime) -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.js"></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --bg-subtle: #f1f5f9;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafc;
+      --surface-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --border-subtle: #edf2f7;
+      --border-dark: #1e293b;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --text-subtle: #94a3b8;
+      --accent: #0f172a;
+      --accent-hover: #1e293b;
+      --accent-light: #f1f5f9;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --warning-border: #fde68a;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+      --shadow-md: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+      --shadow-lg: 0 12px 30px -6px rgba(15, 23, 42, 0.08), 0 8px 12px -6px rgba(15, 23, 42, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg);
+      background-image: 
+        linear-gradient(to right, rgba(226, 232, 240, 0.65) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.65) 1px, transparent 1px),
+        radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+      background-size: 48px 48px, 48px 48px, 24px 24px;
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Government Cadastre Header */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.12);
+    }
+    .brand-logo-badge svg {
+      width: 17px;
+      height: 17px;
+      stroke: #ffffff;
+    }
+    .brand-meta h1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .nav-link-btn:hover {
+      background: #f1f5f9;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .nav-link-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+    }
+    .nav-btn-primary {
+      background: #0f172a !important;
+      color: #ffffff !important;
+      border: 1px solid #0f172a !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+    }
+    .nav-btn-primary:hover {
+      background: #1e293b !important;
+      color: #ffffff !important;
+    }
+
+    /* Main Viewport Container */
+    main {
+      flex: 1;
+      padding: 10px 24px 14px;
+      max-width: 1880px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── LANDING DASHBOARD VIEW (STRIPE / GOV MINIMAL WITH 3D BACKGROUND) ── */
+    .landing-dashboard-section {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      scrollbar-width: thin;
+      width: 100%;
+    }
+    .landing-dashboard-section::-webkit-scrollbar {
+      width: 6px;
+    }
+    .landing-dashboard-section::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    #landing-3d-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.68;
+    }
+
+    .landing-content-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+      gap: 32px;
+      max-width: 1140px;
+      width: 100%;
+    }
+
+    /* Official Government Sub-Badge */
+    .gov-authority-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 24px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      box-shadow: var(--shadow-xs);
+    }
+    .gov-authority-pill svg {
+      width: 13px;
+      height: 13px;
+      stroke: #0f172a;
+    }
+    .gov-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 2px var(--success-border);
+    }
+
+    /* Hero Section: Aim & Purpose */
+    .landing-hero {
+      text-align: center;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: radial-gradient(circle, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.75) 60%, transparent 100%);
+      padding: 12px 28px 18px;
+      border-radius: 24px;
+    }
+    .hero-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(241, 245, 249, 0.9);
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .landing-hero h1 {
+      font-size: 2.65rem;
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      color: var(--text);
+      line-height: 1.12;
+    }
+    .hero-purpose-text {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 680px;
+    }
+    .hero-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .btn-dash-primary {
+      background: #0f172a;
+      color: #ffffff;
+      border: 1px solid #0f172a;
+      padding: 11px 24px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    .btn-dash-primary:hover {
+      background: #1e293b;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.16);
+    }
+    .btn-dash-primary svg {
+      width: 15px;
+      height: 15px;
+      stroke: #ffffff;
+    }
+    .btn-dash-secondary {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-xs);
+    }
+    .btn-dash-secondary:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+    .btn-dash-secondary svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+    }
+
+    /* 3 Aim & Purpose Pillars */
+    .aim-pillars-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 1060px;
+    }
+    .aim-pillar-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    .aim-pillar-card:hover {
+      border-color: #0f172a;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      background: #ffffff;
+    }
+    .pillar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pillar-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f172a;
+    }
+    .pillar-icon-box svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+    .pillar-tag {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #059669;
+      background: #ecfdf5;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #a7f3d0;
+    }
+    .aim-pillar-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .aim-pillar-card p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Streamlined Quick-Demo Bar */
+    .quick-demo-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      width: 100%;
+      max-width: 1060px;
+      box-shadow: var(--shadow-xs);
+    }
+    .demo-strip-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .demo-chips-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .demo-chip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .demo-chip-btn:hover {
+      background: #ffffff;
+      border-color: #0f172a;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-xs);
+    }
+    .chip-ext {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* Trust & Standards Minimal Footer */
+    .landing-footer {
+      max-width: 1060px;
+      width: 100%;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    /* ── STUDIO WORKSPACE VIEW ─────────────────────────────────────────────── */
+    .studio-workspace-section {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    /* Architectural Compact Banner */
+    .mission-banner {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      box-shadow: var(--shadow-xs);
+      flex-shrink: 0;
+    }
+    .mission-info h2 {
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .standard-tags {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .tag-chip {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tag-chip.dark {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+    .tag-chip.dark svg { stroke: #ffffff; width: 11px; height: 11px; }
+
+    /* Studio Grid Layout (3 Columns) */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 290px 1fr 340px;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Panel Cards */
+    .panel-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-xs);
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      background: #ffffff;
+    }
+    .panel-header h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .panel-header h3 svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text);
+    }
+    .panel-body {
+      padding: 12px 14px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Dropzone */
+    .dropzone-box {
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      padding: 14px 10px;
+      text-align: center;
+      background: #fafbfc;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .dropzone-box:hover {
+      border-color: #0f172a;
+      background: #f8fafc;
+    }
+    .dropzone-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dropzone-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-muted);
+    }
+    .dropzone-title {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .dropzone-sub {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+
+    /* Sample Cards */
+    .sample-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sample-card-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .sample-card-item:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+    }
+    .sample-card-item.active {
+      background: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 0 0 1px #0f172a;
+    }
+    .sample-card-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sample-card-item-left svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .sample-title-text {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .sample-desc-text {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+    }
+    .sample-type-badge {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    /* Field Controls */
+    .field-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .field-header .val-badge {
+      font-family: var(--font-mono);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.72rem;
+    }
+    .text-input-field {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 9px;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+    .text-input-field:focus {
+      border-color: #0f172a;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+    }
+    .clean-range-slider {
+      width: 100%;
+      accent-color: #0f172a;
+      cursor: pointer;
+      height: 5px;
+      border-radius: 3px;
+    }
+
+    /* Primary Action Button */
+    .btn-action-primary {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      border: 1px solid #0f172a;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+      transition: all 0.15s ease;
+    }
+    .btn-action-primary:hover {
+      background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+    }
+    .btn-action-primary svg {
+      width: 14px;
+      height: 14px;
+      stroke: #ffffff;
+    }
+
+    /* CENTER VIEWPORT */
+    .center-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    .viewport-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      flex-shrink: 0;
+    }
+    .view-pills { display: flex; gap: 6px; }
+    .view-pill-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 5px 11px;
+      border-radius: 7px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .view-pill-btn svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+    }
+    .view-pill-btn:hover { background: #f1f5f9; color: var(--text); }
+    .view-pill-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .viewport-canvas-box {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      height: 100%;
+      background: radial-gradient(circle at 50% 35%, #ffffff 0%, #edf2f7 100%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #three-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* Floating Studio Toolbar */
+    .studio-float-bar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 25;
+    }
+    .float-dock {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 3px;
+      border-radius: 8px;
+      display: flex;
+      gap: 3px;
+      box-shadow: var(--shadow-sm);
+    }
+    .float-dock-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+    }
+    .float-dock-btn svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+    }
+    .float-dock-btn:hover { background: #f1f5f9; color: var(--text); }
+    .float-dock-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* Exploded Storeys Box */
+    .exploded-float-card {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 7px 11px;
+      border-radius: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 25;
+      width: 180px;
+      box-shadow: var(--shadow-sm);
+    }
+    .exploded-float-card label {
+      font-size: 0.66rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .exploded-float-card label span.mono-val {
+      color: #0f172a;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.7rem;
+    }
+
+    /* Floor Slice Dock */
+    .floor-slice-panel {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 25;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .floor-track {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 2px;
+    }
+    .slice-btn {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.66rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s ease;
+    }
+    .slice-btn:hover { background: #f1f5f9; color: var(--text); }
+    .slice-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* Empty State */
+    .viewport-empty-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      z-index: 10;
+      background: #ffffff;
+      pointer-events: none;
+    }
+    .empty-graphic-ring {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .empty-graphic-ring svg {
+      width: 28px;
+      height: 28px;
+      stroke: #475569;
+    }
+    .empty-title {
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+    .empty-subtitle {
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      max-width: 420px;
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    /* Loading Overlay */
+    .viewport-spinner-box {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+    }
+    .smooth-spinner {
+      width: 26px;
+      height: 26px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #0f172a;
+      border-radius: 50%;
+      animation: spinAnim 0.7s linear infinite;
+    }
+    @keyframes spinAnim {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 2D Plan Comparison Overlay */
+    .preview-2d-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      z-index: 20;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .preview-2d-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      height: 100%;
+    }
+    .preview-sheet {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fafafa;
+    }
+    .preview-sheet-header {
+      padding: 8px 12px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .preview-sheet-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      min-height: 360px;
+    }
+    .preview-sheet-body img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* RIGHT: Cadastre Registry Column */
+    .cadastre-side-col {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Telemetry Deck */
+    .telemetry-deck {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .telemetry-tile {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 7px 5px;
+      border-radius: 7px;
+      text-align: center;
+    }
+    .telemetry-tile.accent {
+      background: #ffffff;
+      border-color: #0f172a;
+    }
+    .telemetry-number {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #0f172a;
+      font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+    .telemetry-label {
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Search Input Dock */
+    .search-input-dock {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .search-input-box {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 10px 6px 28px;
+      font-size: 0.72rem;
+      color: var(--text);
+      outline: none;
+      transition: all 0.15s ease;
+    }
+    .search-input-box:focus {
+      background: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+    }
+    .search-icon-inside {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      stroke: var(--text-dim);
+      pointer-events: none;
+    }
+
+    /* Cadastre Table */
+    .table-dock {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    .cadastre-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.68rem;
+    }
+    .cadastre-table thead {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      z-index: 2;
+    }
+    .cadastre-table th {
+      padding: 6px 8px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .cadastre-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .cadastre-table tbody tr {
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .cadastre-table tbody tr:hover {
+      background: #f8fafc;
+    }
+    .cadastre-table tbody tr.selected {
+      background: #f1f5f9;
+      box-shadow: inset 2px 0 0 #0f172a;
+    }
+    .color-swatch-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .status-badge-tag {
+      font-size: 0.58rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .status-badge-tag.clear {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+    .status-badge-tag.mortgaged {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+    .btn-table-deed {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s ease;
+    }
+    .btn-table-deed:hover {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #ffffff;
+    }
+    .btn-table-deed svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+    }
+
+    /* Export Grid */
+    .export-grid-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .btn-export-tile {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 3px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+    .btn-export-tile:hover {
+      border-color: #0f172a;
+      color: var(--text);
+      background: #f8fafc;
+    }
+    .btn-export-tile svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+    }
+
+    .btn-view-deed {
+      background: #0f172a;
+      color: #ffffff;
+      border: 1px solid #0f172a;
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+    .btn-view-deed:hover {
+      background: #1e293b;
+      transform: translateY(-1px);
+    }
+    .btn-view-deed svg {
+      width: 13px;
+      height: 13px;
+      stroke: #ffffff;
+    }
+
+    /* Raycast Tooltip */
+    #raycast-tooltip {
+      position: absolute;
+      display: none;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      pointer-events: none;
+      z-index: 50;
+      box-shadow: var(--shadow-md);
+      transform: translate(12px, -50%);
+      line-height: 1.35;
+    }
+
+    /* MODAL: Digital Title Certificate */
+    .modal-scrim-curtain {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-frame {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-frame-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+    .modal-frame-header h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-frame-header h4 svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--text);
+    }
+    .btn-modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .btn-modal-close:hover { color: var(--text); }
+    .modal-frame-body {
+      padding: 18px;
+      overflow-y: auto;
+      max-height: 75vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .deed-ulpin-banner {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .deed-ulpin-code {
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+    }
+    .deed-spec-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .deed-spec-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 12px;
+    }
+    .deed-spec-card-lbl {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .deed-spec-card-val {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+    .deed-status-card {
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.74rem;
+      line-height: 1.45;
+    }
+    .deed-status-card.clear {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: #065f46;
+    }
+    .deed-status-card.encumbered {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: #991b1b;
+    }
+    .modal-frame-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      background: #fafbfc;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .btn-dialog-secondary {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-dialog-secondary:hover { background: #f8fafc; }
+    .btn-dialog-secondary svg { width: 13px; height: 13px; stroke: currentColor; }
+    .btn-dialog-primary {
+      background: #0f172a;
+      border: 1px solid #0f172a;
+      color: #ffffff;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-dialog-primary:hover { background: #1e293b; }
+    .btn-dialog-primary svg { width: 13px; height: 13px; stroke: #ffffff; }
+
+    /* Toast */
+    .app-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+      box-shadow: var(--shadow-lg);
+    }
+    .app-toast.show { display: flex; animation: toastSlide 0.25s ease; }
+    @keyframes toastSlide {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .app-toast svg { width: 15px; height: 15px; stroke: #ffffff; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Government Cadastre Header -->
+  <header>
+    <a href="javascript:void(0)" onclick="navigateTo('dashboard')" class="header-brand">
+      <div class="brand-logo-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
+      <div class="brand-meta">
+        <h1>3D ULPIN</h1>
+      </div>
+    </a>
+
+    <div class="header-nav">
+      <a href="/portal" class="nav-link-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+        Portal
+      </a>
+      <a href="/app" class="nav-link-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        Cadastre App
+      </a>
+      <button class="nav-link-btn nav-btn-primary" id="header-view-toggle" onclick="navigateTo('studio')">
+        Enter Studio
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; margin-left: 2px;">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport -->
+  <main>
+    
+    <!-- ── 1. STRIPE / GOV-GRADE MINIMAL LANDING VIEW WITH 3D BACKGROUND ── -->
+    <section class="landing-dashboard-section" id="view-dashboard">
+      <!-- Hardware-accelerated 3D WebGL Volumetric Cadastre Strata Background -->
+      <canvas id="landing-3d-bg"></canvas>
+
+      <div class="landing-content-wrap">
+        <!-- Official Government Authority Badge -->
+        <div class="gov-authority-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Department of Land Resources (DoLR) &bull; PS 26011</span>
+          <span style="color: var(--border);">&bull;</span>
+          <div class="gov-status-dot"></div>
+          <span style="color: var(--success); font-weight: 700;">ISO 19152 Active</span>
+        </div>
+
+        <!-- Hero Section: Aim & Purpose Front and Center -->
+        <div class="landing-hero">
+          <div class="hero-kicker">National 3D Volumetric Cadastre Platform</div>
+          <h1>From 2D Blueprints to Sovereign 3D Land Titles</h1>
+          <p class="hero-purpose-text">
+            The statutory 3D ULPIN platform converts architectural floor plans into immutable 3D volumetric parcels, computes mathematical land equity (UDS), and secures vertical property rights against duplicate mortgages.
+          </p>
+          <div class="hero-actions-row">
+            <button class="btn-dash-primary" onclick="navigateTo('studio')">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+              Launch Cadastre Studio
+            </button>
+            <button class="btn-dash-secondary" onclick="quickLaunchSample('sample_2bhk')">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Explore 2BHK Demo
+            </button>
+          </div>
+        </div>
+
+        <!-- Core Aim & Purpose: 3 Distinct Pillars -->
+        <div class="aim-pillars-container">
+          <div class="aim-pillar-card">
+            <div class="pillar-top">
+              <div class="pillar-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <span class="pillar-tag">ISO 19152 LADM v2</span>
+            </div>
+            <h3>Volumetric Airspace Sovereignty</h3>
+            <p>Replaces ambiguous 2D deed descriptions with statutory 3D volumetric polyhedra (X, Y, Z_min, Z_max, and m³), granting indisputable legal ownership of vertical space.</p>
+          </div>
+
+          <div class="aim-pillar-card">
+            <div class="pillar-top">
+              <div class="pillar-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </div>
+              <span class="pillar-tag">Automated Equity</span>
+            </div>
+            <h3>Algorithmic Land Equity (UDS)</h3>
+            <p>Computes each flat owner's exact Undivided Share of Land based on net carpet area fractions against the registered plot, permanently preventing builder over-allocation.</p>
+          </div>
+
+          <div class="aim-pillar-card">
+            <div class="pillar-top">
+              <div class="pillar-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <span class="pillar-tag">Bank Lien Security</span>
+            </div>
+            <h3>Anti-Fraud Mortgage Lock</h3>
+            <p>Direct integration with institutional banking registries flags active loans and automatically locks strata titles, eliminating duplicate mortgage fraud and unauthorized sales.</p>
+          </div>
+        </div>
+
+        <!-- Streamlined Instant Architectural Demos -->
+        <div class="quick-demo-strip">
+          <span class="demo-strip-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; stroke: #0f172a;">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            Instant Architectural Demos:
+          </span>
+          <div class="demo-chips-row">
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_2bhk')">
+              <span>2BHK Flat</span>
+              <span class="chip-ext">PNG</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_multi_unit')">
+              <span>Multi-Flat Floor</span>
+              <span class="chip-ext">PNG</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_cad')">
+              <span>CAD Vector</span>
+              <span class="chip-ext">PNG</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_hostel_pdf')">
+              <span>Hostel Block A</span>
+              <span class="chip-ext">PDF</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_fdd22')">
+              <span>Tower FDD22</span>
+              <span class="chip-ext">JPG</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Trust & Standards Minimal Footer -->
+        <footer class="landing-footer">
+          <div>
+            Conforms to <strong>ISO 19152:2024 LADM v2</strong> &bull; Digital India Land Records Modernization Programme (DILRMP) &bull; Department of Land Resources (DoLR)
+          </div>
+          <div class="footer-links">
+            <a href="/portal">Cadastre Portal</a>
+            <a href="/app">3D Twin App</a>
+            <a href="javascript:void(0)" onclick="navigateTo('studio')">Open Studio</a>
+          </div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ── 2. STUDIO WORKSPACE VIEW ──────────────────────────────────────────── -->
+    <section class="studio-workspace-section" id="view-studio" style="display: none;">
+      
+      <!-- Architectural Compact Mission Banner -->
+      <section class="mission-banner" id="mission-banner-el">
+        <div class="mission-info">
+          <h2>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Multi-Storey Cadastre Decomposition &amp; 3D ULPIN
+          </h2>
+        </div>
+        <div class="standard-tags">
+          <span class="tag-chip dark">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            ISO 19152 LADM v2
+          </span>
+          <span class="tag-chip">Survey 140/1 Waranga</span>
+          <span class="tag-chip">ResNet34-UNet</span>
+        </div>
+      </section>
+
+      <!-- Studio Grid Layout -->
+      <div class="studio-grid">
+
+        <!-- LEFT: Upload, Parameters & Stacking Controls -->
+        <aside class="panel-card" id="left-col-el">
+          <div class="panel-header">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Blueprint &amp; Controls
+            </h3>
+          </div>
+          <div class="panel-body">
+            
+            <!-- Dropzone -->
+            <div class="dropzone-box" id="drop-zone" onclick="document.getElementById('file-input').click()">
+              <div class="dropzone-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <div class="dropzone-title" id="upload-label">Upload Floor Plan Blueprint</div>
+              <div class="dropzone-sub">PNG, JPG, PDF, SVG architectural drawings</div>
+              <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.webp,.pdf,.svg" style="display: none;" onchange="handleFileSelect(event)" />
+            </div>
+
+            <!-- Verified Real Samples -->
+            <div class="field-block">
+              <label class="field-header">Verified Architectural Samples:</label>
+              <div class="sample-stack">
+                <div class="sample-card-item" onclick="selectSample('sample_2bhk', this)">
+                  <div class="sample-card-item-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    <div>
+                      <div class="sample-title-text">2BHK Residential Flat</div>
+                      <div class="sample-desc-text">Master bed, hall, kitchen &amp; balcony</div>
+                    </div>
+                  </div>
+                  <span class="sample-type-badge">PNG</span>
+                </div>
+                <div class="sample-card-item" onclick="selectSample('sample_multi_unit', this)">
+                  <div class="sample-card-item-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><line x1="3" y1="12" x2="21" y2="12"></line></svg>
+                    <div>
+                      <div class="sample-title-text">Multi-Flat Floor Plan</div>
+                      <div class="sample-desc-text">Central corridor with 4 distinct owner flats</div>
+                    </div>
+                  </div>
+                  <span class="sample-type-badge">PNG</span>
+                </div>
+                <div class="sample-card-item" onclick="selectSample('sample_cad', this)">
+                  <div class="sample-card-item-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <div>
+                      <div class="sample-title-text">CAD Vector Blueprint</div>
+                      <div class="sample-desc-text">Precision structural wall contour drawing</div>
+                    </div>
+                  </div>
+                  <span class="sample-type-badge">PNG</span>
+                </div>
+                <div class="sample-card-item" onclick="selectSample('sample_hostel_pdf', this)">
+                  <div class="sample-card-item-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <div>
+                      <div class="sample-title-text">Hostel Block A (HSTL01)</div>
+                      <div class="sample-desc-text">Official 10-floor institutional PDF</div>
+                    </div>
+                  </div>
+                  <span class="sample-type-badge">PDF</span>
+                </div>
+                <div class="sample-card-item" onclick="selectSample('sample_fdd22', this)">
+                  <div class="sample-card-item-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <div>
+                      <div class="sample-title-text">Tower Block FDD22</div>
+                      <div class="sample-desc-text">High-density residential tower</div>
+                    </div>
+                  </div>
+                  <span class="sample-type-badge">JPG</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Building Name & Code -->
+            <div class="field-block">
+              <label class="field-header">Building Name &amp; Code:</label>
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 6px;">
+                <input type="text" id="building-name-input" class="text-input-field" value="Surya Heights Residency" />
+                <input type="text" id="bldg-code-input" class="text-input-field" value="SURY" placeholder="CODE" style="font-family: var(--font-mono); text-transform: uppercase;" />
+              </div>
+            </div>
+
+            <!-- Base Plot Area for UDS -->
+            <div class="field-block">
+              <label class="field-header">
+                Base Plot Surface Area:
+                <span class="val-badge" id="plot-area-display">1,200 m&sup2;</span>
+              </label>
+              <input type="range" id="plot-area-slider" class="clean-range-slider" min="500" max="8000" step="50" value="1200" oninput="onPlotAreaChange(this.value)" />
+            </div>
+
+            <!-- Total Floors Slider -->
+            <div class="field-block">
+              <label class="field-header">
+                Total Vertical Floors:
+                <span class="val-badge" id="floors-display">5 Floors</span>
+              </label>
+              <input type="range" id="floors-slider" class="clean-range-slider" min="1" max="15" value="5" oninput="onFloorSliderChange(this.value)" />
+            </div>
+
+            <!-- Wall Height Slider -->
+            <div class="field-block">
+              <label class="field-header">
+                Wall / Story Height:
+                <span class="val-badge" id="height-display">3.0 m</span>
+              </label>
+              <input type="range" id="height-slider" class="clean-range-slider" min="2.5" max="5.0" step="0.1" value="3.0" oninput="onHeightSliderChange(this.value)" />
+            </div>
+
+            <!-- Run Pipeline Action -->
+            <button class="btn-action-primary" id="generate-btn" onclick="triggerPipeline()">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Generate 3D ULPIN Cadastre
+            </button>
+
+            <div style="font-size: 0.68rem; color: var(--text-dim); text-align: center;" id="status-hint">
+              Ready to extract 3D architecture &amp; ULPIN cadastre
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- CENTER: 3D Studio & 2D Blueprint Tab -->
+        <section class="center-col" id="center-col-el">
+          <div class="viewport-topbar">
+            <div class="view-pills">
+              <button class="view-pill-btn active" id="tab-3d" onclick="switchView('3d')">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                3D Volumetric Studio
+              </button>
+              <button class="view-pill-btn" id="tab-2d" onclick="switchView('2d')">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                2D Blueprint &amp; AI Mask
+              </button>
+            </div>
+            <div style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="view-status-msg">
+              Orbit: Drag &bull; Pan: Right-Drag &bull; Zoom: Scroll &bull; Select: Click Mesh
+            </div>
+          </div>
+
+          <div class="viewport-canvas-box" id="viewer-container">
+            
+            <!-- Empty State -->
+            <div class="viewport-empty-screen" id="empty-state">
+              <div class="empty-graphic-ring">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21h18"></path>
+                  <path d="M5 21V7l8-4v18"></path>
+                  <path d="M19 21V11l-6-4"></path>
+                  <path d="M9 9h1"></path>
+                  <path d="M9 13h1"></path>
+                  <path d="M9 17h1"></path>
+                </svg>
+              </div>
+              <div class="empty-title">3D Volumetric Cadastre Studio</div>
+              <div class="empty-subtitle">
+                Upload an architectural floor plan on the left or select a verified sample blueprint.<br/>
+                The engine extracts structural contours, stacks vertical storeys, and computes ISO 19152 3D ULPINs.
+              </div>
+            </div>
+
+            <!-- Minimal Loading -->
+            <div class="viewport-spinner-box" id="loading-overlay">
+              <div class="smooth-spinner"></div>
+              <div style="font-size: 0.82rem; font-weight: 600; color: #0f172a;" id="loading-text">
+                Extracting structural contours &amp; computing 3D ULPINs...
+              </div>
+            </div>
+
+            <!-- Three.js Canvas -->
+            <canvas id="three-canvas"></canvas>
+
+            <!-- Floating Raycasting Tooltip -->
+            <div id="raycast-tooltip">
+              <div style="font-weight: 700;" id="tip-ulpin">--</div>
+              <div style="font-size: 0.68rem; color: #94a3b8;" id="tip-info">--</div>
+            </div>
+
+            <!-- Floating Studio Toolbar -->
+            <div class="studio-float-bar" id="viewer-toolbar">
+              <div class="float-dock">
+                <button class="float-dock-btn active" id="btn-mode-owners" onclick="toggleColorMode('owners')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  Owners
+                </button>
+                <button class="float-dock-btn" id="btn-mode-uds" onclick="toggleColorMode('uds')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  UDS Heatmap
+                </button>
+                <button class="float-dock-btn" id="btn-mode-arch" onclick="toggleColorMode('arch')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+                  Solid Plaster
+                </button>
+                <button class="float-dock-btn" id="btn-xray" onclick="toggleXRay()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  X-Ray
+                </button>
+              </div>
+              <div class="float-dock">
+                <button class="float-dock-btn" onclick="setCameraView('persp')">Orbit</button>
+                <button class="float-dock-btn" onclick="setCameraView('top')">Top Plan</button>
+                <button class="float-dock-btn" onclick="setCameraView('front')">Elevation</button>
+                <button class="float-dock-btn" onclick="resetCamera()">Reset</button>
+              </div>
+            </div>
+
+            <!-- Exploded Storeys Control Card -->
+            <div class="exploded-float-card" id="exploded-box">
+              <label>
+                <span>Exploded Floors:</span>
+                <span id="exploded-val" class="mono-val">0.0x</span>
+              </label>
+              <input type="range" id="exploded-slider" class="clean-range-slider" min="0" max="2.0" step="0.05" value="0" oninput="onExplodeChange(this.value)" />
+            </div>
+
+            <!-- Floor Slice Bar -->
+            <div class="floor-slice-panel" id="floor-bar">
+              <div style="font-size: 0.68rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                Floor Filter:
+              </div>
+              <div class="floor-track" id="floor-pills">
+                <button class="slice-btn active" onclick="filterFloor('all', this)">All Floors</button>
+              </div>
+              <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text); font-weight: 600;" id="elevation-indicator">Z: 0.0m - 15.0m</span>
+            </div>
+
+            <!-- 2D Plan Comparison Overlay -->
+            <div class="preview-2d-overlay" id="preview-2d">
+              <div class="preview-2d-grid">
+                <div class="preview-sheet">
+                  <div class="preview-sheet-header">
+                    <span>INPUT ARCHITECTURAL BLUEPRINT</span>
+                    <span id="orig-res-label">--</span>
+                  </div>
+                  <div class="preview-sheet-body">
+                    <img id="orig-plan-img" alt="Floor Plan" />
+                  </div>
+                </div>
+                <div class="preview-sheet">
+                  <div class="preview-sheet-header">
+                    <span>RESNET34-UNET SEGMENTATION</span>
+                    <span>Walls, Openings &amp; Partitions</span>
+                  </div>
+                  <div class="preview-sheet-body">
+                    <img id="seg-mask-img" alt="Segmentation" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- RIGHT: 3D ULPIN Cadastre Registry -->
+        <aside class="panel-card cadastre-side-col" id="right-col-el">
+          <div class="panel-header">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              3D ULPIN Cadastre Registry
+            </h3>
+            <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-dim);" id="flat-total-badge">-- Units</span>
+          </div>
+          <div class="panel-body">
+
+            <!-- Telemetry Row -->
+            <div class="telemetry-deck">
+              <div class="telemetry-tile accent">
+                <div class="telemetry-number" id="stat-flats">--</div>
+                <div class="telemetry-label">Parcels</div>
+              </div>
+              <div class="telemetry-tile">
+                <div class="telemetry-number" id="stat-area">-- m&sup2;</div>
+                <div class="telemetry-label">Carpet Area</div>
+              </div>
+              <div class="telemetry-tile">
+                <div class="telemetry-number" id="stat-volume">-- m&sup3;</div>
+                <div class="telemetry-label">Airspace Vol</div>
+              </div>
+              <div class="telemetry-tile success">
+                <div class="telemetry-number" id="stat-topology" style="color: var(--success);">100%</div>
+                <div class="telemetry-label">Topology</div>
+              </div>
+            </div>
+
+            <!-- Search Filter -->
+            <div class="search-input-dock">
+              <svg class="search-icon-inside" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="cadastre-search" class="search-input-box" placeholder="Search by ULPIN, Flat #, or Owner..." oninput="filterCadastreTable(this.value)" />
+            </div>
+
+            <!-- Cadastre Table -->
+            <div class="field-block" style="flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+              <div class="table-dock">
+                <table class="cadastre-table">
+                  <thead>
+                    <tr>
+                      <th>Unit / ULPIN</th>
+                      <th>Owner</th>
+                      <th>Flr</th>
+                      <th>Carpet</th>
+                      <th>UDS</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cadastre-table-body">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 40px 14px;">
+                        No floor plan loaded.<br/>Upload or pick a sample on the left to extract 3D ULPIN parcels.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Export Actions -->
+            <div class="field-block">
+              <label class="field-header">Export Cadastre &amp; 3D Assets:</label>
+              <div class="export-grid-actions">
+                <button class="btn-export-tile" onclick="downloadExport('obj')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                  .OBJ
+                </button>
+                <button class="btn-export-tile" onclick="downloadExport('unity')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  Unity
+                </button>
+                <button class="btn-export-tile" onclick="downloadExport('cadastre')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  JSON
+                </button>
+                <button class="btn-export-tile" onclick="downloadCadastreCSV()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  CSV
+                </button>
+              </div>
+              <button class="btn-view-deed" onclick="openSelectedUnitDeed()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                View Digital 3D ULPIN Title Certificate
+              </button>
+            </div>
+
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: Digital 3D ULPIN Title Certificate -->
+  <div class="modal-scrim-curtain" id="deed-modal">
+    <div class="modal-frame" id="deed-modal-frame">
+      <div class="modal-frame-header">
+        <h4>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Digital 3D ULPIN Property Card
+        </h4>
+        <button class="btn-modal-close" onclick="closeDeedModal()">&times;</button>
+      </div>
+
+      <div class="modal-frame-body">
+        
+        <div class="deed-ulpin-banner">
+          <div>
+            <div style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600;">Standard 3D ULPIN Identifier</div>
+            <div class="deed-ulpin-code" id="modal-ulpin">--</div>
+          </div>
+          <span class="tag-chip dark">ISO 19152 LADM v2</span>
+        </div>
+
+        <div class="deed-spec-grid">
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Rights Holder / Owner</div>
+            <div class="deed-spec-card-val" id="modal-owner">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Aadhaar / Bhu-Aadhaar</div>
+            <div class="deed-spec-card-val" id="modal-aadhaar">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Floor &amp; Unit Label</div>
+            <div class="deed-spec-card-val" id="modal-unit">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Zoning Classification</div>
+            <div class="deed-spec-card-val" id="modal-zoning">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Net Carpet Area</div>
+            <div class="deed-spec-card-val" id="modal-carpet">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Gross Airspace Volume</div>
+            <div class="deed-spec-card-val" id="modal-volume">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Undivided Land Share (UDS)</div>
+            <div class="deed-spec-card-val" id="modal-uds">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">WGS84 GPS Centroid</div>
+            <div class="deed-spec-card-val" id="modal-gps">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Elevation Extents</div>
+            <div class="deed-spec-card-val" id="modal-elevation">--</div>
+          </div>
+          <div class="deed-spec-card">
+            <div class="deed-spec-card-lbl">Cadastral Survey Anchor</div>
+            <div class="deed-spec-card-val" id="modal-survey">--</div>
+          </div>
+        </div>
+
+        <div id="modal-encumbrance-card" class="deed-status-card clear">
+          <!-- Populated dynamically -->
+        </div>
+
+      </div>
+
+      <div class="modal-frame-footer">
+        <button class="btn-dialog-secondary" onclick="printDeedCertificate()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print Property Card
+        </button>
+        <button class="btn-dialog-secondary" onclick="stampMortgagePrompt()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Stamp Mortgage
+        </button>
+        <button class="btn-dialog-primary" onclick="transferTitleMutation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          Transfer Title (Resale)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="app-toast" id="app-toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="16" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+    <span id="toast-msg">Notification</span>
+  </div>
+
+  <script>
+    // State
+    let currentSessionId = null;
+    let currentPipelineResult = null;
+    let selectedSampleId = null;
+    let activeColorMode = "owners"; // "owners", "uds", "arch"
+    let isXRay = false;
+    let selectedFlatUlpin = null;
+    let currentExplodeY = 0;
+    let currentViewMode = "dashboard"; // "dashboard" or "studio"
+
+    // Cadastre Enriched State
+    let enrichedFlats = [];
+    let surfacePlotAreaM2 = 1200;
+
+    // Three.js State
+    let scene, camera, renderer, controls;
+    let planGroup, underlayMesh;
+    let flatMeshes = [];
+    let wallMeshes = [];
+    let slabMeshes = [];
+    let raycaster, mouse;
+
+    const TARGET_PLAN_SIZE = 14.0;
+    let currentScale = 1.0;
+    let currentCx = 0;
+    let currentCy = 0;
+
+    // Minimal Calibrated Owner Palette
+    const MINIMAL_OWNER_PALETTE = [
+      "#2563eb", "#059669", "#d97706", "#7c3aed",
+      "#db2777", "#0891b2", "#ea580c", "#65a30d",
+      "#4f46e5", "#0d9488", "#c026d3", "#ca8a04"
+    ];
+
+    // Mock Mortgage Pool
+    const MORTGAGE_BANKS = [
+      { name: "State Bank of India", refPrefix: "SBI-NAG-2026", amount: 4800000 },
+      { name: "Bank of Maharashtra", refPrefix: "BOM-WAR-2026", amount: 3500000 },
+      { name: "HDFC Bank Ltd", refPrefix: "HDFC-HOM-2026", amount: 6200000 },
+    ];
+
+    // Initialize
+    window.addEventListener("DOMContentLoaded", () => {
+      initThree();
+      initLanding3DBackground();
+      checkModelStatus();
+      initRaycasting();
+      initMotionTransitions();
+
+      // Support direct URL demonstration: /studio?sample=sample_2bhk or /studio?view=studio
+      const urlParams = new URLSearchParams(window.location.search);
+      const autoSample = urlParams.get("sample");
+      const autoView = urlParams.get("view");
+      if (autoSample) {
+        navigateTo("studio");
+        setTimeout(() => {
+          const card = document.querySelector(`.sample-card-item[onclick*="${autoSample}"]`);
+          if (card) selectSample(autoSample, card);
+          else executePipeline(autoSample);
+        }, 400);
+      } else if (autoView === "studio") {
+        navigateTo("studio");
+      }
+    });
+
+    // ── View Mode Navigation (Dashboard vs Studio) ───────────────────────────
+    function navigateTo(view) {
+      currentViewMode = view;
+      const dash = document.getElementById("view-dashboard");
+      const studio = document.getElementById("view-studio");
+      const navBtn = document.getElementById("header-view-toggle");
+
+      if (view === "studio") {
+        if (window.Motion && window.Motion.animate) {
+          window.Motion.animate(dash, { opacity: [1, 0] }, { duration: 0.15 }).then(() => {
+            dash.style.display = "none";
+            studio.style.display = "flex";
+            window.Motion.animate(studio, { opacity: [0, 1] }, { duration: 0.2 });
+            onWindowResize();
+          });
+        } else {
+          dash.style.display = "none";
+          studio.style.display = "flex";
+          onWindowResize();
+        }
+        if (navBtn) {
+          navBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; margin-right: 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Dashboard`;
+          navBtn.onclick = () => navigateTo('dashboard');
+        }
+      } else {
+        if (window.Motion && window.Motion.animate) {
+          window.Motion.animate(studio, { opacity: [1, 0] }, { duration: 0.15 }).then(() => {
+            studio.style.display = "none";
+            dash.style.display = "flex";
+            window.Motion.animate(dash, { opacity: [0, 1] }, { duration: 0.2 });
+          });
+        } else {
+          studio.style.display = "none";
+          dash.style.display = "flex";
+        }
+        if (navBtn) {
+          navBtn.innerHTML = `Enter Studio <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; margin-left: 2px;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+          navBtn.onclick = () => navigateTo('studio');
+        }
+      }
+    }
+
+    function quickLaunchSample(sampleId) {
+      navigateTo('studio');
+      setTimeout(() => {
+        const card = document.querySelector(`.sample-card-item[onclick*="${sampleId}"]`);
+        if (card) selectSample(sampleId, card);
+        else executePipeline(sampleId);
+      }, 250);
+    }
+
+    // ── Motion (Framer Motion Web Runtime) Transitions ──────────────────────
+    function initMotionTransitions() {
+      if (window.Motion && window.Motion.animate) {
+        const { animate } = window.Motion;
+        animate(".gov-authority-pill", { opacity: [0, 1], y: [-6, 0] }, { duration: 0.35, easing: [0.16, 1, 0.3, 1] });
+        animate(".landing-hero", { opacity: [0, 1], y: [12, 0] }, { duration: 0.45, delay: 0.05, easing: [0.16, 1, 0.3, 1] });
+        animate(".aim-pillars-container", { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: 0.12, easing: [0.16, 1, 0.3, 1] });
+        animate(".quick-demo-strip", { opacity: [0, 1], y: [18, 0] }, { duration: 0.55, delay: 0.18, easing: [0.16, 1, 0.3, 1] });
+      }
+    }
+
+    // ── 3D WebGL Volumetric Cadastre Strata Background ──────────────────────
+    let bgScene, bgCamera, bgRenderer, bgBuildingGroup, bgAnimId;
+    let bgTargetRotX = 0, bgTargetRotY = 0;
+
+    function initLanding3DBackground() {
+      const canvas = document.getElementById("landing-3d-bg");
+      if (!canvas) return;
+      const container = document.getElementById("view-dashboard");
+      if (!container) return;
+
+      bgScene = new THREE.Scene();
+
+      const width = container.clientWidth || window.innerWidth;
+      const height = container.clientHeight || window.innerHeight;
+
+      bgCamera = new THREE.PerspectiveCamera(36, width / height, 0.1, 1000);
+      bgCamera.position.set(26, 17, 28);
+      bgCamera.lookAt(0, -0.5, 0);
+
+      bgRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      bgRenderer.setSize(width, height);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+      bgScene.add(ambient);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      dirLight.position.set(20, 35, 20);
+      bgScene.add(dirLight);
+
+      // Subtle ground cadastre grid
+      const grid = new THREE.GridHelper(40, 26, 0xcbd5e1, 0xe2e8f0);
+      grid.position.y = -2.05;
+      bgScene.add(grid);
+
+      // Building Strata Group
+      bgBuildingGroup = new THREE.Group();
+      bgBuildingGroup.position.set(0, -2.0, 0);
+
+      const floorCount = 4;
+      const slabWidth = 13;
+      const slabDepth = 9;
+      const floorHeight = 2.4;
+
+      for (let f = 0; f < floorCount; f++) {
+        const y = f * floorHeight;
+
+        // Floor base slab
+        const slabGeo = new THREE.BoxGeometry(slabWidth, 0.1, slabDepth);
+        const slabMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+        const slabMesh = new THREE.Mesh(slabGeo, slabMat);
+        slabMesh.position.y = y;
+        bgBuildingGroup.add(slabMesh);
+
+        // Crisp CAD border line
+        const slabEdges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(slabGeo),
+          new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.75 })
+        );
+        slabEdges.position.y = y;
+        bgBuildingGroup.add(slabEdges);
+
+        // 3 Volumetric Parcel Bounding Boxes per floor
+        const parcelConfigs = [
+          { w: 5.4, h: floorHeight * 0.76, d: 3.8, x: -3.2, z: -2, color: 0x0f172a, lineCol: 0x64748b, op: 0.04 },
+          { w: 5.4, h: floorHeight * 0.76, d: 3.8, x: 3.2, z: -2, color: 0x059669, lineCol: 0x10b981, op: 0.08 },
+          { w: 11.8, h: floorHeight * 0.76, d: 3.8, x: 0, z: 2.1, color: 0x0f172a, lineCol: 0x475569, op: 0.04 },
+        ];
+
+        parcelConfigs.forEach(p => {
+          const pGeo = new THREE.BoxGeometry(p.w, p.h, p.d);
+          const pMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: p.op });
+          const pMesh = new THREE.Mesh(pGeo, pMat);
+          pMesh.position.set(p.x, y + p.h / 2 + 0.05, p.z);
+          bgBuildingGroup.add(pMesh);
+
+          const pEdges = new THREE.LineSegments(
+            new THREE.EdgesGeometry(pGeo),
+            new THREE.LineBasicMaterial({ color: p.lineCol, transparent: true, opacity: 0.85 })
+          );
+          pEdges.position.set(p.x, y + p.h / 2 + 0.05, p.z);
+          bgBuildingGroup.add(pEdges);
+        });
+
+        // Floor level corner node
+        const nodeGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const nodeMat = new THREE.MeshBasicMaterial({ color: 0x059669 });
+        const nodeMesh = new THREE.Mesh(nodeGeo, nodeMat);
+        nodeMesh.position.set(-slabWidth / 2 - 0.25, y + 0.05, -slabDepth / 2 - 0.25);
+        bgBuildingGroup.add(nodeMesh);
+      }
+
+      bgScene.add(bgBuildingGroup);
+
+      // Mouse Parallax Listener
+      window.addEventListener("mousemove", (e) => {
+        const normX = (e.clientX / window.innerWidth) * 2 - 1;
+        const normY = -(e.clientY / window.innerHeight) * 2 + 1;
+        bgTargetRotY = normX * 0.32;
+        bgTargetRotX = -normY * 0.16;
+      });
+
+      // Resize listener
+      window.addEventListener("resize", () => {
+        if (!container || !bgRenderer || !bgCamera) return;
+        const w = container.clientWidth || window.innerWidth;
+        const h = container.clientHeight || window.innerHeight;
+        bgCamera.aspect = w / h;
+        bgCamera.updateProjectionMatrix();
+        bgRenderer.setSize(w, h);
+      });
+
+      // Render Loop (Pauses when inside Studio workspace)
+      function animateBg() {
+        bgAnimId = requestAnimationFrame(animateBg);
+        if (currentViewMode !== "dashboard") return;
+
+        bgBuildingGroup.rotation.y += 0.0016;
+        bgBuildingGroup.rotation.x += (bgTargetRotX - bgBuildingGroup.rotation.x) * 0.04;
+        bgBuildingGroup.position.y = Math.sin(Date.now() * 0.0012) * 0.2;
+
+        bgRenderer.render(bgScene, bgCamera);
+      }
+      animateBg();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("app-toast");
+      const label = document.getElementById("toast-msg");
+      label.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    // ── Three.js Initialization ─────────────────────────────────────────────
+    function initThree() {
+      const container = document.getElementById("viewer-container");
+      const canvas = document.getElementById("three-canvas");
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf8fafc); // Clean architectural white studio
+
+      camera = new THREE.PerspectiveCamera(40, (container.clientWidth || 800) / (container.clientHeight || 600), 0.1, 1000);
+      camera.position.set(22, 18, 26);
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth || 800, container.clientHeight || 600);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      controls = new THREE.OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.maxPolarAngle = Math.PI / 2 - 0.01;
+
+      // Daylight Studio Lighting
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xe2e8f0, 0.9);
+      scene.add(hemi);
+
+      const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+      sun.position.set(25, 45, 20);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      scene.add(sun);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+
+      // Precision CAD Coordinate Grid
+      const grid = new THREE.GridHelper(60, 60, 0xcbd5e1, 0xe2e8f0);
+      grid.position.y = -0.005;
+      scene.add(grid);
+
+      planGroup = new THREE.Group();
+      scene.add(planGroup);
+
+      window.addEventListener("resize", onWindowResize);
+      animate();
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById("viewer-container");
+      if (!container || !renderer || !camera) return;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls) controls.update();
+      if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+
+    function resetCamera() {
+      setCameraView('persp');
+    }
+
+    function setCameraView(preset) {
+      if (!currentPipelineResult) return;
+      const bldg = currentPipelineResult.building_summary || {};
+      const totalFloors = bldg.total_floors || 5;
+      const wallHeight = currentPipelineResult.wall_height_m || 3.0;
+      const totalHeight = totalFloors * (wallHeight + 0.25);
+      const midY = totalHeight / 2;
+
+      let targetPos;
+      if (preset === 'top') {
+        targetPos = new THREE.Vector3(0, totalHeight + 22, 0.01);
+      } else if (preset === 'front') {
+        targetPos = new THREE.Vector3(0, midY, 32);
+      } else { // persp
+        targetPos = new THREE.Vector3(22, midY + 11, 26);
+      }
+
+      if (window.Motion && window.Motion.animate) {
+        const startX = camera.position.x;
+        const startY = camera.position.y;
+        const startZ = camera.position.z;
+        window.Motion.animate((progress) => {
+          camera.position.x = startX + (targetPos.x - startX) * progress;
+          camera.position.y = startY + (targetPos.y - startY) * progress;
+          camera.position.z = startZ + (targetPos.z - startZ) * progress;
+          controls.target.set(0, midY, 0);
+          controls.update();
+        }, { duration: 0.6, easing: [0.16, 1, 0.3, 1] });
+      } else {
+        camera.position.copy(targetPos);
+        controls.target.set(0, midY, 0);
+        controls.update();
+      }
+    }
+
+    // ── Raycasting Hover & Click Inspection ─────────────────────────────────
+    function initRaycasting() {
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+      const canvas = document.getElementById("three-canvas");
+      const tooltip = document.getElementById("raycast-tooltip");
+
+      canvas.addEventListener("mousemove", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(flatMeshes, false);
+
+        if (intersects.length > 0 && intersects[0].object.visible) {
+          const m = intersects[0].object;
+          tooltip.style.display = "block";
+          tooltip.style.left = `${e.clientX - rect.left}px`;
+          tooltip.style.top = `${e.clientY - rect.top}px`;
+          document.getElementById("tip-ulpin").textContent = m.userData.ulpin_3d;
+          document.getElementById("tip-info").textContent = `${m.userData.flat_number} • ${m.userData.owner_name} (${m.userData.carpet_area} m²)`;
+          canvas.style.cursor = "pointer";
+        } else {
+          tooltip.style.display = "none";
+          canvas.style.cursor = "default";
+        }
+      });
+
+      // Canvas click selects unit without automatically popping up the deed modal
+      canvas.addEventListener("click", () => {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(flatMeshes, false);
+        if (intersects.length > 0 && intersects[0].object.visible) {
+          const m = intersects[0].object;
+          selectFlat(m.userData.ulpin_3d, false); // false = highlight only, do not popup deed
+        }
+      });
+    }
+
+    // ── Backend Model Status Check ──────────────────────────────────────────
+    async function checkModelStatus() {
+      try {
+        const res = await fetch("/api/ai/floorplan-3d/status");
+        if (res.ok) {
+          const st = await res.json();
+          const hint = document.getElementById("status-hint");
+          if (st.status === "ready" || st.status === "loaded") {
+            hint.textContent = "Pipeline Active: ResNet34-UNet Ready";
+          }
+        }
+      } catch (e) {
+        console.warn("Status check notice:", e);
+      }
+    }
+
+    // ── Sample Blueprint Selection ──────────────────────────────────────────
+    function selectSample(sampleId, el) {
+      document.querySelectorAll(".sample-card-item").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      selectedSampleId = sampleId;
+
+      const nameMap = {
+        sample_2bhk: "2BHK Residential Flat",
+        sample_multi_unit: "Multi-Flat Floor Plan",
+        sample_multi_flat: "Multi-Flat Floor Plan",
+        sample_cad: "CAD Vector Blueprint",
+        sample_hostel_pdf: "Hostel Block A (HSTL01)",
+        sample_fdd22: "Tower Block FDD22"
+      };
+      document.getElementById("upload-label").textContent = `Selected: ${nameMap[sampleId] || sampleId}`;
+      document.getElementById("status-hint").textContent = `Ready to process ${nameMap[sampleId] || sampleId}`;
+
+      executePipeline(sampleId);
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedSampleId = null;
+      document.querySelectorAll(".sample-card-item").forEach(c => c.classList.remove("active"));
+      document.getElementById("upload-label").textContent = `Selected: ${file.name}`;
+      uploadCustomFile(file);
+    }
+
+    function triggerPipeline() {
+      if (selectedSampleId) {
+        executePipeline(selectedSampleId);
+      } else {
+        const fileInput = document.getElementById("file-input");
+        if (fileInput.files.length > 0) {
+          uploadCustomFile(fileInput.files[0]);
+        } else {
+          selectSample("sample_2bhk", document.querySelector(".sample-card-item"));
+        }
+      }
+    }
+
+    // ── Pipeline Ingestion ──────────────────────────────────────────────────
+    async function executePipeline(sampleIdToUse) {
+      const sample = sampleIdToUse || selectedSampleId;
+      const fileInput = document.getElementById("file-input");
+
+      const overlay = document.getElementById("loading-overlay");
+      overlay.style.display = "flex";
+      document.getElementById("loading-text").textContent = "Extracting structural contours & computing 3D ULPINs...";
+
+      const formData = new FormData();
+      if (fileInput.files && fileInput.files.length > 0 && !sample) {
+        formData.append("floor_plan", fileInput.files[0]);
+      } else if (sample) {
+        const normSample = (sample === "sample_multi_flat") ? "sample_multi_unit" : sample;
+        formData.append("sample_id", normSample);
+      } else {
+        formData.append("sample_id", "sample_2bhk");
+      }
+
+      const buildingName = document.getElementById("building-name-input").value || "Surya Heights Residency";
+      const floors = document.getElementById("floors-slider").value || 5;
+      const wallHeight = document.getElementById("height-slider").value || 3.0;
+
+      formData.append("building_name", buildingName);
+      formData.append("floors", floors);
+      formData.append("wall_height", wallHeight);
+
+      try {
+        const res = await fetch("/api/ai/floorplan-3d/generate", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Pipeline execution failed: ${errText}`);
+        }
+
+        const data = await res.json();
+        processPipelineResponse(data);
+      } catch (err) {
+        showToast("Error: " + err.message);
+        console.error(err);
+      } finally {
+        overlay.style.display = "none";
+      }
+    }
+
+    async function uploadCustomFile(file) {
+      if (!file) return;
+      const overlay = document.getElementById("loading-overlay");
+      overlay.style.display = "flex";
+      document.getElementById("loading-text").textContent = "Uploading & extracting 3D ULPIN contours...";
+
+      const floors = document.getElementById("floors-slider").value || 5;
+      const wallHeight = document.getElementById("height-slider").value || 3.0;
+      const buildingName = document.getElementById("building-name-input").value || "Surya Heights Residency";
+
+      const formData = new FormData();
+      formData.append("floor_plan", file);
+      formData.append("building_name", buildingName);
+      formData.append("floors", floors);
+      formData.append("wall_height", wallHeight);
+
+      try {
+        const res = await fetch("/api/ai/floorplan-3d/generate", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Upload processing failed: ${errText}`);
+        }
+
+        const data = await res.json();
+        processPipelineResponse(data);
+      } catch (err) {
+        showToast("Error: " + err.message);
+        console.error(err);
+      } finally {
+        overlay.style.display = "none";
+      }
+    }
+
+    function processPipelineResponse(data) {
+      currentPipelineResult = data;
+      currentSessionId = data.session_id;
+
+      // Reveal view controls
+      document.getElementById("empty-state").style.display = "none";
+      document.getElementById("viewer-toolbar").style.display = "flex";
+      document.getElementById("exploded-box").style.display = "flex";
+      document.getElementById("floor-bar").style.display = "flex";
+
+      // Enrich with Standard 3D ULPIN & LADM v2 parameters
+      enrichCadastreData(data);
+
+      renderStudio(data);
+      showToast("Cadastre extracted: 3D ULPIN registry populated");
+    }
+
+    // ── 3D ULPIN & ISO 19152 LADM v2 Cadastral Enrichment ───────────────────
+    function enrichCadastreData(data) {
+      const rawFlats = data.flats_list || [];
+      const totalCarpet = rawFlats.reduce((sum, f) => sum + (f.carpet_area_sqm || 0), 0);
+      const bldgCode = (document.getElementById("bldg-code-input").value || "SURY").toUpperCase().trim();
+      const stateParcelPrefix = "33-5509-94106"; // Maharashtra Waranga Survey 140/1
+
+      const baseLat = 21.018420;
+      const baseLon = 79.027210;
+
+      enrichedFlats = rawFlats.map((f, idx) => {
+        let zoning = "RES-2BHK";
+        if (f.carpet_area_sqm >= 115) zoning = "RES-3BHK";
+        else if (f.carpet_area_sqm < 65) zoning = "RES-1BHK";
+
+        const unitNum = f.flat_number.replace(/\D/g, "") || `${f.floor_level}${String(idx + 1).padStart(2, '0')}`;
+        const standardUlpin = `${stateParcelPrefix}-${bldgCode}-F${String(f.floor_level).padStart(2, '0')}-${unitNum}-${zoning}`;
+
+        const udsFraction = totalCarpet > 0 ? (f.carpet_area_sqm / totalCarpet) : (1 / rawFlats.length);
+        const udsSqm = parseFloat((udsFraction * surfacePlotAreaM2).toFixed(2));
+
+        const latOffset = ((f.center ? f.center[1] : 300) - 300) * 0.0000012;
+        const lonOffset = ((f.center ? f.center[0] : 300) - 300) * 0.0000012;
+
+        const isMortgaged = (idx % 3 === 1);
+        let encumbrance = null;
+        if (isMortgaged) {
+          const bank = MORTGAGE_BANKS[idx % MORTGAGE_BANKS.length];
+          encumbrance = {
+            bank_name: bank.name,
+            sanction_ref: `${bank.refPrefix}-${unitNum}`,
+            loan_amount_inr: bank.amount,
+            status: "ENCUMBERED_LIEN_ACTIVE"
+          };
+        }
+
+        const wallH = data.wall_height_m || 3.0;
+        const zMin = parseFloat(((f.floor_level - 1) * (wallH + 0.25)).toFixed(1));
+        const zMax = parseFloat((zMin + wallH).toFixed(1));
+
+        return {
+          ...f,
+          ulpin_3d: standardUlpin,
+          carpet_area_sqm: f.carpet_area_sqm,
+          airspace_volume_m3: f.airspace_volume_m3 || Math.round(f.carpet_area_sqm * wallH),
+          uds_sqm: udsSqm,
+          uds_fraction: (udsFraction * 100).toFixed(2) + "%",
+          gps_wgs84: {
+            lat: parseFloat((baseLat + latOffset).toFixed(6)),
+            lon: parseFloat((baseLon + lonOffset).toFixed(6))
+          },
+          z_min_m: zMin,
+          z_max_m: zMax,
+          survey_anchor: "Survey 140/1, Khata 341, Waranga",
+          village: "Waranga",
+          zoning: zoning,
+          color: MINIMAL_OWNER_PALETTE[idx % MINIMAL_OWNER_PALETTE.length],
+          encumbrance: encumbrance,
+          masked_aadhaar: `XXXX-XXXX-${String(1000 + (idx * 137) % 9000)}`
+        };
+      });
+    }
+
+    // ── Render Studio State ─────────────────────────────────────────────────
+    function renderStudio(data) {
+      const bldg = data.building_summary || {};
+      const totalFlats = enrichedFlats.length;
+      const totalFloors = bldg.total_floors || 5;
+      const totalCarpet = enrichedFlats.reduce((s, f) => s + f.carpet_area_sqm, 0);
+      const totalVol = enrichedFlats.reduce((s, f) => s + f.airspace_volume_m3, 0);
+
+      // 1. Telemetry
+      document.getElementById("stat-flats").textContent = totalFlats;
+      document.getElementById("stat-area").innerHTML = `${Math.round(totalCarpet)} m&sup2;`;
+      document.getElementById("stat-volume").innerHTML = `${Math.round(totalVol)} m&sup3;`;
+      document.getElementById("flat-total-badge").textContent = `${totalFlats} Parcels`;
+
+      // 2. Floor Filter Pills
+      const pills = document.getElementById("floor-pills");
+      pills.innerHTML = `<button class="slice-btn active" onclick="filterFloor('all', this)">All Floors</button>`;
+      for (let f = 1; f <= totalFloors; f++) {
+        pills.innerHTML += `<button class="slice-btn" onclick="filterFloor(${f}, this)">Floor ${f}</button>`;
+      }
+      const wallH = data.wall_height_m || 3.0;
+      document.getElementById("elevation-indicator").textContent = `Z: 0.0m - ${(totalFloors * (wallH + 0.25)).toFixed(1)}m`;
+
+      // 3. 2D Previews
+      if (data.input_image_b64) {
+        document.getElementById("orig-plan-img").src = "data:image/png;base64," + data.input_image_b64;
+        document.getElementById("seg-mask-img").src = "data:image/png;base64," + data.input_image_b64;
+        document.getElementById("orig-res-label").textContent = (data.pipeline_metadata && data.pipeline_metadata.resolution) || "--";
+      }
+
+      // 4. Cadastre Table
+      renderTable(enrichedFlats);
+
+      // 5. Build 3D Scene
+      build3D(data);
+    }
+
+    // ── Security Sanitization ───────────────────────────────────────────────
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // ── Table Rendering with Motion Stagger ──────────────────────────────────
+    function renderTable(flats) {
+      const tbody = document.getElementById("cadastre-table-body");
+      tbody.innerHTML = "";
+
+      if (!flats || flats.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px 10px;">No parcels match your search query.</td></tr>`;
+        return;
+      }
+
+      flats.forEach(f => {
+        const tr = document.createElement("tr");
+        tr.id = `row-${escapeHtml(f.ulpin_3d)}`;
+        // Click row to select flat (false = no automatic modal popup)
+        tr.onclick = () => selectFlat(f.ulpin_3d, false);
+
+        const isMortgaged = !!f.encumbrance;
+        const statusBadge = isMortgaged
+          ? `<span class="status-badge-tag mortgaged">MORTGAGED</span>`
+          : `<span class="status-badge-tag clear">CLEAR</span>`;
+
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight: 600; color: #0f172a; display: flex; align-items: center;">
+              <span class="color-swatch-dot" style="background-color: ${escapeHtml(f.color)};"></span>
+              ${escapeHtml(f.flat_number)}
+            </div>
+            <div style="font-size: 0.62rem; color: var(--text-dim); font-family: var(--font-mono);">${escapeHtml(f.ulpin_3d.slice(-15))}</div>
+          </td>
+          <td style="color: var(--text-muted);">${escapeHtml(f.owner_name)}</td>
+          <td style="font-family: var(--font-mono); color: var(--text-dim);">Fl ${Number(f.floor_level)}</td>
+          <td>${Number(f.carpet_area_sqm)} m&sup2;</td>
+          <td style="font-weight: 600; color: #0f172a;">${Number(f.uds_sqm)} m&sup2;</td>
+          <td>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+              ${statusBadge}
+              <button class="btn-table-deed" onclick="event.stopPropagation(); openDeedModal('${escapeHtml(f.ulpin_3d)}')" title="View Title Deed">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Animate table rows entrance if Motion is available
+      if (window.Motion && window.Motion.animate) {
+        const rows = tbody.querySelectorAll("tr");
+        if (rows.length > 0 && rows.length <= 45) {
+          window.Motion.animate(rows, { opacity: [0, 1], y: [6, 0] }, { delay: window.Motion.stagger(0.015), duration: 0.25 });
+        }
+      }
+    }
+
+    // ── Build Accurate 3D Geometry ──────────────────────────────────────────
+    function buildShape(outer, holes, scale, cx, cy) {
+      const shape = new THREE.Shape();
+      if (!outer || outer.length === 0) return shape;
+
+      const p0 = outer[0];
+      shape.moveTo((p0[0] - cx) * scale, -(p0[1] - cy) * scale);
+
+      for (let i = 1; i < outer.length; i++) {
+        const pt = outer[i];
+        shape.lineTo((pt[0] - cx) * scale, -(pt[1] - cy) * scale);
+      }
+      shape.closePath();
+
+      if (holes && holes.length > 0) {
+        holes.forEach(holePts => {
+          if (holePts.length < 3) return;
+          const holePath = new THREE.Path();
+          const hp0 = holePts[0];
+          holePath.moveTo((hp0[0] - cx) * scale, -(hp0[1] - cy) * scale);
+          for (let j = 1; j < holePts.length; j++) {
+            const hpt = holePts[j];
+            holePath.lineTo((hpt[0] - cx) * scale, -(hpt[1] - cy) * scale);
+          }
+          holePath.closePath();
+          shape.holes.push(holePath);
+        });
+      }
+      return shape;
+    }
+
+    function build3D(data) {
+      while (planGroup.children.length > 0) {
+        const obj = planGroup.children[0];
+        if (obj.geometry) obj.geometry.dispose();
+        planGroup.remove(obj);
+      }
+      flatMeshes = [];
+      wallMeshes = [];
+      slabMeshes = [];
+
+      const bldg = data.building_summary || {};
+      const polygons = data.polygons || {};
+      const allWalls = polygons.wall || [];
+
+      const totalFloors = bldg.total_floors || 5;
+      const wallHeight = data.wall_height_m || 3.0;
+      const slabThickness = 0.25;
+      const floorPitch = wallHeight + slabThickness;
+
+      // Compute bounding box
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      allWalls.forEach(p => {
+        (p.outer || []).forEach(([x, y]) => {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        });
+      });
+
+      if (!isFinite(minX)) {
+        enrichedFlats.forEach(f => {
+          (f.polygon || []).forEach(([x, y]) => {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          });
+        });
+      }
+
+      if (!isFinite(minX)) {
+        minX = 0; minY = 0; maxX = 800; maxY = 600;
+      }
+
+      const bw = Math.max(maxX - minX, 1);
+      const bh = Math.max(maxY - minY, 1);
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const scale = TARGET_PLAN_SIZE / Math.max(bw, bh);
+
+      currentScale = scale;
+      currentCx = cx;
+      currentCy = cy;
+
+      // Ground Blueprint Texture Underlay
+      if (data.input_image_b64) {
+        const img = new Image();
+        img.onload = () => {
+          const tex = new THREE.Texture(img);
+          tex.needsUpdate = true;
+          tex.encoding = THREE.sRGBEncoding;
+          tex.flipY = false;
+
+          const [W, H] = data.building_summary.canvas_size || [bw, bh];
+          const planeGeom = new THREE.PlaneGeometry(W * scale, H * scale);
+          planeGeom.rotateX(-Math.PI / 2);
+          const planeMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.55, depthWrite: false });
+          underlayMesh = new THREE.Mesh(planeGeom, planeMat);
+          underlayMesh.position.set(0, 0.01, 0);
+          planGroup.add(underlayMesh);
+        };
+        img.src = "data:image/png;base64," + data.input_image_b64;
+      }
+
+      // Minimalist Architectural Wall Material (Pure White Plaster with Stark Contours)
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.5,
+        metalness: 0.05,
+        transparent: isXRay,
+        opacity: isXRay ? 0.25 : 0.96,
+      });
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x18181b, transparent: true, opacity: 0.85 });
+
+      // Build Multi-Storey Stacking
+      for (let fl = 1; fl <= totalFloors; fl++) {
+        const floorBaseY = (fl - 1) * floorPitch;
+
+        // Architectural Floor Slab
+        const slabGeom = new THREE.BoxGeometry(bw * scale * 1.04, slabThickness, bh * scale * 1.04);
+        const slabMat = new THREE.MeshStandardMaterial({ color: 0xf1f1f4, roughness: 0.9 });
+        const slabMesh = new THREE.Mesh(slabGeom, slabMat);
+        slabMesh.position.set(0, floorBaseY + slabThickness / 2, 0);
+        slabMesh.receiveShadow = true;
+        slabMesh.userData = { floorLevel: fl, isSlab: true, baseOffsetY: floorBaseY + slabThickness / 2 };
+        planGroup.add(slabMesh);
+        slabMeshes.push(slabMesh);
+
+        // Extrude Walls
+        allWalls.forEach(p => {
+          if ((p.outer || []).length < 3) return;
+          const shape = buildShape(p.outer, p.holes, scale, cx, cy);
+          const geom = new THREE.ExtrudeGeometry(shape, { depth: wallHeight, bevelEnabled: false });
+          mesh = new THREE.Mesh(geom, wallMat);
+          mesh.rotation.x = -Math.PI / 2;
+          mesh.position.y = floorBaseY + slabThickness;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+
+          const edges = new THREE.EdgesGeometry(geom, 15);
+          mesh.add(new THREE.LineSegments(edges, edgeMat));
+
+          mesh.userData = { floorLevel: fl, isWall: true, baseOffsetY: floorBaseY + slabThickness };
+          planGroup.add(mesh);
+          wallMeshes.push(mesh);
+        });
+
+        // Extrude 3D ULPIN Flat Parcels for this Floor
+        const flatsThisFloor = enrichedFlats.filter(f => f.floor_level === fl);
+        flatsThisFloor.forEach(flat => {
+          if (!flat.polygon || flat.polygon.length < 3) return;
+
+          const flatShape = buildShape(flat.polygon, [], scale, cx, cy);
+          const flatGeom = new THREE.ExtrudeGeometry(flatShape, { depth: 0.08, bevelEnabled: false });
+
+          const parcelColor = new THREE.Color(flat.color);
+          const flatMat = new THREE.MeshStandardMaterial({
+            color: parcelColor,
+            roughness: 0.5,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.85,
+          });
+
+          const flatMesh = new THREE.Mesh(flatGeom, flatMat);
+          flatMesh.rotation.x = -Math.PI / 2;
+          flatMesh.position.y = floorBaseY + slabThickness + 0.02;
+
+          const flatEdges = new THREE.EdgesGeometry(flatGeom, 15);
+          flatMesh.add(new THREE.LineSegments(flatEdges, new THREE.LineBasicMaterial({ color: 0x0f172a, linewidth: 1 })));
+
+          flatMesh.userData = {
+            ulpin_3d: flat.ulpin_3d,
+            flat_number: flat.flat_number,
+            owner_name: flat.owner_name,
+            carpet_area: flat.carpet_area_sqm,
+            uds_sqm: flat.uds_sqm,
+            color: flat.color,
+            floorLevel: fl,
+            isFlat: true,
+            baseOffsetY: floorBaseY + slabThickness + 0.02,
+          };
+
+          planGroup.add(flatMesh);
+          flatMeshes.push(flatMesh);
+        });
+      }
+
+      setCameraView('persp');
+    }
+
+    // ── Interactive Selection & Focus ────────────────────────────────────────
+    function selectFlat(ulpin, openDeedDirectly = false) {
+      selectedFlatUlpin = ulpin;
+
+      document.querySelectorAll(".cadastre-table tr").forEach(r => r.classList.remove("selected"));
+      const row = document.getElementById(`row-${ulpin}`);
+      if (row) {
+        row.classList.add("selected");
+        row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      // Highlight in 3D scene
+      flatMeshes.forEach(m => {
+        if (m.userData.ulpin_3d === ulpin) {
+          m.material.opacity = 1.0;
+          m.material.emissive = new THREE.Color(m.userData.color);
+          m.material.emissiveIntensity = 0.5;
+
+          const meshWorldPos = new THREE.Vector3();
+          m.getWorldPosition(meshWorldPos);
+          controls.target.lerp(meshWorldPos, 0.4);
+          controls.update();
+        } else {
+          m.material.opacity = 0.25;
+          m.material.emissiveIntensity = 0.0;
+        }
+      });
+
+      if (openDeedDirectly) {
+        openDeedModal(ulpin);
+      }
+    }
+
+    function openSelectedUnitDeed() {
+      if (!selectedFlatUlpin) {
+        if (enrichedFlats.length > 0) {
+          selectFlat(enrichedFlats[0].ulpin_3d, true);
+        } else {
+          showToast("Please upload and generate a 3D cadastre first.");
+        }
+        return;
+      }
+      openDeedModal(selectedFlatUlpin);
+    }
+
+    // ── Exploded Storeys Slider ──────────────────────────────────────────────
+    function onExplodeChange(val) {
+      currentExplodeY = parseFloat(val);
+      document.getElementById("exploded-val").textContent = `${currentExplodeY.toFixed(2)}x`;
+
+      const gapPerFloor = currentExplodeY * 3.5;
+      slabMeshes.forEach(m => {
+        m.position.y = m.userData.baseOffsetY + (m.userData.floorLevel - 1) * gapPerFloor;
+      });
+      wallMeshes.forEach(m => {
+        m.position.y = m.userData.baseOffsetY + (m.userData.floorLevel - 1) * gapPerFloor;
+      });
+      flatMeshes.forEach(m => {
+        m.position.y = m.userData.baseOffsetY + (m.userData.floorLevel - 1) * gapPerFloor;
+      });
+    }
+
+    // ── Floor Filtering ──────────────────────────────────────────────────────
+    function filterFloor(targetFloor, el) {
+      document.querySelectorAll(".slice-btn").forEach(p => p.classList.remove("active"));
+      if (el) el.classList.add("active");
+
+      const isAll = (targetFloor === "all");
+      const flNum = parseInt(targetFloor, 10);
+
+      slabMeshes.forEach(m => {
+        m.visible = isAll || (m.userData.floorLevel === flNum);
+      });
+      wallMeshes.forEach(m => {
+        m.visible = isAll || (m.userData.floorLevel === flNum);
+      });
+      flatMeshes.forEach(m => {
+        m.visible = isAll || (m.userData.floorLevel === flNum);
+      });
+
+      if (!isAll && currentPipelineResult) {
+        const wallH = currentPipelineResult.wall_height_m || 3.0;
+        const zMin = (flNum - 1) * (wallH + 0.25);
+        const zMax = zMin + wallH;
+        document.getElementById("elevation-indicator").textContent = `Z: ${zMin.toFixed(1)}m - ${zMax.toFixed(1)}m (Fl ${flNum})`;
+      } else if (currentPipelineResult) {
+        const totalF = currentPipelineResult.building_summary.total_floors || 5;
+        const wallH = currentPipelineResult.wall_height_m || 3.0;
+        document.getElementById("elevation-indicator").textContent = `Z: 0.0m - ${(totalF * (wallH + 0.25)).toFixed(1)}m`;
+      }
+    }
+
+    // ── Visual Modes ─────────────────────────────────────────────────────────
+    function toggleColorMode(mode) {
+      activeColorMode = mode;
+      document.querySelectorAll(".studio-float-bar .float-dock-btn").forEach(b => {
+        if (b.id.startsWith("btn-mode-")) b.classList.remove("active");
+      });
+      const targetBtn = document.getElementById(`btn-mode-${mode}`);
+      if (targetBtn) targetBtn.classList.add("active");
+
+      applyShaderMaterials();
+    }
+
+    function toggleXRay() {
+      isXRay = !isXRay;
+      document.getElementById("btn-xray").classList.toggle("active", isXRay);
+      applyShaderMaterials();
+    }
+
+    function applyShaderMaterials() {
+      wallMeshes.forEach(m => {
+        m.material.transparent = isXRay;
+        m.material.opacity = isXRay ? 0.25 : 0.96;
+      });
+
+      const maxUds = Math.max(...enrichedFlats.map(f => f.uds_sqm), 1);
+      const minUds = Math.min(...enrichedFlats.map(f => f.uds_sqm), 0);
+
+      flatMeshes.forEach(m => {
+        if (activeColorMode === "owners") {
+          m.material.color.set(m.userData.color);
+        } else if (activeColorMode === "uds") {
+          const norm = (m.userData.uds_sqm - minUds) / Math.max(maxUds - minUds, 0.01);
+          const heatColor = new THREE.Color().setHSL(0.55 - norm * 0.45, 0.9, 0.5);
+          m.material.color.copy(heatColor);
+        } else if (activeColorMode === "arch") {
+          m.material.color.set(0xffffff);
+        }
+      });
+    }
+
+    // ── Parameter Live Update Handlers ───────────────────────────────────────
+    function onPlotAreaChange(val) {
+      surfacePlotAreaM2 = parseFloat(val);
+      document.getElementById("plot-area-display").innerHTML = `${val} m&sup2;`;
+      if (currentPipelineResult) {
+        enrichCadastreData(currentPipelineResult);
+        renderTable(enrichedFlats);
+      }
+    }
+
+    function onFloorSliderChange(val) {
+      document.getElementById("floors-display").textContent = `${val} Floors`;
+    }
+
+    function onHeightSliderChange(val) {
+      document.getElementById("height-display").textContent = `${parseFloat(val).toFixed(1)} m`;
+    }
+
+    function switchView(view) {
+      document.getElementById("tab-3d").classList.toggle("active", view === "3d");
+      document.getElementById("tab-2d").classList.toggle("active", view === "2d");
+
+      const canvas = document.getElementById("three-canvas");
+      const preview2d = document.getElementById("preview-2d");
+
+      if (window.Motion && window.Motion.animate) {
+        if (view === "3d") {
+          preview2d.style.display = "none";
+          canvas.style.display = "block";
+          window.Motion.animate(canvas, { opacity: [0, 1] }, { duration: 0.25 });
+        } else {
+          canvas.style.display = "none";
+          preview2d.style.display = "block";
+          window.Motion.animate(preview2d, { opacity: [0, 1] }, { duration: 0.25 });
+        }
+      } else {
+        canvas.style.display = view === "3d" ? "block" : "none";
+        preview2d.style.display = view === "2d" ? "block" : "none";
+      }
+    }
+
+    // ── Search & Filter in Table ─────────────────────────────────────────────
+    function filterCadastreTable(query) {
+      const q = (query || "").toLowerCase().trim();
+      if (!q) {
+        renderTable(enrichedFlats);
+        return;
+      }
+      const filtered = enrichedFlats.filter(f =>
+        f.ulpin_3d.toLowerCase().includes(q) ||
+        f.flat_number.toLowerCase().includes(q) ||
+        f.owner_name.toLowerCase().includes(q) ||
+        String(f.floor_level) === q
+      );
+      renderTable(filtered);
+    }
+
+    // ── MODAL: 3D ULPIN Title Deed / Property Card ───────────────────────────
+    function openDeedModal(ulpin) {
+      const flat = enrichedFlats.find(f => f.ulpin_3d === ulpin);
+      if (!flat) return;
+
+      document.getElementById("modal-ulpin").textContent = flat.ulpin_3d;
+      document.getElementById("modal-owner").textContent = flat.owner_name;
+      document.getElementById("modal-aadhaar").textContent = flat.masked_aadhaar;
+      document.getElementById("modal-unit").textContent = `Floor ${flat.floor_level} • ${flat.flat_number}`;
+      document.getElementById("modal-zoning").textContent = flat.zoning;
+      document.getElementById("modal-carpet").innerHTML = `${flat.carpet_area_sqm} m&sup2;`;
+      document.getElementById("modal-volume").innerHTML = `${flat.airspace_volume_m3} m&sup3;`;
+      document.getElementById("modal-uds").innerHTML = `${flat.uds_sqm} m&sup2; (${flat.uds_fraction})`;
+      document.getElementById("modal-gps").textContent = `${flat.gps_wgs84.lat}° N, ${flat.gps_wgs84.lon}° E`;
+      document.getElementById("modal-elevation").textContent = `Z: ${flat.z_min_m}m - ${flat.z_max_m}m AGL`;
+      document.getElementById("modal-survey").textContent = flat.survey_anchor;
+
+      const encBox = document.getElementById("modal-encumbrance-card");
+      if (flat.encumbrance) {
+        encBox.className = "deed-status-card encumbered";
+        encBox.innerHTML = `
+          <div style="font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            ACTIVE BANK MORTGAGE LIEN REGISTERED
+          </div>
+          Financing Bank: ${escapeHtml(flat.encumbrance.bank_name)} &bull; Sanction Ref: <code>${escapeHtml(flat.encumbrance.sanction_ref)}</code><br/>
+          Secured Debt: INR ${Number(flat.encumbrance.loan_amount_inr || 0).toLocaleString('en-IN')} &bull; <em>Conveyance and resale are locked by anti-fraud protocol.</em>
+        `;
+      } else {
+        encBox.className = "deed-status-card clear";
+        encBox.innerHTML = `
+          <div style="font-weight: 700; color: #065f46; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            UNENCUMBERED STRATA FREEHOLD TITLE
+          </div>
+          Clear registered strata title under Bhunaksha pu-id: 33550994106. Parcel is fully eligible for statutory mutation or conveyance.
+        `;
+      }
+
+      const curtain = document.getElementById("deed-modal");
+      const frame = document.getElementById("deed-modal-frame");
+      curtain.style.display = "flex";
+
+      if (window.Motion && window.Motion.animate) {
+        window.Motion.animate(curtain, { opacity: [0, 1] }, { duration: 0.2 });
+        window.Motion.animate(frame, { scale: [0.94, 1], opacity: [0, 1] }, { duration: 0.28, easing: [0.16, 1, 0.3, 1] });
+      }
+    }
+
+    function closeDeedModal() {
+      const curtain = document.getElementById("deed-modal");
+      const frame = document.getElementById("deed-modal-frame");
+      if (window.Motion && window.Motion.animate) {
+        window.Motion.animate(frame, { scale: [1, 0.95], opacity: [1, 0] }, { duration: 0.15 });
+        window.Motion.animate(curtain, { opacity: [1, 0] }, { duration: 0.15 }).then(() => {
+          curtain.style.display = "none";
+        });
+      } else {
+        curtain.style.display = "none";
+      }
+    }
+
+    function printDeedCertificate() {
+      window.print();
+    }
+
+    // ── Anti-Fraud Title Conveyance Check ────────────────────────────────────
+    function transferTitleMutation() {
+      if (!selectedFlatUlpin) return;
+      const flat = enrichedFlats.find(f => f.ulpin_3d === selectedFlatUlpin);
+      if (!flat) return;
+
+      if (flat.encumbrance) {
+        showToast("ANTI-FRAUD LOCKOUT: Title mutation blocked due to active mortgage lien.");
+        return;
+      }
+
+      const newOwner = prompt("Enter full statutory name of transferee (new registered owner):", "Rajeshwari Deshmukh");
+      if (!newOwner || !newOwner.trim()) return;
+
+      flat.owner_name = newOwner.trim();
+      flat.masked_aadhaar = "XXXX-XXXX-9901";
+
+      renderTable(enrichedFlats);
+      openDeedModal(flat.ulpin_3d);
+      showToast(`Title Mutation Approved: 3D ULPIN ${flat.ulpin_3d} conveyed to ${flat.owner_name}`);
+    }
+
+    function stampMortgagePrompt() {
+      if (!selectedFlatUlpin) return;
+      const flat = enrichedFlats.find(f => f.ulpin_3d === selectedFlatUlpin);
+      if (!flat) return;
+
+      if (flat.encumbrance) {
+        showToast("Unit is already encumbered under bank lien.");
+        return;
+      }
+
+      const bank = prompt("Enter Lending Financial Institution:", "State Bank of India");
+      if (!bank) return;
+      const amt = parseInt(prompt("Sanctioned Secured Debt Amount (INR):", "5000000"), 10) || 5000000;
+
+      flat.encumbrance = {
+        bank_name: bank.trim(),
+        sanction_ref: `MORT-${Date.now().toString().slice(-6)}`,
+        loan_amount_inr: amt,
+        status: "ENCUMBERED_LIEN_ACTIVE"
+      };
+
+      renderTable(enrichedFlats);
+      openDeedModal(flat.ulpin_3d);
+      showToast(`Mortgage Lien successfully stamped against 3D ULPIN ${flat.ulpin_3d}`);
+    }
+
+    // ── Exports ──────────────────────────────────────────────────────────────
+    function downloadExport(type) {
+      if (!currentSessionId) {
+        showToast("Generate a 3D cadastre first.");
+        return;
+      }
+      let url = "";
+      if (type === "obj") url = `/api/ai/floorplan-3d/export-obj/${currentSessionId}`;
+      else if (type === "unity") url = `/api/ai/floorplan-3d/export-unity/${currentSessionId}`;
+      else if (type === "cadastre") url = `/api/ai/floorplan-3d/export-cadastre/${currentSessionId}`;
+      else url = `/api/ai/floorplan-3d/export-${type}/${currentSessionId}`;
+      window.open(url, "_blank");
+    }
+
+    function downloadCadastreCSV() {
+      if (!enrichedFlats || enrichedFlats.length === 0) {
+        showToast("No cadastre parcels available to export.");
+        return;
+      }
+      let csv = "3D_ULPIN,Flat_Number,Floor_Level,Owner_Name,Carpet_Area_Sqm,Airspace_Volume_M3,UDS_Sqm,UDS_Fraction,GPS_Lat,GPS_Lon,Elevation_Z_Min,Elevation_Z_Max,Survey_Anchor,Status\n";
+      enrichedFlats.forEach(f => {
+        csv += `"${f.ulpin_3d}","${f.flat_number}",${f.floor_level},"${f.owner_name}",${f.carpet_area_sqm},${f.airspace_volume_m3},${f.uds_sqm},"${f.uds_fraction}",${f.gps_wgs84.lat},${f.gps_wgs84.lon},${f.z_min_m},${f.z_max_m},"${f.survey_anchor}","${f.encumbrance ? 'MORTGAGED' : 'CLEAR'}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `3D_ULPIN_Cadastre_${currentSessionId || 'export'}.csv`;
+      link.click();
+      showToast("3D ULPIN CSV generated and downloaded");
+    }
+  </script>
+</body>
+</html>

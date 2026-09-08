@@ -1,15 +1,160 @@
-# Virtual environment
-ulpin_env/
-.env
-env/
-venv/
-
-# Python cache & build files
+# =============================================================================
+# Python & Virtual Environments
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
+*.dll
+*.pyo
 
-# OS files
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+ulpin_env/
+env.bak/
+venv.bak/
+
+# Packaging & Distribution
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.manifest
+*.spec
+
+# Testing, Coverage & Linters
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+
+# =============================================================================
+# Environment Variables & Secrets
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# =============================================================================
+# Machine Learning, Models & Datasets
+# =============================================================================
+runs/
+weights/
+checkpoints/
+wandb/
+*.pkl
+*.pickle
+*.ckpt
+*.pth
+*.onnx
+*.h5
+*.tflite
+*.safetensors
+
+# Large datasets
+data/resplan/
+
+# =============================================================================
+# Project Runtime, Generated Outputs & Temp Uploads
+# =============================================================================
+# Temporary uploads from surveyor ingestion & AI pipeline
+data/uploads/tmp*
+data/uploads/*.tmp
+*.tmp
+
+# AI pipeline dynamic uploads and runtime placeholders
+data/ai_uploads/*
+!data/ai_uploads/.gitkeep
+
+# Generated 3D digital twin WebGL/Plotly HTML files (preserve base hostel_3d_twin.html)
+frontend/*_3d_twin.html
+!frontend/hostel_3d_twin.html
+
+# Generated cadastral pipeline room label exports from tests & dynamic predictions
+data/room_labels_bldg_*
+data/room_labels_test_*
+data/room_labels_resplan_*
+data/room_labels_plan_*
+data/room_labels_pred_*
+data/room_labels_ai_test_*
+data/room_labels_ai_img_*
+data/room_labels_res_dim_test_*
+data/room_labels_restest*
+
+# Developer scratchpad and experiment scripts
+scratch/*
+!scratch/dolr_en_raw.html
+!scratch/dolr_raw.html
+!scratch/test_scanned_plan.png
+
+# Database journals and locks
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-journal
+
+# Logs
+*.log
+logs/
+
+# =============================================================================
+# Node & Frontend Build Artifacts
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# =============================================================================
+# IDE, Editor & OS Files
+# =============================================================================
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
 Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# IDE & Editor files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.cursor/
+.vs/
