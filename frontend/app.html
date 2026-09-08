@@ -42,15 +42,50 @@
         
         <div class="search-form-group">
           <label>District (जिल्हा)</label>
-          <select id="sel-district">
+          <select id="sel-district" onchange="onDistrictChange()">
             <option value="Nagpur" selected>Nagpur (नागपूर)</option>
+            <option value="Akola">Akola (अकोला)</option>
+            <option value="Amravati">Amravati (अमरावती)</option>
+            <option value="Buldhana">Buldhana (बुलढाणा)</option>
+            <option value="Yavatmal">Yavatmal (यवतमाळ)</option>
+            <option value="Washim">Washim (वाशिम)</option>
+            <option value="Dharashiv">Dharashiv (धाराशिव)</option>
+            <option value="Chhatrapati_Sambhajinagar">Chhatrapati Sambhajinagar (छत्रपती संभाजीनगर)</option>
+            <option value="Jalna">Jalna (जालना)</option>
+            <option value="Nanded">Nanded (नांदेड)</option>
+            <option value="Parbhani">Parbhani (परभणी)</option>
+            <option value="Beed">Beed (बीड)</option>
+            <option value="Latur">Latur (लातूर)</option>
+            <option value="Hingoli">Hingoli (हिंगोली)</option>
+            <option value="Thane">Thane (ठाणे)</option>
+            <option value="Palghar">Palghar (पालघर)</option>
+            <option value="Mumbai_Suburban">Mumbai Suburban (मुंबई उपनगर)</option>
+            <option value="Ratnagiri">Ratnagiri (रत्नागिरी)</option>
+            <option value="Raigad">Raigad (रायगड)</option>
+            <option value="Sindhudurg">Sindhudurg (सिंधुदुर्ग)</option>
+            <option value="Gadchiroli">Gadchiroli (गडचिरोली)</option>
+            <option value="Gondia">Gondia (गोंदिया)</option>
+            <option value="Chandrapur">Chandrapur (चंद्रपूर)</option>
           </select>
         </div>
 
         <div class="search-form-group">
           <label>Taluka (तालुका)</label>
-          <select id="sel-taluka">
+          <select id="sel-taluka" onchange="onTalukaChange()">
             <option value="Nagpur_Rural" selected>Nagpur Rural (नागपूर ग्रामीण)</option>
+            <option value="Umred">Umred (उमरेड)</option>
+            <option value="Kalmeshwar">Kalmeshwar (कळमेश्वर)</option>
+            <option value="Katol">Katol (काटोल)</option>
+            <option value="Kamthi">Kamthi (कामठी)</option>
+            <option value="Kuhi">Kuhi (कुही)</option>
+            <option value="Nagpur_City">Nagpur City (नागपूर शहर)</option>
+            <option value="Narkhed">Narkhed (नरखेड)</option>
+            <option value="Parseoni">Parseoni (पारशिवनी)</option>
+            <option value="Bhiwapur">Bhiwapur (भिवापूर)</option>
+            <option value="Mouda">Mouda (मौदा)</option>
+            <option value="Ramtek">Ramtek (रामटेक)</option>
+            <option value="Savner">Savner (सावनेर)</option>
+            <option value="Hingna">Hingna (हिंगणा)</option>
           </select>
         </div>
 
@@ -58,6 +93,44 @@
           <label>Village (गाव)</label>
           <select id="sel-village">
             <option value="Waranga" selected>Waranga (वारंगा)</option>
+            <option value="Mohgaon">Mohgaon (मोहगांव)</option>
+            <option value="Mhasala">Mhasala (म्हासाळा)</option>
+            <option value="Yerla">Yerla (येरला)</option>
+            <option value="Rahimapur">Rahimapur (रहिमापूर)</option>
+            <option value="Rahimabad">Rahimabad (रहिमाबाद)</option>
+            <option value="Raipur">Raipur (रायपूर)</option>
+            <option value="Rama">Rama (रामा)</option>
+            <option value="Ridhora">Ridhora (रिधोरा)</option>
+            <option value="Rui">Rui (रुई)</option>
+            <option value="Ruikhari">Ruikhari (रुईखैरी)</option>
+            <option value="Rengapar">Rengapar (रेंगापार)</option>
+            <option value="Lava">Lava (लाव्हा)</option>
+            <option value="Linga">Linga (लिंगा)</option>
+            <option value="Lonara">Lonara (लोणारा)</option>
+            <option value="Vadgaon">Vadgaon (वडगांव)</option>
+            <option value="Varoda">Varoda (वरोडा)</option>
+            <option value="Valni">Valni (वलनी)</option>
+            <option value="Vakeshwar">Vakeshwar (वाकेश्वर)</option>
+            <option value="Vathoda">Vathoda (वाठोडा)</option>
+            <option value="Wadi">Wadi (वाडी)</option>
+            <option value="Vihirgaon">Vihirgaon (विहिरीगांव)</option>
+            <option value="Vela_Harishchandra">Vela Harishchandra (वेळा हरिश्चंद्र)</option>
+            <option value="Vyahad">Vyahad (व्याहाड)</option>
+            <option value="Vyahadghat">Vyahadghat (व्याहाडघाट)</option>
+            <option value="Shankarpur">Shankarpur (शंकरपूर)</option>
+            <option value="Shirpur">Shirpur (शिरपूर)</option>
+            <option value="Satnavari">Satnavari (सातनवरी)</option>
+            <option value="Salai_Godhani">Salai Godhani (सालई गोधनी)</option>
+            <option value="Savanga">Savanga (सावंगा)</option>
+            <option value="Sindewihiri">Sindewihiri (सिंदेविहीरी)</option>
+            <option value="Sukali">Sukali (सुकळी)</option>
+            <option value="Surabardi">Surabardi (सुराबर्डी)</option>
+            <option value="Sonurli">Sonurli (सोनूर्ली)</option>
+            <option value="Sonegaon_Nipani">Sonegaon Nipani (सोनेगांव निपाणी)</option>
+            <option value="Sonegaon_Bori">Sonegaon Bori (सोनेगांव बोरी)</option>
+            <option value="Sonegaon_Lodhi">Sonegaon Lodhi (सोनेगांव लोधी)</option>
+            <option value="Hudkeshwar_Khurd">Hudkeshwar Khurd (हुडकेश्वर खू)</option>
+            <option value="Hudkeshwar_Budruk">Hudkeshwar Budruk (हुडकेश्वर बु)</option>
           </select>
         </div>
 
@@ -86,7 +159,7 @@
         ← Back to Search (नवीन शोध)
       </button>
       <div class="breadcrumb-path">
-        <strong>Survey 140/1 (pu-id: 33550994106)</strong>
+        <strong id="breadcrumb-survey-label">Survey 140/1 (pu-id: 33550994106)</strong>
       </div>
 
     </div>

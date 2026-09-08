@@ -70,24 +70,150 @@ function setupEventListeners() {
 }
 
 
+// Cascading Data Dictionaries for Mahabhulekh Search
+const NAGPUR_TALUKAS = [
+  { value: "Nagpur_Rural", label: "Nagpur Rural (नागपूर ग्रामीण)" },
+  { value: "Umred", label: "Umred (उमरेड)" },
+  { value: "Kalmeshwar", label: "Kalmeshwar (कळमेश्वर)" },
+  { value: "Katol", label: "Katol (काटोल)" },
+  { value: "Kamthi", label: "Kamthi (कामठी)" },
+  { value: "Kuhi", label: "Kuhi (कुही)" },
+  { value: "Nagpur_City", label: "Nagpur City (नागपूर शहर)" },
+  { value: "Narkhed", label: "Narkhed (नरखेड)" },
+  { value: "Parseoni", label: "Parseoni (पारशिवनी)" },
+  { value: "Bhiwapur", label: "Bhiwapur (भिवापूर)" },
+  { value: "Mouda", label: "Mouda (मौदा)" },
+  { value: "Ramtek", label: "Ramtek (रामटेक)" },
+  { value: "Savner", label: "Savner (सावनेर)" },
+  { value: "Hingna", label: "Hingna (हिंगणा)" }
+];
+
+const NAGPUR_RURAL_VILLAGES = [
+  { value: "Waranga", label: "Waranga (वारंगा)" },
+  { value: "Mohgaon", label: "Mohgaon (मोहगांव)" },
+  { value: "Mhasala", label: "Mhasala (म्हासाळा)" },
+  { value: "Yerla", label: "Yerla (येरला)" },
+  { value: "Rahimapur", label: "Rahimapur (रहिमापूर)" },
+  { value: "Rahimabad", label: "Rahimabad (रहिमाबाद)" },
+  { value: "Raipur", label: "Raipur (रायपूर)" },
+  { value: "Rama", label: "Rama (रामा)" },
+  { value: "Ridhora", label: "Ridhora (रिधोरा)" },
+  { value: "Rui", label: "Rui (रुई)" },
+  { value: "Ruikhari", label: "Ruikhari (रुईखैरी)" },
+  { value: "Rengapar", label: "Rengapar (रेंगापार)" },
+  { value: "Lava", label: "Lava (लाव्हा)" },
+  { value: "Linga", label: "Linga (लिंगा)" },
+  { value: "Lonara", label: "Lonara (लोणारा)" },
+  { value: "Vadgaon", label: "Vadgaon (वडगांव)" },
+  { value: "Varoda", label: "Varoda (वरोडा)" },
+  { value: "Valni", label: "Valni (वलनी)" },
+  { value: "Vakeshwar", label: "Vakeshwar (वाकेश्वर)" },
+  { value: "Vathoda", label: "Vathoda (वाठोडा)" },
+  { value: "Wadi", label: "Wadi (वाडी)" },
+  { value: "Vihirgaon", label: "Vihirgaon (विहिरीगांव)" },
+  { value: "Vela_Harishchandra", label: "Vela Harishchandra (वेळा हरिश्चंद्र)" },
+  { value: "Vyahad", label: "Vyahad (व्याहाड)" },
+  { value: "Vyahadghat", label: "Vyahadghat (व्याहाडघाट)" },
+  { value: "Shankarpur", label: "Shankarpur (शंकरपूर)" },
+  { value: "Shirpur", label: "Shirpur (शिरपूर)" },
+  { value: "Satnavari", label: "Satnavari (सातनवरी)" },
+  { value: "Salai_Godhani", label: "Salai Godhani (सालई गोधनी)" },
+  { value: "Savanga", label: "Savanga (सावंगा)" },
+  { value: "Sindewihiri", label: "Sindewihiri (सिंदेविहीरी)" },
+  { value: "Sukali", label: "Sukali (सुकळी)" },
+  { value: "Surabardi", label: "Surabardi (सुराबर्डी)" },
+  { value: "Sonurli", label: "Sonurli (सोनूर्ली)" },
+  { value: "Sonegaon_Nipani", label: "Sonegaon Nipani (सोनेगांव निपाणी)" },
+  { value: "Sonegaon_Bori", label: "Sonegaon Bori (सोनेगांव बोरी)" },
+  { value: "Sonegaon_Lodhi", label: "Sonegaon Lodhi (सोनेगांव लोधी)" },
+  { value: "Hudkeshwar_Khurd", label: "Hudkeshwar Khurd (हुडकेश्वर खू)" },
+  { value: "Hudkeshwar_Budruk", label: "Hudkeshwar Budruk (हुडकेश्वर बु)" }
+];
+
+function onDistrictChange() {
+  const dist = document.getElementById("sel-district").value;
+  const talukaSelect = document.getElementById("sel-taluka");
+  talukaSelect.innerHTML = "";
+
+  if (dist === "Nagpur") {
+    NAGPUR_TALUKAS.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.value;
+      opt.textContent = t.label;
+      if (t.value === "Nagpur_Rural") opt.selected = true;
+      talukaSelect.appendChild(opt);
+    });
+  } else {
+    // Realistic fallback talukas for simulated search
+    const fallbackTalukas = [
+      { value: `${dist}_Rural`, label: `${dist} Rural (${dist} ग्रामीण)` },
+      { value: `${dist}_City`, label: `${dist} City (${dist} शहर)` },
+      { value: `${dist}_North`, label: `${dist} North (${dist} उत्तर)` },
+      { value: `${dist}_South`, label: `${dist} South (${dist} दक्षिण)` }
+    ];
+    fallbackTalukas.forEach((t, i) => {
+      const opt = document.createElement("option");
+      opt.value = t.value;
+      opt.textContent = t.label;
+      if (i === 0) opt.selected = true;
+      talukaSelect.appendChild(opt);
+    });
+  }
+
+  onTalukaChange();
+}
+
+function onTalukaChange() {
+  const taluka = document.getElementById("sel-taluka").value;
+  const villageSelect = document.getElementById("sel-village");
+  villageSelect.innerHTML = "";
+
+  if (taluka === "Nagpur_Rural") {
+    NAGPUR_RURAL_VILLAGES.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.value;
+      opt.textContent = v.label;
+      if (v.value === "Waranga") opt.selected = true;
+      villageSelect.appendChild(opt);
+    });
+  } else {
+    // Keep Waranga on top so pilot data always resolves, plus realistic sample villages
+    const sampleVillages = [
+      { value: "Waranga", label: "Waranga (वारंगा)" },
+      { value: "Central_Sector", label: "Central Sector (मध्यवर्ती विभाग)" },
+      { value: "Shastri_Nagar", label: "Shastri Nagar (शास्त्री नगर)" },
+      { value: "Vidya_Nagari", label: "Vidya Nagari (विद्या नगरी)" }
+    ];
+    sampleVillages.forEach((v, i) => {
+      const opt = document.createElement("option");
+      opt.value = v.value;
+      opt.textContent = v.label;
+      if (i === 0) opt.selected = true;
+      villageSelect.appendChild(opt);
+    });
+  }
+}
+
 // Step 1 -> Step 2: Execute Mahabhulekh Search
 async function executeSearch() {
   const district = document.getElementById("sel-district").value;
   const taluka = document.getElementById("sel-taluka").value;
-  const village = document.getElementById("sel-village").value;
-  const surveyNo = document.getElementById("inp-survey-no").value.trim();
-
-  if (!surveyNo) {
-    showToast("Please enter a valid Survey / Gat Number", "error");
-    return;
-  }
+  const villageSelect = document.getElementById("sel-village");
+  const villageText = villageSelect.options[villageSelect.selectedIndex]?.text || "Waranga (वारंगा)";
+  const surveyNo = document.getElementById("inp-survey-no").value.trim() || "140/1";
 
   // Switch Views
   document.getElementById("view-search").style.display = "none";
   const resultsView = document.getElementById("view-results");
   resultsView.style.display = "flex";
 
-  showToast("Resolved Land Record: Survey 140/1, Waranga (pu-id: 33550994106)", "success");
+  // Dynamically update breadcrumb label
+  const breadcrumbEl = document.getElementById("breadcrumb-survey-label") || document.querySelector(".breadcrumb-path strong");
+  if (breadcrumbEl) {
+    breadcrumbEl.innerText = `Survey ${surveyNo} (pu-id: 33550994106)`;
+  }
+
+  showToast(`Resolved Land Record: Survey ${surveyNo}, ${villageText.split(' ')[0]} (pu-id: 33550994106)`, "success");
 
   // Load analytics & active building
   await loadAnalytics();
