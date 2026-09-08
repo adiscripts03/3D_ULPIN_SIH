@@ -25,10 +25,23 @@ import cv2
 import numpy as np
 from PIL import Image
 
-import torch
-import torch.nn as nn
 import yaml
-from safetensors.torch import load_file
+
+_TORCH_AVAILABLE = False
+_torch = None
+_nn = None
+_load_file = None
+
+try:
+    import torch
+    import torch.nn as nn
+    from safetensors.torch import load_file
+    _TORCH_AVAILABLE = True
+    _torch = torch
+    _nn = nn
+    _load_file = load_file
+except ImportError:
+    pass
 
 # Paths to models
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -76,21 +89,25 @@ FLAT_PALETTE = [
 EXPORT_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
-def get_device() -> torch.device:
+def get_device() -> Any:
     global _DEVICE
+    if not _TORCH_AVAILABLE:
+        return "cpu"
     if _DEVICE is None:
-        if torch.backends.mps.is_available():
-            _DEVICE = torch.device("mps")
-        elif torch.cuda.is_available():
-            _DEVICE = torch.device("cuda")
+        if _torch.backends.mps.is_available():
+            _DEVICE = _torch.device("mps")
+        elif _torch.cuda.is_available():
+            _DEVICE = _torch.device("cuda")
         else:
-            _DEVICE = torch.device("cpu")
+            _DEVICE = _torch.device("cpu")
     return _DEVICE
 
 
-def load_resnet_unet() -> Optional[nn.Module]:
+def load_resnet_unet() -> Optional[Any]:
     """Load ResNet34-UNet model from weights."""
     global _RESNET_UNET_MODEL, _RESNET_CONFIG
+    if not _TORCH_AVAILABLE:
+        return None
     if _RESNET_UNET_MODEL is not None:
         return _RESNET_UNET_MODEL
 
@@ -110,7 +127,7 @@ def load_resnet_unet() -> Optional[nn.Module]:
             classes=4,  # floor=0, wall=1, door=2, window=3
         ).to(device)
 
-        state = load_file(str(SAFELTENSORS_PATH), device=str(device))
+        state = _load_file(str(SAFELTENSORS_PATH), device=str(device))
         model.load_state_dict(state)
         model.eval()
         _RESNET_UNET_MODEL = model
@@ -122,7 +139,7 @@ def load_resnet_unet() -> Optional[nn.Module]:
 
 
 def get_model_status() -> Dict[str, Any]:
-    resnet_ready = SAFELTENSORS_PATH.exists() and CONFIG_PATH.exists()
+    resnet_ready = _TORCH_AVAILABLE and SAFELTENSORS_PATH.exists() and CONFIG_PATH.exists()
     return {
         "ok": True,
         "resnet_unet": {
@@ -207,9 +224,9 @@ def extract_architectural_features(
             arr = np.array(canvas, dtype=np.float32) / 255.0
             mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
             std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-            tensor = torch.from_numpy((arr - mean) / std).permute(2, 0, 1).unsqueeze(0).to(device)
+            tensor = _torch.from_numpy((arr - mean) / std).permute(2, 0, 1).unsqueeze(0).to(device)
 
-            with torch.no_grad():
+            with _torch.no_grad():
                 logits = model(tensor)
                 pred_512 = logits.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.uint8)
 

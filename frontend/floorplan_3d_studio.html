@@ -1026,10 +1026,16 @@
     async function checkModelStatus() {
       try {
         const res = await fetch("/api/ai/floorplan-3d/status");
+        if (!res.ok) {
+          console.warn("Status endpoint returned status:", res.status);
+          return;
+        }
         const data = await res.json();
         const pillText = document.getElementById("model-status-text");
         if (data.resnet_unet && data.resnet_unet.available) {
           pillText.textContent = `ResNet34-UNet (${data.resnet_unet.device.toUpperCase()} Active)`;
+        } else {
+          pillText.textContent = "OpenCV Cadastre Engine (Active)";
         }
       } catch (e) {
         console.warn("Status error:", e);
@@ -1108,8 +1114,15 @@
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Pipeline execution failed");
+          const errText = await res.text();
+          let msg = `Pipeline execution failed (${res.status})`;
+          try {
+            const errJson = JSON.parse(errText);
+            msg = errJson.detail || msg;
+          } catch (_) {
+            if (errText) msg = errText;
+          }
+          throw new Error(msg);
         }
 
         const data = await res.json();
