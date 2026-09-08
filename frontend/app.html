@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D ULPIN Cadastral Management System | DoLR</title>
-  <link rel="stylesheet" href="/static/app.css?v=3.1">
+  <link rel="stylesheet" href="/static/app.css?v=3.2">
   <script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
 </head>
 <body>
@@ -43,7 +43,8 @@
         <div class="search-form-group">
           <label>District (जिल्हा)</label>
           <select id="sel-district" onchange="onDistrictChange()">
-            <option value="Nagpur" selected>Nagpur (नागपूर)</option>
+            <option value="" selected disabled>-- निवडा (Select District) --</option>
+            <option value="Nagpur">Nagpur (नागपूर)</option>
             <option value="Akola">Akola (अकोला)</option>
             <option value="Amravati">Amravati (अमरावती)</option>
             <option value="Buldhana">Buldhana (बुलढाणा)</option>
@@ -72,7 +73,8 @@
         <div class="search-form-group">
           <label>Taluka (तालुका)</label>
           <select id="sel-taluka" onchange="onTalukaChange()">
-            <option value="Nagpur_Rural" selected>Nagpur Rural (नागपूर ग्रामीण)</option>
+            <option value="" selected disabled>-- निवडा (Select Taluka) --</option>
+            <option value="Nagpur_Rural">Nagpur Rural (नागपूर ग्रामीण)</option>
             <option value="Umred">Umred (उमरेड)</option>
             <option value="Kalmeshwar">Kalmeshwar (कळमेश्वर)</option>
             <option value="Katol">Katol (काटोल)</option>
@@ -92,7 +94,8 @@
         <div class="search-form-group">
           <label>Village (गाव)</label>
           <select id="sel-village">
-            <option value="Waranga" selected>Waranga (वारंगा)</option>
+            <option value="" selected disabled>-- निवडा (Select Village) --</option>
+            <option value="Waranga">Waranga (वारंगा)</option>
             <option value="Mohgaon">Mohgaon (मोहगांव)</option>
             <option value="Mhasala">Mhasala (म्हासाळा)</option>
             <option value="Yerla">Yerla (येरला)</option>
@@ -252,7 +255,7 @@ Map Report</div>
         <div class="bhunaksha-map-toolbar">
           <div style="font-size:0.8rem;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;"></span>
-            <span>वारंगा (Waranga) Cadastral Map Sheet • Revenue Village 270900090108850000</span>
+            <span id="bhu-toolbar-title">वारंगा (Waranga) Cadastral Map Sheet • Revenue Village 270900090108850000</span>
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="btn btn-subtle" onclick="zoomBhunakshaMap(1.2)" style="padding:4px 10px;font-size:0.85rem;font-weight:700;" title="Zoom In">+</button>
@@ -783,7 +786,7 @@ Map Report</div>
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <script src="/static/app.js?v=3.1"></script>
+  <script src="/static/app.js?v=3.2"></script>
 </body>
 </html>
 

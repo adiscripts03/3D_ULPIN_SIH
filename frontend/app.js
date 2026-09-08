@@ -143,15 +143,21 @@ function onDistrictChange() {
   const talukaSelect = document.getElementById("sel-taluka");
   talukaSelect.innerHTML = "";
 
+  const defaultTalukaOpt = document.createElement("option");
+  defaultTalukaOpt.value = "";
+  defaultTalukaOpt.textContent = "-- निवडा (Select Taluka) --";
+  defaultTalukaOpt.disabled = true;
+  defaultTalukaOpt.selected = true;
+  talukaSelect.appendChild(defaultTalukaOpt);
+
   if (dist === "Nagpur") {
     NAGPUR_TALUKAS.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t.value;
       opt.textContent = t.label;
-      if (t.value === "Nagpur_Rural") opt.selected = true;
       talukaSelect.appendChild(opt);
     });
-  } else {
+  } else if (dist) {
     // Realistic fallback talukas for simulated search
     const fallbackTalukas = [
       { value: `${dist}_Rural`, label: `${dist} Rural (${dist} ग्रामीण)` },
@@ -159,16 +165,23 @@ function onDistrictChange() {
       { value: `${dist}_North`, label: `${dist} North (${dist} उत्तर)` },
       { value: `${dist}_South`, label: `${dist} South (${dist} दक्षिण)` }
     ];
-    fallbackTalukas.forEach((t, i) => {
+    fallbackTalukas.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t.value;
       opt.textContent = t.label;
-      if (i === 0) opt.selected = true;
       talukaSelect.appendChild(opt);
     });
   }
 
-  onTalukaChange();
+  // Reset village select to placeholder
+  const villageSelect = document.getElementById("sel-village");
+  villageSelect.innerHTML = "";
+  const defaultVillageOpt = document.createElement("option");
+  defaultVillageOpt.value = "";
+  defaultVillageOpt.textContent = "-- निवडा (Select Village) --";
+  defaultVillageOpt.disabled = true;
+  defaultVillageOpt.selected = true;
+  villageSelect.appendChild(defaultVillageOpt);
 }
 
 function onTalukaChange() {
@@ -176,27 +189,32 @@ function onTalukaChange() {
   const villageSelect = document.getElementById("sel-village");
   villageSelect.innerHTML = "";
 
+  const defaultVillageOpt = document.createElement("option");
+  defaultVillageOpt.value = "";
+  defaultVillageOpt.textContent = "-- निवडा (Select Village) --";
+  defaultVillageOpt.disabled = true;
+  defaultVillageOpt.selected = true;
+  villageSelect.appendChild(defaultVillageOpt);
+
   if (taluka === "Nagpur_Rural") {
     NAGPUR_RURAL_VILLAGES.forEach(v => {
       const opt = document.createElement("option");
       opt.value = v.value;
       opt.textContent = v.label;
-      if (v.value === "Waranga") opt.selected = true;
       villageSelect.appendChild(opt);
     });
-  } else {
-    // Keep Waranga on top so pilot data always resolves, plus realistic sample villages
+  } else if (taluka) {
+    // Keep Waranga in list so pilot data always resolves, plus realistic sample villages
     const sampleVillages = [
       { value: "Waranga", label: "Waranga (वारंगा)" },
       { value: "Central_Sector", label: "Central Sector (मध्यवर्ती विभाग)" },
       { value: "Shastri_Nagar", label: "Shastri Nagar (शास्त्री नगर)" },
       { value: "Vidya_Nagari", label: "Vidya Nagari (विद्या नगरी)" }
     ];
-    sampleVillages.forEach((v, i) => {
+    sampleVillages.forEach(v => {
       const opt = document.createElement("option");
       opt.value = v.value;
       opt.textContent = v.label;
-      if (i === 0) opt.selected = true;
       villageSelect.appendChild(opt);
     });
   }
@@ -208,9 +226,20 @@ function openVillageMap() {
   const talukaSelect = document.getElementById("sel-taluka");
   const villageSelect = document.getElementById("sel-village");
 
-  const distText = distSelect.options[distSelect.selectedIndex]?.text || "Nagpur (नागपूर)";
-  const talukaText = talukaSelect.options[talukaSelect.selectedIndex]?.text || "Nagpur Rural (नागपूर ग्रामीण)";
-  const villageText = villageSelect.options[villageSelect.selectedIndex]?.text || "Waranga (वारंगा)";
+  const distVal = distSelect ? distSelect.value : "";
+  const talukaVal = talukaSelect ? talukaSelect.value : "";
+  const villageVal = villageSelect ? villageSelect.value : "";
+
+  // If user selected specific options, use their chosen labels; otherwise fallback gracefully to Nagpur / Nagpur Rural / Waranga
+  const distText = (distVal && distSelect.selectedIndex >= 0 && distSelect.options[distSelect.selectedIndex].value)
+    ? distSelect.options[distSelect.selectedIndex].text 
+    : "Nagpur (नागपूर)";
+  const talukaText = (talukaVal && talukaSelect.selectedIndex >= 0 && talukaSelect.options[talukaSelect.selectedIndex].value)
+    ? talukaSelect.options[talukaSelect.selectedIndex].text 
+    : "Nagpur Rural (नागपूर ग्रामीण)";
+  const villageText = (villageVal && villageSelect.selectedIndex >= 0 && villageSelect.options[villageSelect.selectedIndex].value)
+    ? villageSelect.options[villageSelect.selectedIndex].text 
+    : "Waranga (वारंगा)";
 
   // Update Location in Bhunaksha Sidebar
   const dispDist = document.getElementById("bhu-disp-district");
@@ -219,6 +248,8 @@ function openVillageMap() {
   if (dispTal) dispTal.innerText = talukaText;
   const dispVil = document.getElementById("bhu-disp-village");
   if (dispVil) dispVil.innerText = villageText;
+  const bhuTitle = document.getElementById("bhu-toolbar-title");
+  if (bhuTitle) bhuTitle.innerText = `${villageText} Cadastral Map Sheet • Revenue Village 270900090108850000`;
 
   // Reset Map View State
   const mapImg = document.getElementById("bhunaksha-map-img");

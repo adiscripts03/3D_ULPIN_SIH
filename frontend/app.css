@@ -140,9 +140,11 @@ header {
   border: 1px solid var(--border-strong);
   border-radius: 10px;
   width: 100%;
-  max-width: 780px;
-  padding: 42px 48px;
+  max-width: 900px;
+  padding: 36px 36px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .portal-card-header {
@@ -181,14 +183,20 @@ header {
 
 .cascading-form-grid-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 28px;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 880px) {
   .cascading-form-grid-3 {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .search-portal-card {
+    padding: 24px 20px;
   }
 }
 
@@ -341,6 +349,8 @@ header {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  width: 100%;
 }
 
 .search-form-group label {
@@ -352,20 +362,41 @@ header {
 }
 
 .search-form-group select, .search-form-group input {
-  background: var(--bg-card-subtle);
+  background-color: var(--bg-card-subtle);
   border: 1.5px solid var(--border-strong);
   color: var(--text-main);
-  padding: 12px 14px;
+  padding: 10px 32px 10px 12px;
   border-radius: 6px;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 500;
   transition: all 0.15s ease;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2357534e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+.search-form-group select option {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  background: #ffffff;
+  padding: 6px 10px;
 }
 
 .search-form-group select:focus, .search-form-group input:focus {
   outline: none;
   border-color: var(--accent-primary);
-  background: #ffffff;
+  background-color: #ffffff;
   box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
 }
 
