@@ -166,16 +166,17 @@
       overflow: hidden;
     }
 
-    /* ── LANDING DASHBOARD VIEW (STRIPE / GOV STANDARD) ───────────────────── */
+    /* ── LANDING DASHBOARD VIEW (STRIPE / GOV MINIMAL WITH 3D BACKGROUND) ── */
     .landing-dashboard-section {
       flex: 1;
+      position: relative;
       overflow-y: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 48px;
-      gap: 32px;
       scrollbar-width: thin;
+      width: 100%;
     }
     .landing-dashboard-section::-webkit-scrollbar {
       width: 6px;
@@ -185,15 +186,40 @@
       border-radius: 4px;
     }
 
+    #landing-3d-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.68;
+    }
+
+    .landing-content-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+      gap: 32px;
+      max-width: 1140px;
+      width: 100%;
+    }
+
     /* Official Government Sub-Badge */
     .gov-authority-pill {
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--border);
-      padding: 5px 14px;
-      border-radius: 20px;
+      padding: 6px 16px;
+      border-radius: 24px;
       font-size: 0.72rem;
       font-weight: 600;
       color: var(--text-muted);
@@ -212,7 +238,7 @@
       box-shadow: 0 0 0 2px var(--success-border);
     }
 
-    /* Hero Section */
+    /* Hero Section: Aim & Purpose */
     .landing-hero {
       text-align: center;
       max-width: 860px;
@@ -220,6 +246,9 @@
       flex-direction: column;
       align-items: center;
       gap: 16px;
+      background: radial-gradient(circle, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.75) 60%, transparent 100%);
+      padding: 12px 28px 18px;
+      border-radius: 24px;
     }
     .hero-kicker {
       font-family: var(--font-mono);
@@ -228,23 +257,23 @@
       color: #0f172a;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      background: #f1f5f9;
-      padding: 3px 10px;
+      background: rgba(241, 245, 249, 0.9);
+      padding: 4px 12px;
       border-radius: 4px;
       border: 1px solid var(--border);
     }
     .landing-hero h1 {
-      font-size: 2.5rem;
+      font-size: 2.65rem;
       font-weight: 900;
       letter-spacing: -0.035em;
       color: var(--text);
       line-height: 1.12;
     }
-    .landing-hero p {
-      font-size: 0.96rem;
+    .hero-purpose-text {
+      font-size: 1.05rem;
       color: var(--text-muted);
-      line-height: 1.55;
-      max-width: 720px;
+      line-height: 1.6;
+      max-width: 680px;
     }
     .hero-actions-row {
       display: flex;
@@ -278,7 +307,8 @@
       stroke: #ffffff;
     }
     .btn-dash-secondary {
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
       color: var(--text);
       border: 1px solid var(--border);
       padding: 11px 20px;
@@ -293,7 +323,7 @@
       box-shadow: var(--shadow-xs);
     }
     .btn-dash-secondary:hover {
-      background: #f8fafc;
+      background: #ffffff;
       border-color: #cbd5e1;
       transform: translateY(-1px);
     }
@@ -303,247 +333,143 @@
       stroke: currentColor;
     }
 
-    /* Institutional Telemetry & National Metrics Bar */
-    .cadastre-metrics-strip {
+    /* 3 Aim & Purpose Pillars */
+    .aim-pillars-container {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 1060px;
+    }
+    .aim-pillar-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
       gap: 12px;
-      max-width: 1100px;
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 20px;
       box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
     }
-    .metric-strip-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      padding: 0 10px;
-      border-right: 1px solid var(--border);
-    }
-    .metric-strip-cell:last-child {
-      border-right: none;
-    }
-    .metric-val {
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: #0f172a;
-      font-family: var(--font-mono);
-      letter-spacing: -0.02em;
-    }
-    .metric-title {
-      font-size: 0.74rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .metric-sub {
-      font-size: 0.65rem;
-      color: var(--text-dim);
-    }
-
-    /* Verified Architectural Datasets Quick-Launch */
-    .dashboard-launch-section {
-      max-width: 1100px;
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 22px 24px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .launch-section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .launch-section-header h4 {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--text);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .launch-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-    }
-    .launch-card-btn {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 14px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      text-align: left;
-      transition: all 0.15s ease;
-    }
-    .launch-card-btn:hover {
-      background: #ffffff;
+    .aim-pillar-card:hover {
       border-color: #0f172a;
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
+      background: #ffffff;
     }
-    .launch-card-top {
+    .pillar-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .launch-card-top svg {
-      width: 17px;
-      height: 17px;
-      stroke: var(--text);
-    }
-    .launch-card-title {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.25;
-    }
-    .launch-card-desc {
-      font-size: 0.66rem;
-      color: var(--text-dim);
-      line-height: 1.35;
-    }
-
-    /* Stripe-Grade 4 Capabilities Matrix */
-    .capabilities-matrix-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      max-width: 1100px;
-      width: 100%;
-    }
-    .capability-card {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 22px 24px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      transition: all 0.2s ease;
-    }
-    .capability-card:hover {
-      border-color: #cbd5e1;
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-    .capability-icon-box {
-      width: 40px;
-      height: 40px;
-      border-radius: 9px;
+    .pillar-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
       background: #f8fafc;
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
-      color: var(--text);
+      color: #0f172a;
     }
-    .capability-icon-box svg {
-      width: 20px;
-      height: 20px;
+    .pillar-icon-box svg {
+      width: 18px;
+      height: 18px;
       stroke: currentColor;
     }
-    .capability-content {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex: 1;
-    }
-    .capability-content h3 {
-      font-size: 0.92rem;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.01em;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .capability-content p {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-    .capability-tag {
-      font-size: 0.66rem;
+    .pillar-tag {
+      font-size: 0.65rem;
       font-family: var(--font-mono);
       font-weight: 600;
       color: #059669;
       background: #ecfdf5;
-      padding: 2px 7px;
+      padding: 2px 8px;
       border-radius: 4px;
       border: 1px solid #a7f3d0;
     }
+    .aim-pillar-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .aim-pillar-card p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
 
-    /* 4-Step Pipeline Architecture Section */
-    .pipeline-workflow-card {
-      max-width: 1100px;
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 22px 24px;
-      box-shadow: var(--shadow-sm);
+    /* Streamlined Quick-Demo Bar */
+    .quick-demo-strip {
       display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .workflow-header {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      width: 100%;
+      max-width: 1060px;
+      box-shadow: var(--shadow-xs);
     }
-    .workflow-header h4 {
-      font-size: 0.82rem;
+    .demo-strip-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.75rem;
       font-weight: 700;
       color: var(--text);
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      white-space: nowrap;
     }
-    .workflow-steps-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+    .demo-chips-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
-    .workflow-step-box {
+    .demo-chip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .step-num {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .step-name {
-      font-size: 0.8rem;
-      font-weight: 700;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.74rem;
+      font-weight: 600;
       color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
     }
-    .step-desc {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      line-height: 1.4;
+    .demo-chip-btn:hover {
+      background: #ffffff;
+      border-color: #0f172a;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-xs);
+    }
+    .chip-ext {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 1px 5px;
+      border-radius: 3px;
     }
 
     /* Trust & Standards Minimal Footer */
     .landing-footer {
-      max-width: 1100px;
+      max-width: 1060px;
       width: 100%;
       border-top: 1px solid var(--border);
       padding-top: 20px;
@@ -1622,235 +1548,138 @@
   <!-- Main Viewport -->
   <main>
     
-    <!-- ── 1. STRIPE / GOV-GRADE LANDING DASHBOARD VIEW ────────────────────── -->
+    <!-- ── 1. STRIPE / GOV-GRADE MINIMAL LANDING VIEW WITH 3D BACKGROUND ── -->
     <section class="landing-dashboard-section" id="view-dashboard">
-      
-      <!-- Official Government Authority Badge -->
-      <div class="gov-authority-pill">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-        <span>Department of Land Resources (DoLR) &bull; PS 26011</span>
-        <span style="color: var(--border-subtle);">&bull;</span>
-        <div class="gov-status-dot"></div>
-        <span style="color: var(--success); font-weight: 700;">ISO 19152 Active</span>
-      </div>
+      <!-- Hardware-accelerated 3D WebGL Volumetric Cadastre Strata Background -->
+      <canvas id="landing-3d-bg"></canvas>
 
-      <!-- Hero Section -->
-      <div class="landing-hero">
-        <div class="hero-kicker">Statutory 3D Volumetric Cadastre Platform</div>
-        <h1>The Volumetric Cadastre Platform for Vertical Land Governance</h1>
-        <p>
-          Transform architectural floor plans into immutable 3D ULPIN parcels. Establish statutory spatial boundaries, compute algorithmic Undivided Land Share (UDS), and eliminate multi-bank mortgage fraud across multi-storey real estate.
-        </p>
-        <div class="hero-actions-row">
-          <button class="btn-dash-primary" onclick="navigateTo('studio')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            </svg>
-            Enter Cadastre Studio
-          </button>
-          <button class="btn-dash-secondary" onclick="quickLaunchSample('sample_2bhk')">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            Try 2BHK Demo Blueprint
-          </button>
+      <div class="landing-content-wrap">
+        <!-- Official Government Authority Badge -->
+        <div class="gov-authority-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Department of Land Resources (DoLR) &bull; PS 26011</span>
+          <span style="color: var(--border);">&bull;</span>
+          <div class="gov-status-dot"></div>
+          <span style="color: var(--success); font-weight: 700;">ISO 19152 Active</span>
         </div>
-      </div>
 
-      <!-- Institutional National Telemetry Bar -->
-      <div class="cadastre-metrics-strip">
-        <div class="metric-strip-cell">
-          <div class="metric-val">14-Digit</div>
-          <div class="metric-title">Base Parcel Anchor</div>
-          <div class="metric-sub">Survey 140/1 Waranga standard</div>
+        <!-- Hero Section: Aim & Purpose Front and Center -->
+        <div class="landing-hero">
+          <div class="hero-kicker">National 3D Volumetric Cadastre Platform</div>
+          <h1>From 2D Blueprints to Sovereign 3D Land Titles</h1>
+          <p class="hero-purpose-text">
+            The statutory 3D ULPIN platform converts architectural floor plans into immutable 3D volumetric parcels, computes mathematical land equity (UDS), and secures vertical property rights against duplicate mortgages.
+          </p>
+          <div class="hero-actions-row">
+            <button class="btn-dash-primary" onclick="navigateTo('studio')">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+              Launch Cadastre Studio
+            </button>
+            <button class="btn-dash-secondary" onclick="quickLaunchSample('sample_2bhk')">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Explore 2BHK Demo
+            </button>
+          </div>
         </div>
-        <div class="metric-strip-cell">
-          <div class="metric-val">ISO 19152</div>
-          <div class="metric-title">LADM v2 Strata Standard</div>
-          <div class="metric-sub">Spatial Unit &amp; Rights Packages</div>
-        </div>
-        <div class="metric-strip-cell">
-          <div class="metric-val">100%</div>
-          <div class="metric-title">Spatial Topology</div>
-          <div class="metric-sub">Non-overlapping Euler polyhedra</div>
-        </div>
-        <div class="metric-strip-cell">
-          <div class="metric-val">40+</div>
-          <div class="metric-title">Volumetric Parcels</div>
-          <div class="metric-sub">Extruded &amp; verified per tower</div>
-        </div>
-      </div>
 
-      <!-- Verified Architectural Datasets Quick-Launch -->
-      <div class="dashboard-launch-section">
-        <div class="launch-section-header">
-          <h4>Launch with Verified Sample Blueprints:</h4>
-          <span style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);">5 Official Architectural Datasets</span>
-        </div>
-        <div class="launch-grid">
-          <button class="launch-card-btn" onclick="quickLaunchSample('sample_2bhk')">
-            <div class="launch-card-top">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-              <span class="sample-type-badge">PNG</span>
+        <!-- Core Aim & Purpose: 3 Distinct Pillars -->
+        <div class="aim-pillars-container">
+          <div class="aim-pillar-card">
+            <div class="pillar-top">
+              <div class="pillar-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <span class="pillar-tag">ISO 19152 LADM v2</span>
             </div>
-            <div class="launch-card-title">2BHK Residential Flat</div>
-            <div class="launch-card-desc">Master bed, hall, kitchen &amp; balcony</div>
-          </button>
+            <h3>Volumetric Airspace Sovereignty</h3>
+            <p>Replaces ambiguous 2D deed descriptions with statutory 3D volumetric polyhedra (X, Y, Z_min, Z_max, and m³), granting indisputable legal ownership of vertical space.</p>
+          </div>
 
-          <button class="launch-card-btn" onclick="quickLaunchSample('sample_multi_unit')">
-            <div class="launch-card-top">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><line x1="3" y1="12" x2="21" y2="12"></line></svg>
-              <span class="sample-type-badge">PNG</span>
+          <div class="aim-pillar-card">
+            <div class="pillar-top">
+              <div class="pillar-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </div>
+              <span class="pillar-tag">Automated Equity</span>
             </div>
-            <div class="launch-card-title">Multi-Flat Floor Plan</div>
-            <div class="launch-card-desc">Corridor with 4 distinct owner flats</div>
-          </button>
+            <h3>Algorithmic Land Equity (UDS)</h3>
+            <p>Computes each flat owner's exact Undivided Share of Land based on net carpet area fractions against the registered plot, permanently preventing builder over-allocation.</p>
+          </div>
 
-          <button class="launch-card-btn" onclick="quickLaunchSample('sample_cad')">
-            <div class="launch-card-top">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-              <span class="sample-type-badge">PNG</span>
+          <div class="aim-pillar-card">
+            <div class="pillar-top">
+              <div class="pillar-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <span class="pillar-tag">Bank Lien Security</span>
             </div>
-            <div class="launch-card-title">CAD Vector Blueprint</div>
-            <div class="launch-card-desc">Precision structural wall contours</div>
-          </button>
-
-          <button class="launch-card-btn" onclick="quickLaunchSample('sample_hostel_pdf')">
-            <div class="launch-card-top">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              <span class="sample-type-badge">PDF</span>
-            </div>
-            <div class="launch-card-title">Hostel Block A</div>
-            <div class="launch-card-desc">10-floor institutional PDF</div>
-          </button>
-
-          <button class="launch-card-btn" onclick="quickLaunchSample('sample_fdd22')">
-            <div class="launch-card-top">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-              <span class="sample-type-badge">JPG</span>
-            </div>
-            <div class="launch-card-title">Tower Block FDD22</div>
-            <div class="launch-card-desc">High-density residential tower</div>
-          </button>
+            <h3>Anti-Fraud Mortgage Lock</h3>
+            <p>Direct integration with institutional banking registries flags active loans and automatically locks strata titles, eliminating duplicate mortgage fraud and unauthorized sales.</p>
+          </div>
         </div>
+
+        <!-- Streamlined Instant Architectural Demos -->
+        <div class="quick-demo-strip">
+          <span class="demo-strip-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; stroke: #0f172a;">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            Instant Architectural Demos:
+          </span>
+          <div class="demo-chips-row">
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_2bhk')">
+              <span>2BHK Flat</span>
+              <span class="chip-ext">PNG</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_multi_unit')">
+              <span>Multi-Flat Floor</span>
+              <span class="chip-ext">PNG</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_cad')">
+              <span>CAD Vector</span>
+              <span class="chip-ext">PNG</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_hostel_pdf')">
+              <span>Hostel Block A</span>
+              <span class="chip-ext">PDF</span>
+            </button>
+            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_fdd22')">
+              <span>Tower FDD22</span>
+              <span class="chip-ext">JPG</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Trust & Standards Minimal Footer -->
+        <footer class="landing-footer">
+          <div>
+            Conforms to <strong>ISO 19152:2024 LADM v2</strong> &bull; Digital India Land Records Modernization Programme (DILRMP) &bull; Department of Land Resources (DoLR)
+          </div>
+          <div class="footer-links">
+            <a href="/portal">Cadastre Portal</a>
+            <a href="/app">3D Twin App</a>
+            <a href="javascript:void(0)" onclick="navigateTo('studio')">Open Studio</a>
+          </div>
+        </footer>
       </div>
-
-      <!-- Stripe-Grade 4 Capabilities Matrix -->
-      <div class="capabilities-matrix-grid">
-        <div class="capability-card">
-          <div class="capability-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-              <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
-          </div>
-          <div class="capability-content">
-            <h3>
-              Volumetric 3D Stratification
-              <span class="capability-tag">ISO 19152</span>
-            </h3>
-            <p>Converts flat 2D architectural drawings into legally bounded 3D volumetric airspace polyhedra ($X, Y, Z_{min}, Z_{max}$ and $m^3$) providing unambiguous vertical title rights for every owner.</p>
-          </div>
-        </div>
-
-        <div class="capability-card">
-          <div class="capability-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <line x1="9" y1="21" x2="9" y2="9"></line>
-            </svg>
-          </div>
-          <div class="capability-content">
-            <h3>
-              Algorithmic UDS Equity Calculus
-              <span class="capability-tag">Real-Time Equity</span>
-            </h3>
-            <p>Computes statutory Undivided Share of Land based on precision net carpet area fractions against the registered plot boundary, guaranteeing proportional land equity in multi-owner developments.</p>
-          </div>
-        </div>
-
-        <div class="capability-card">
-          <div class="capability-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <div class="capability-content">
-            <h3>
-              Anti-Fraud Mortgage &amp; Resale Lock
-              <span class="capability-tag">Bank Lien Protection</span>
-            </h3>
-            <p>Direct integration with institutional mortgage registries to flag active bank liens (SBI, HDFC, BoM) and automatically lock strata titles against fraudulent double-selling or unverified mutation.</p>
-          </div>
-        </div>
-
-        <div class="capability-card">
-          <div class="capability-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-          </div>
-          <div class="capability-content">
-            <h3>
-              BIM &amp; National GIS Interoperability
-              <span class="capability-tag">Multi-Format Exchange</span>
-            </h3>
-            <p>Full machine-readable data exchange supporting .OBJ 3D textured meshes, Unity Digital Twin coordinate graphs, and standard revenue-compliant ISO 19152 ULPIN JSON/CSV ledgers.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4-Step Cadastral Pipeline Architecture -->
-      <div class="pipeline-workflow-card">
-        <div class="workflow-header">
-          <h4>Standard Statutory 3D Cadastral Pipeline:</h4>
-          <span style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);">End-to-End Workflow</span>
-        </div>
-        <div class="workflow-steps-row">
-          <div class="workflow-step-box">
-            <div class="step-num">01 / INGESTION</div>
-            <div class="step-name">Architectural Blueprint</div>
-            <div class="step-desc">Upload architectural CAD drawings, institutional PDFs, or high-res vector scans.</div>
-          </div>
-          <div class="workflow-step-box">
-            <div class="step-num">02 / SEGMENTATION</div>
-            <div class="step-name">ResNet34-UNet Extraction</div>
-            <div class="step-desc">Extracts bearing walls, common circulation, and distinct private room boundaries.</div>
-          </div>
-          <div class="workflow-step-box">
-            <div class="step-num">03 / EXTRUSION</div>
-            <div class="step-name">3D Volumetric Stacking</div>
-            <div class="step-desc">Stacks vertical storeys, assigns elevation extents (Z_min to Z_max), and computes airspace volume.</div>
-          </div>
-          <div class="workflow-step-box">
-            <div class="step-num">04 / TITLE ISSUANCE</div>
-            <div class="step-name">3D ULPIN Property Deed</div>
-            <div class="step-desc">Stamps statutory 3D Bhu-Aadhaar and enforces real-time bank mortgage anti-fraud locks.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Trust & Standards Minimal Footer -->
-      <footer class="landing-footer">
-        <div>
-          Conforms to <strong>ISO 19152:2024 LADM v2</strong> &bull; Digital India Land Records Modernization Programme (DILRMP) &bull; Department of Land Resources (DoLR)
-        </div>
-        <div class="footer-links">
-          <a href="/portal">Cadastre Portal</a>
-          <a href="/app">3D Twin App</a>
-          <a href="javascript:void(0)" onclick="navigateTo('studio')">Open Studio</a>
-        </div>
-      </footer>
-
     </section>
 
     <!-- ── 2. STUDIO WORKSPACE VIEW ──────────────────────────────────────────── -->
@@ -2398,6 +2227,7 @@
     // Initialize
     window.addEventListener("DOMContentLoaded", () => {
       initThree();
+      initLanding3DBackground();
       checkModelStatus();
       initRaycasting();
       initMotionTransitions();
@@ -2475,11 +2305,134 @@
         const { animate } = window.Motion;
         animate(".gov-authority-pill", { opacity: [0, 1], y: [-6, 0] }, { duration: 0.35, easing: [0.16, 1, 0.3, 1] });
         animate(".landing-hero", { opacity: [0, 1], y: [12, 0] }, { duration: 0.45, delay: 0.05, easing: [0.16, 1, 0.3, 1] });
-        animate(".cadastre-metrics-strip", { opacity: [0, 1], y: [14, 0] }, { duration: 0.45, delay: 0.1, easing: [0.16, 1, 0.3, 1] });
-        animate(".dashboard-launch-section", { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: 0.15, easing: [0.16, 1, 0.3, 1] });
-        animate(".capabilities-matrix-grid", { opacity: [0, 1], y: [18, 0] }, { duration: 0.55, delay: 0.2, easing: [0.16, 1, 0.3, 1] });
-        animate(".pipeline-workflow-card", { opacity: [0, 1], y: [20, 0] }, { duration: 0.55, delay: 0.25, easing: [0.16, 1, 0.3, 1] });
+        animate(".aim-pillars-container", { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: 0.12, easing: [0.16, 1, 0.3, 1] });
+        animate(".quick-demo-strip", { opacity: [0, 1], y: [18, 0] }, { duration: 0.55, delay: 0.18, easing: [0.16, 1, 0.3, 1] });
       }
+    }
+
+    // ── 3D WebGL Volumetric Cadastre Strata Background ──────────────────────
+    let bgScene, bgCamera, bgRenderer, bgBuildingGroup, bgAnimId;
+    let bgTargetRotX = 0, bgTargetRotY = 0;
+
+    function initLanding3DBackground() {
+      const canvas = document.getElementById("landing-3d-bg");
+      if (!canvas) return;
+      const container = document.getElementById("view-dashboard");
+      if (!container) return;
+
+      bgScene = new THREE.Scene();
+
+      const width = container.clientWidth || window.innerWidth;
+      const height = container.clientHeight || window.innerHeight;
+
+      bgCamera = new THREE.PerspectiveCamera(36, width / height, 0.1, 1000);
+      bgCamera.position.set(26, 17, 28);
+      bgCamera.lookAt(0, -0.5, 0);
+
+      bgRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      bgRenderer.setSize(width, height);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+      bgScene.add(ambient);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      dirLight.position.set(20, 35, 20);
+      bgScene.add(dirLight);
+
+      // Subtle ground cadastre grid
+      const grid = new THREE.GridHelper(40, 26, 0xcbd5e1, 0xe2e8f0);
+      grid.position.y = -2.05;
+      bgScene.add(grid);
+
+      // Building Strata Group
+      bgBuildingGroup = new THREE.Group();
+      bgBuildingGroup.position.set(0, -2.0, 0);
+
+      const floorCount = 4;
+      const slabWidth = 13;
+      const slabDepth = 9;
+      const floorHeight = 2.4;
+
+      for (let f = 0; f < floorCount; f++) {
+        const y = f * floorHeight;
+
+        // Floor base slab
+        const slabGeo = new THREE.BoxGeometry(slabWidth, 0.1, slabDepth);
+        const slabMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+        const slabMesh = new THREE.Mesh(slabGeo, slabMat);
+        slabMesh.position.y = y;
+        bgBuildingGroup.add(slabMesh);
+
+        // Crisp CAD border line
+        const slabEdges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(slabGeo),
+          new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.75 })
+        );
+        slabEdges.position.y = y;
+        bgBuildingGroup.add(slabEdges);
+
+        // 3 Volumetric Parcel Bounding Boxes per floor
+        const parcelConfigs = [
+          { w: 5.4, h: floorHeight * 0.76, d: 3.8, x: -3.2, z: -2, color: 0x0f172a, lineCol: 0x64748b, op: 0.04 },
+          { w: 5.4, h: floorHeight * 0.76, d: 3.8, x: 3.2, z: -2, color: 0x059669, lineCol: 0x10b981, op: 0.08 },
+          { w: 11.8, h: floorHeight * 0.76, d: 3.8, x: 0, z: 2.1, color: 0x0f172a, lineCol: 0x475569, op: 0.04 },
+        ];
+
+        parcelConfigs.forEach(p => {
+          const pGeo = new THREE.BoxGeometry(p.w, p.h, p.d);
+          const pMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: p.op });
+          const pMesh = new THREE.Mesh(pGeo, pMat);
+          pMesh.position.set(p.x, y + p.h / 2 + 0.05, p.z);
+          bgBuildingGroup.add(pMesh);
+
+          const pEdges = new THREE.LineSegments(
+            new THREE.EdgesGeometry(pGeo),
+            new THREE.LineBasicMaterial({ color: p.lineCol, transparent: true, opacity: 0.85 })
+          );
+          pEdges.position.set(p.x, y + p.h / 2 + 0.05, p.z);
+          bgBuildingGroup.add(pEdges);
+        });
+
+        // Floor level corner node
+        const nodeGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const nodeMat = new THREE.MeshBasicMaterial({ color: 0x059669 });
+        const nodeMesh = new THREE.Mesh(nodeGeo, nodeMat);
+        nodeMesh.position.set(-slabWidth / 2 - 0.25, y + 0.05, -slabDepth / 2 - 0.25);
+        bgBuildingGroup.add(nodeMesh);
+      }
+
+      bgScene.add(bgBuildingGroup);
+
+      // Mouse Parallax Listener
+      window.addEventListener("mousemove", (e) => {
+        const normX = (e.clientX / window.innerWidth) * 2 - 1;
+        const normY = -(e.clientY / window.innerHeight) * 2 + 1;
+        bgTargetRotY = normX * 0.32;
+        bgTargetRotX = -normY * 0.16;
+      });
+
+      // Resize listener
+      window.addEventListener("resize", () => {
+        if (!container || !bgRenderer || !bgCamera) return;
+        const w = container.clientWidth || window.innerWidth;
+        const h = container.clientHeight || window.innerHeight;
+        bgCamera.aspect = w / h;
+        bgCamera.updateProjectionMatrix();
+        bgRenderer.setSize(w, h);
+      });
+
+      // Render Loop (Pauses when inside Studio workspace)
+      function animateBg() {
+        bgAnimId = requestAnimationFrame(animateBg);
+        if (currentViewMode !== "dashboard") return;
+
+        bgBuildingGroup.rotation.y += 0.0016;
+        bgBuildingGroup.rotation.x += (bgTargetRotX - bgBuildingGroup.rotation.x) * 0.04;
+        bgBuildingGroup.position.y = Math.sin(Date.now() * 0.0012) * 0.2;
+
+        bgRenderer.render(bgScene, bgCamera);
+      }
+      animateBg();
     }
 
     function showToast(msg) {
