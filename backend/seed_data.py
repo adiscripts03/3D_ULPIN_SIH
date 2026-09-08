@@ -149,13 +149,13 @@ def seed_database():
     # 4. Seed Sample Demonstration Mortgage Liens (SIMULATED DATA FOR CERSAI DEMONSTRATION)
     print("🏦 Seeding Sample Demonstration Mortgage Liens (SIMULATED DATA)...")
     stamp_bank_mortgage_lien(
-        ulpin_3d="HSTL01-F1-X01-4S",
+        ulpin_3d="3355099410630101",
         mortgagee_name="State Bank of India (Demo Branch)",
         sanction_ref="SBI-DEMO-2026-90412",
         loan_amount_inr=4500000.0
     )
     stamp_bank_mortgage_lien(
-        ulpin_3d="HSTL01-F2-X07-2S",
+        ulpin_3d="3355099410630207",
         mortgagee_name="Bank of Maharashtra (Demo Branch)",
         sanction_ref="BOM-DEMO-2026-11029",
         loan_amount_inr=2800000.0

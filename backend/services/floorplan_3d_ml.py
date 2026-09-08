@@ -54,21 +54,7 @@ _RESNET_UNET_MODEL = None
 _RESNET_CONFIG = None
 _DEVICE = None
 
-# Sample owner pool for residential building flat allotments
-OWNER_POOL = [
-    {"name": "Rajesh Sharma", "aadhaar_mask": "XXXX-XXXX-8921", "tenure": "Freehold"},
-    {"name": "Priya Deshmukh", "aadhaar_mask": "XXXX-XXXX-3412", "tenure": "Freehold"},
-    {"name": "Amitabh Sen", "aadhaar_mask": "XXXX-XXXX-7124", "tenure": "Freehold"},
-    {"name": "Sunita Patil", "aadhaar_mask": "XXXX-XXXX-5589", "tenure": "Freehold"},
-    {"name": "Vikram Malhotra", "aadhaar_mask": "XXXX-XXXX-9023", "tenure": "Freehold"},
-    {"name": "Ananya Roy", "aadhaar_mask": "XXXX-XXXX-1145", "tenure": "Freehold"},
-    {"name": "Deepak Joshi", "aadhaar_mask": "XXXX-XXXX-6632", "tenure": "Freehold"},
-    {"name": "Kavita Reddy", "aadhaar_mask": "XXXX-XXXX-4419", "tenure": "Freehold"},
-    {"name": "Manoj Verma", "aadhaar_mask": "XXXX-XXXX-2278", "tenure": "Freehold"},
-    {"name": "Meera Nair", "aadhaar_mask": "XXXX-XXXX-8831", "tenure": "Freehold"},
-    {"name": "Sanjay Kulkarni", "aadhaar_mask": "XXXX-XXXX-3901", "tenure": "Freehold"},
-    {"name": "Pooja Hegde", "aadhaar_mask": "XXXX-XXXX-5120", "tenure": "Freehold"},
-]
+# Distinct palette for different units' flats
 
 # Distinct palette for different owners' flats
 FLAT_PALETTE = [
@@ -304,7 +290,7 @@ def extract_architectural_features(
 def decompose_flats_and_owners(
     walls_closed: np.ndarray,
     image_shape: Tuple[int, int],
-    building_name: str = "Surya Heights Residency",
+    building_name: str = "Residential Block",
     floors: int = 5,
     scale_m_per_px: float = 0.035,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -432,19 +418,18 @@ def decompose_flats_and_owners(
 
         for flat in base_flats:
             flat_num = f"{fl}{flat['unit_suffix']}"
-            ulpin_3d = f"33-5509-94106-{bldg_code}-F{fl:02d}-{flat['unit_suffix']}"
+            # 16-digit unique 3D ULPIN: 11-digit 2D parcel (33550994106) + 1-digit bldg (1) + 2-digit floor + 2-digit unit
+            ulpin_3d = f"335509941061{fl:02d}{flat['unit_suffix']}"
 
-            owner_idx = (fl * 3 + flat["unit_index"] - 1) % len(OWNER_POOL)
-            owner = OWNER_POOL[owner_idx]
             vol_m3 = round(flat["carpet_area_sqm"] * (floor_height_m - slab_thickness_m), 1)
 
             multi_storey_flats.append({
                 "flat_number": f"Flat {flat_num}",
                 "floor_level": fl,
                 "ulpin_3d": ulpin_3d,
-                "owner_name": owner["name"],
-                "owner_aadhaar": owner["aadhaar_mask"],
-                "tenure_type": owner["tenure"],
+                "owner_name": "Unassigned",
+                "owner_aadhaar": "Pending Allotment",
+                "tenure_type": "Freehold",
                 "flat_type": flat["flat_type"],
                 "carpet_area_sqm": flat["carpet_area_sqm"],
                 "airspace_volume_m3": vol_m3,
@@ -462,10 +447,11 @@ def decompose_flats_and_owners(
     for fl in range(1, floors + 1):
         for c_idx, c in enumerate(common_units):
             c_area_m2 = round(c["area_px"] * (scale_m_per_px ** 2), 1)
+            comm_suffix = f"{71 + c_idx:02d}"
             multi_storey_common.append({
                 "name": f"Common Corridor - Floor {fl}",
                 "floor_level": fl,
-                "ulpin_3d": f"33-5509-94106-{bldg_code}-F{fl:02d}-COMM{c_idx+1:02d}",
+                "ulpin_3d": f"335509941061{fl:02d}{comm_suffix}",
                 "carpet_area_sqm": max(c_area_m2, 14.0),
                 "polygon": c["polygon"],
                 "center": [round(c["cx"], 1), round(c["cy"], 1)],
@@ -479,7 +465,7 @@ def decompose_flats_and_owners(
 def run_floorplan_3d_pipeline(
     file_bytes: bytes,
     filename: str,
-    building_name: str = "Surya Heights Residency",
+    building_name: str = "Residential Block",
     floors: int = 5,
     wall_height_m: float = 3.0,
     model_type: str = "hybrid",

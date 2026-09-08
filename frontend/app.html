@@ -12,7 +12,7 @@
   <!-- Top Unified Header -->
   <header>
     <div class="brand-section">
-      <a href="/" class="btn btn-subtle" style="font-weight:600; padding:4px 10px; font-size:0.75rem;">← DoLR Home</a>
+      <a href="/studio" class="btn btn-subtle" style="font-weight:600; padding:4px 10px; font-size:0.75rem;">3D Studio</a>
       <div style="width:1px; height:20px; background:var(--border-strong); margin:0 4px;"></div>
       <div class="brand-title">
         <h1>National 3D ULPIN Cadastral System</h1>
@@ -20,9 +20,6 @@
       </div>
     </div>
     <div class="header-right">
-      <a href="/programmes/3d-ulpin" class="btn btn-subtle">3D Schemes Page</a>
-      <button class="btn btn-subtle" id="btn-run-topology" onclick="runTopologyAudit()">Topology Audit</button>
-      <button class="btn btn-primary" id="btn-open-ingestion" onclick="openIngestModal(currentBuildingId)" style="background:#0284c7;color:white;font-weight:600;">⚡ Field Ingestion</button>
       <button class="btn btn-primary" id="btn-open-actions" onclick="openModal()">+ Cadastral Actions</button>
     </div>
   </header>
@@ -89,13 +86,9 @@
         ← Back to Search (नवीन शोध)
       </button>
       <div class="breadcrumb-path">
-        <a href="/" style="color:var(--accent-primary); text-decoration:none;">DoLR Home</a> &gt;
-        <a href="/programmes/3d-ulpin" style="color:var(--text-secondary); text-decoration:none;">Schemes</a> &gt;
-        Maharashtra &gt; Nagpur &gt; Nagpur Rural &gt; Waranga &gt; <strong>Survey 140/1 (pu-id: 33550994106)</strong>
+        <strong>Survey 140/1 (pu-id: 33550994106)</strong>
       </div>
-      <div style="font-size:0.72rem;color:var(--text-muted);">
-        Khata No. 341 · Sarkar Tenure
-      </div>
+
     </div>
 
     <!-- Resolved Land Record Summary Banner -->
@@ -128,9 +121,7 @@
         <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:0.04em;">
           Select Building on Parcel 140/1 to Inspect 3D Stratum
         </div>
-        <div style="font-size:0.72rem;color:var(--text-muted);">
-          4 Campus Buildings
-        </div>
+
       </div>
 
       <div class="building-cards-grid" id="building-cards-grid">
@@ -184,9 +175,7 @@
           
           <!-- Controls for Surveyed Building -->
           <div id="surveyed-controls" style="display:flex;gap:8px;align-items:center;">
-            <input type="text" id="custom-building-id" placeholder="Search ID (e.g. TEST_001)" style="font-size:0.74rem;padding:3px 8px;border:1px solid #dfdcce;border-radius:4px;width:150px;">
-            <button class="btn btn-subtle" onclick="loadCustomBuilding()" style="padding:2px 8px;font-size:0.75rem;background:#e0f2fe;color:#0369a1;">Visualize AI Twin</button>
-            <select id="floor-filter" style="font-size:0.74rem;padding:3px 8px;margin-left:8px;">
+            <select id="floor-filter" style="font-size:0.74rem;padding:3px 8px;">
               <option value="ALL">All Floors (10 Floors)</option>
             </select>
             <select id="type-filter" style="font-size:0.74rem;padding:3px 8px;">
@@ -219,11 +208,15 @@
             </div>
             <div class="data-row">
               <span class="data-label">3D ULPIN</span>
-              <span class="data-value" id="insp-ulpin" style="color:var(--accent-primary);">HSTL01-F1-X01-4S</span>
+              <span class="data-value" id="insp-ulpin" style="color:var(--accent-primary);font-family:monospace;font-weight:700;">3355099410630101</span>
             </div>
             <div class="data-row">
-              <span class="data-label">Master Parcel (pu-id)</span>
+              <span class="data-label">2D Base Parcel (pu-id)</span>
               <span class="data-value" style="font-size:0.7rem;">33550994106 (Surv 140/1)</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Unit Designation</span>
+              <span class="data-value" id="insp-unit-num">Unit 101</span>
             </div>
             <div class="data-row">
               <span class="data-label">Classification</span>

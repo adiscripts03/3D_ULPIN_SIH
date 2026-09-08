@@ -102,7 +102,7 @@ def run_cadastral_pipeline(
         z_max = round(z_min + room_height, 2)
         z_slab_top = round(floor * floor_pitch, 2)
 
-        for base in base_units:
+        for u_idx, base in enumerate(base_units):
             base_prop_id = base["prop_id"]
             ptype = base.get("type", "MISC")
             is_common = base.get("is_common_property", 0)
@@ -118,8 +118,16 @@ def run_cadastral_pipeline(
             else:
                 clean_id = base_prop_id.replace(" ", "_").replace("&", "AND")
 
-            # Standardized 3D ULPIN Schema: BUILDING-FLOOR-UNIT-TYPE
-            ulpin_3d = f"{building_id}-F{floor}-{clean_id}-{ptype}"
+            # 16-digit unique 3D ULPIN: 11-digit 2D parcel (33550994106) + 1-digit bldg + 2-digit floor + 2-digit unit
+            bldg_map = {"ADMIN01": 1, "ACAD01": 2, "HSTL01": 3, "RES01": 4}
+            bldg_digit = bldg_map.get(building_id, 1)
+            digits_in_clean = "".join(filter(str.isdigit, str(clean_id)))
+            if digits_in_clean:
+                unit_num = int(digits_in_clean) % 100
+                unit_code = f"{unit_num:02d}"
+            else:
+                unit_code = f"{70 + (u_idx + 1):02d}"
+            ulpin_3d = f"33550994106{bldg_digit}{floor:02d}{unit_code}"
 
             # Georeferencing: Centroid GPS coordinates
             x_m = float(base["real_x_start_m"]) + (float(base["real_width_m"]) / 2.0)

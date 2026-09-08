@@ -334,7 +334,7 @@ async def get_floorplan_3d_samples():
 async def generate_floorplan_3d(
     floor_plan: Optional[UploadFile] = File(None),
     sample_id: Optional[str] = Form(None),
-    building_name: str = Form("Surya Heights Residency"),
+    building_name: str = Form("Residential Block"),
     floors: int = Form(5),
     wall_height: float = Form(3.0),
     model_type: str = Form("hybrid"),

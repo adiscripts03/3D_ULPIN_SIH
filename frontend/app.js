@@ -148,6 +148,8 @@ function renderPendingNotice(buildingId, meta) {
 
   // Update Inspector
   document.getElementById("insp-ulpin").innerText = `N/A (${buildingId})`;
+  const unitEl = document.getElementById("insp-unit-num");
+  if (unitEl) unitEl.innerText = "--";
   document.getElementById("insp-type").innerText = "Institutional Building";
   document.getElementById("insp-floor").innerText = "Ground Level";
   document.getElementById("insp-area").innerText = "0.00 m²";
@@ -159,7 +161,8 @@ function renderPendingNotice(buildingId, meta) {
 }
 
 async function loadCustomBuilding() {
-  const customId = document.getElementById("custom-building-id").value.trim();
+  const el = document.getElementById("custom-building-id");
+  const customId = el ? el.value.trim() : "";
   if(!customId) {
     showToast("Please enter a Building ID (e.g. TEST_001)", "error");
     return;
@@ -250,7 +253,7 @@ function renderPlotly3D(parcels) {
     const k = [0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6];
 
     let hoverText = `<b>3D ULPIN:</b> ${p.ulpin_3d}<br>` +
-                    `<b>Master Parcel:</b> pu-id 33550994106 (Surv 140/1)<br>` +
+                    `<b>2D Base Parcel:</b> 33550994106 (Surv 140/1)<br>` +
                     `<b>Floor:</b> ${p.floor} | <b>Unit:</b> ${p.room_id}<br>` +
                     `<b>Zoning:</b> ${p.type} (${p.status_label})<br>` +
                     `<b>Carpet Area:</b> ${p.carpet_area} m² | <b>Volume:</b> ${p.volume} m³<br>` +
@@ -314,8 +317,17 @@ function renderPlotly3D(parcels) {
 
   Plotly.newPlot("plot3d-container", traces, layout, config);
 
-  // Hook Click Event
-  document.getElementById("plot3d-container").on("plotly_click", (data) => {
+  // Hook Click & Hover Events so right panel updates on interaction
+  const plotDiv = document.getElementById("plot3d-container");
+  plotDiv.on("plotly_click", (data) => {
+    if (data.points && data.points.length > 0) {
+      const traceIdx = data.points[0].curveNumber;
+      const ulpin = traces[traceIdx].name;
+      inspectParcel(ulpin);
+    }
+  });
+
+  plotDiv.on("plotly_hover", (data) => {
     if (data.points && data.points.length > 0) {
       const traceIdx = data.points[0].curveNumber;
       const ulpin = traces[traceIdx].name;
@@ -353,6 +365,8 @@ async function inspectParcel(ulpin) {
     const p = await res.json();
 
     document.getElementById("insp-ulpin").innerText = p.ulpin_3d;
+    const unitEl = document.getElementById("insp-unit-num");
+    if (unitEl) unitEl.innerText = `Unit ${p.room_id}`;
     document.getElementById("insp-type").innerText = `${p.type} (${p.is_common_property ? 'Common Property' : 'Private Stratum'})`;
     document.getElementById("insp-floor").innerText = `Floor ${p.floor} (Z: ${p.z_min}m to ${p.z_max}m)`;
     document.getElementById("insp-area").innerText = `${p.carpet_area_sqm} m²`;

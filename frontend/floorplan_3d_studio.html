@@ -1507,7 +1507,7 @@
 
   <!-- Top Government Cadastre Header -->
   <header>
-    <a href="javascript:void(0)" onclick="navigateTo('dashboard')" class="header-brand">
+    <a href="/studio" class="header-brand">
       <div class="brand-logo-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
@@ -1521,13 +1521,6 @@
     </a>
 
     <div class="header-nav">
-      <a href="/portal" class="nav-link-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-        </svg>
-        Portal
-      </a>
       <a href="/app" class="nav-link-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -1536,154 +1529,14 @@
         </svg>
         Cadastre App
       </a>
-      <button class="nav-link-btn nav-btn-primary" id="header-view-toggle" onclick="navigateTo('studio')">
-        Enter Studio
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; margin-left: 2px;">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
     </div>
   </header>
 
   <!-- Main Viewport -->
   <main>
     
-    <!-- ── 1. STRIPE / GOV-GRADE MINIMAL LANDING VIEW WITH 3D BACKGROUND ── -->
-    <section class="landing-dashboard-section" id="view-dashboard">
-      <!-- Hardware-accelerated 3D WebGL Volumetric Cadastre Strata Background -->
-      <canvas id="landing-3d-bg"></canvas>
-
-      <div class="landing-content-wrap">
-        <!-- Official Government Authority Badge -->
-        <div class="gov-authority-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          <span>Department of Land Resources (DoLR) &bull; PS 26011</span>
-          <span style="color: var(--border);">&bull;</span>
-          <div class="gov-status-dot"></div>
-          <span style="color: var(--success); font-weight: 700;">ISO 19152 Active</span>
-        </div>
-
-        <!-- Hero Section: Aim & Purpose Front and Center -->
-        <div class="landing-hero">
-          <div class="hero-kicker">National 3D Volumetric Cadastre Platform</div>
-          <h1>From 2D Blueprints to Sovereign 3D Land Titles</h1>
-          <p class="hero-purpose-text">
-            The statutory 3D ULPIN platform converts architectural floor plans into immutable 3D volumetric parcels, computes mathematical land equity (UDS), and secures vertical property rights against duplicate mortgages.
-          </p>
-          <div class="hero-actions-row">
-            <button class="btn-dash-primary" onclick="navigateTo('studio')">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              </svg>
-              Launch Cadastre Studio
-            </button>
-            <button class="btn-dash-secondary" onclick="quickLaunchSample('sample_2bhk')">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              Explore 2BHK Demo
-            </button>
-          </div>
-        </div>
-
-        <!-- Core Aim & Purpose: 3 Distinct Pillars -->
-        <div class="aim-pillars-container">
-          <div class="aim-pillar-card">
-            <div class="pillar-top">
-              <div class="pillar-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                </svg>
-              </div>
-              <span class="pillar-tag">ISO 19152 LADM v2</span>
-            </div>
-            <h3>Volumetric Airspace Sovereignty</h3>
-            <p>Replaces ambiguous 2D deed descriptions with statutory 3D volumetric polyhedra (X, Y, Z_min, Z_max, and m³), granting indisputable legal ownership of vertical space.</p>
-          </div>
-
-          <div class="aim-pillar-card">
-            <div class="pillar-top">
-              <div class="pillar-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="3" y1="9" x2="21" y2="9"></line>
-                  <line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
-              </div>
-              <span class="pillar-tag">Automated Equity</span>
-            </div>
-            <h3>Algorithmic Land Equity (UDS)</h3>
-            <p>Computes each flat owner's exact Undivided Share of Land based on net carpet area fractions against the registered plot, permanently preventing builder over-allocation.</p>
-          </div>
-
-          <div class="aim-pillar-card">
-            <div class="pillar-top">
-              <div class="pillar-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-              </div>
-              <span class="pillar-tag">Bank Lien Security</span>
-            </div>
-            <h3>Anti-Fraud Mortgage Lock</h3>
-            <p>Direct integration with institutional banking registries flags active loans and automatically locks strata titles, eliminating duplicate mortgage fraud and unauthorized sales.</p>
-          </div>
-        </div>
-
-        <!-- Streamlined Instant Architectural Demos -->
-        <div class="quick-demo-strip">
-          <span class="demo-strip-label">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; stroke: #0f172a;">
-              <polyline points="4 17 10 11 4 5"></polyline>
-              <line x1="12" y1="19" x2="20" y2="19"></line>
-            </svg>
-            Instant Architectural Demos:
-          </span>
-          <div class="demo-chips-row">
-            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_2bhk')">
-              <span>2BHK Flat</span>
-              <span class="chip-ext">PNG</span>
-            </button>
-            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_multi_unit')">
-              <span>Multi-Flat Floor</span>
-              <span class="chip-ext">PNG</span>
-            </button>
-            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_cad')">
-              <span>CAD Vector</span>
-              <span class="chip-ext">PNG</span>
-            </button>
-            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_hostel_pdf')">
-              <span>Hostel Block A</span>
-              <span class="chip-ext">PDF</span>
-            </button>
-            <button class="demo-chip-btn" onclick="quickLaunchSample('sample_fdd22')">
-              <span>Tower FDD22</span>
-              <span class="chip-ext">JPG</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Trust & Standards Minimal Footer -->
-        <footer class="landing-footer">
-          <div>
-            Conforms to <strong>ISO 19152:2024 LADM v2</strong> &bull; Digital India Land Records Modernization Programme (DILRMP) &bull; Department of Land Resources (DoLR)
-          </div>
-          <div class="footer-links">
-            <a href="/portal">Cadastre Portal</a>
-            <a href="/app">3D Twin App</a>
-            <a href="javascript:void(0)" onclick="navigateTo('studio')">Open Studio</a>
-          </div>
-        </footer>
-      </div>
-    </section>
-
-    <!-- ── 2. STUDIO WORKSPACE VIEW ──────────────────────────────────────────── -->
-    <section class="studio-workspace-section" id="view-studio" style="display: none;">
+    <!-- ── STUDIO WORKSPACE VIEW ──────────────────────────────────────────── -->
+    <section class="studio-workspace-section" id="view-studio">
       
       <!-- Architectural Compact Mission Banner -->
       <section class="mission-banner" id="mission-banner-el">
@@ -1695,14 +1548,6 @@
             </svg>
             Multi-Storey Cadastre Decomposition &amp; 3D ULPIN
           </h2>
-        </div>
-        <div class="standard-tags">
-          <span class="tag-chip dark">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            ISO 19152 LADM v2
-          </span>
-          <span class="tag-chip">Survey 140/1 Waranga</span>
-          <span class="tag-chip">ResNet34-UNet</span>
         </div>
       </section>
 
@@ -1738,7 +1583,7 @@
 
             <!-- Verified Real Samples -->
             <div class="field-block">
-              <label class="field-header">Verified Architectural Samples:</label>
+              <label class="field-header">Architectural Samples:</label>
               <div class="sample-stack">
                 <div class="sample-card-item" onclick="selectSample('sample_2bhk', this)">
                   <div class="sample-card-item-left">
@@ -1797,8 +1642,8 @@
             <div class="field-block">
               <label class="field-header">Building Name &amp; Code:</label>
               <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 6px;">
-                <input type="text" id="building-name-input" class="text-input-field" value="Surya Heights Residency" />
-                <input type="text" id="bldg-code-input" class="text-input-field" value="SURY" placeholder="CODE" style="font-family: var(--font-mono); text-transform: uppercase;" />
+                <input type="text" id="building-name-input" class="text-input-field" placeholder="e.g. Block A" value="" />
+                <input type="text" id="bldg-code-input" class="text-input-field" placeholder="CODE" value="" style="font-family: var(--font-mono); text-transform: uppercase;" />
               </div>
             </div>
 
@@ -1847,7 +1692,7 @@
         <!-- CENTER: 3D Studio & 2D Blueprint Tab -->
         <section class="center-col" id="center-col-el">
           <div class="viewport-topbar">
-            <div class="view-pills">
+            <div class="view-pills" id="view-pills-box" style="display: none;">
               <button class="view-pill-btn active" id="tab-3d" onclick="switchView('3d')">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 3D Volumetric Studio
@@ -1858,7 +1703,7 @@
               </button>
             </div>
             <div style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="view-status-msg">
-              Orbit: Drag &bull; Pan: Right-Drag &bull; Zoom: Scroll &bull; Select: Click Mesh
+              Ready to process architectural floor plan
             </div>
           </div>
 
@@ -2047,8 +1892,8 @@
               </div>
             </div>
 
-            <!-- Export Actions -->
-            <div class="field-block">
+            <!-- Export Actions (Visible once cadastre is generated) -->
+            <div class="field-block" id="export-actions-block" style="display: none;">
               <label class="field-header">Export Cadastre &amp; 3D Assets:</label>
               <div class="export-grid-actions">
                 <button class="btn-export-tile" onclick="downloadExport('obj')">
@@ -2102,7 +1947,7 @@
             <div style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600;">Standard 3D ULPIN Identifier</div>
             <div class="deed-ulpin-code" id="modal-ulpin">--</div>
           </div>
-          <span class="tag-chip dark">ISO 19152 LADM v2</span>
+          <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-dim); font-weight: 600;">ISO 19152 LADM v2</span>
         </div>
 
         <div class="deed-spec-grid">
@@ -2159,13 +2004,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
           Print Property Card
         </button>
-        <button class="btn-dialog-secondary" onclick="stampMortgagePrompt()">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          Stamp Mortgage
-        </button>
-        <button class="btn-dialog-primary" onclick="transferTitleMutation()">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-          Transfer Title (Resale)
+        <button class="btn-dialog-primary" onclick="closeDeedModal()">
+          Close
         </button>
       </div>
 
@@ -2217,223 +2057,26 @@
       "#4f46e5", "#0d9488", "#c026d3", "#ca8a04"
     ];
 
-    // Mock Mortgage Pool
-    const MORTGAGE_BANKS = [
-      { name: "State Bank of India", refPrefix: "SBI-NAG-2026", amount: 4800000 },
-      { name: "Bank of Maharashtra", refPrefix: "BOM-WAR-2026", amount: 3500000 },
-      { name: "HDFC Bank Ltd", refPrefix: "HDFC-HOM-2026", amount: 6200000 },
-    ];
-
     // Initialize
     window.addEventListener("DOMContentLoaded", () => {
       initThree();
-      initLanding3DBackground();
       checkModelStatus();
       initRaycasting();
-      initMotionTransitions();
 
-      // Support direct URL demonstration: /studio?sample=sample_2bhk or /studio?view=studio
+      // Only run auto-sample if explicitly requested via query parameter: /studio?sample=sample_2bhk
       const urlParams = new URLSearchParams(window.location.search);
       const autoSample = urlParams.get("sample");
-      const autoView = urlParams.get("view");
       if (autoSample) {
-        navigateTo("studio");
         setTimeout(() => {
           const card = document.querySelector(`.sample-card-item[onclick*="${autoSample}"]`);
           if (card) selectSample(autoSample, card);
           else executePipeline(autoSample);
-        }, 400);
-      } else if (autoView === "studio") {
-        navigateTo("studio");
+        }, 300);
       }
     });
 
-    // ── View Mode Navigation (Dashboard vs Studio) ───────────────────────────
-    function navigateTo(view) {
-      currentViewMode = view;
-      const dash = document.getElementById("view-dashboard");
-      const studio = document.getElementById("view-studio");
-      const navBtn = document.getElementById("header-view-toggle");
 
-      if (view === "studio") {
-        if (window.Motion && window.Motion.animate) {
-          window.Motion.animate(dash, { opacity: [1, 0] }, { duration: 0.15 }).then(() => {
-            dash.style.display = "none";
-            studio.style.display = "flex";
-            window.Motion.animate(studio, { opacity: [0, 1] }, { duration: 0.2 });
-            onWindowResize();
-          });
-        } else {
-          dash.style.display = "none";
-          studio.style.display = "flex";
-          onWindowResize();
-        }
-        if (navBtn) {
-          navBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; margin-right: 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Dashboard`;
-          navBtn.onclick = () => navigateTo('dashboard');
-        }
-      } else {
-        if (window.Motion && window.Motion.animate) {
-          window.Motion.animate(studio, { opacity: [1, 0] }, { duration: 0.15 }).then(() => {
-            studio.style.display = "none";
-            dash.style.display = "flex";
-            window.Motion.animate(dash, { opacity: [0, 1] }, { duration: 0.2 });
-          });
-        } else {
-          studio.style.display = "none";
-          dash.style.display = "flex";
-        }
-        if (navBtn) {
-          navBtn.innerHTML = `Enter Studio <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 12px; margin-left: 2px;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
-          navBtn.onclick = () => navigateTo('studio');
-        }
-      }
-    }
 
-    function quickLaunchSample(sampleId) {
-      navigateTo('studio');
-      setTimeout(() => {
-        const card = document.querySelector(`.sample-card-item[onclick*="${sampleId}"]`);
-        if (card) selectSample(sampleId, card);
-        else executePipeline(sampleId);
-      }, 250);
-    }
-
-    // ── Motion (Framer Motion Web Runtime) Transitions ──────────────────────
-    function initMotionTransitions() {
-      if (window.Motion && window.Motion.animate) {
-        const { animate } = window.Motion;
-        animate(".gov-authority-pill", { opacity: [0, 1], y: [-6, 0] }, { duration: 0.35, easing: [0.16, 1, 0.3, 1] });
-        animate(".landing-hero", { opacity: [0, 1], y: [12, 0] }, { duration: 0.45, delay: 0.05, easing: [0.16, 1, 0.3, 1] });
-        animate(".aim-pillars-container", { opacity: [0, 1], y: [16, 0] }, { duration: 0.5, delay: 0.12, easing: [0.16, 1, 0.3, 1] });
-        animate(".quick-demo-strip", { opacity: [0, 1], y: [18, 0] }, { duration: 0.55, delay: 0.18, easing: [0.16, 1, 0.3, 1] });
-      }
-    }
-
-    // ── 3D WebGL Volumetric Cadastre Strata Background ──────────────────────
-    let bgScene, bgCamera, bgRenderer, bgBuildingGroup, bgAnimId;
-    let bgTargetRotX = 0, bgTargetRotY = 0;
-
-    function initLanding3DBackground() {
-      const canvas = document.getElementById("landing-3d-bg");
-      if (!canvas) return;
-      const container = document.getElementById("view-dashboard");
-      if (!container) return;
-
-      bgScene = new THREE.Scene();
-
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
-
-      bgCamera = new THREE.PerspectiveCamera(36, width / height, 0.1, 1000);
-      bgCamera.position.set(26, 17, 28);
-      bgCamera.lookAt(0, -0.5, 0);
-
-      bgRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      bgRenderer.setSize(width, height);
-
-      const ambient = new THREE.AmbientLight(0xffffff, 0.9);
-      bgScene.add(ambient);
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      dirLight.position.set(20, 35, 20);
-      bgScene.add(dirLight);
-
-      // Subtle ground cadastre grid
-      const grid = new THREE.GridHelper(40, 26, 0xcbd5e1, 0xe2e8f0);
-      grid.position.y = -2.05;
-      bgScene.add(grid);
-
-      // Building Strata Group
-      bgBuildingGroup = new THREE.Group();
-      bgBuildingGroup.position.set(0, -2.0, 0);
-
-      const floorCount = 4;
-      const slabWidth = 13;
-      const slabDepth = 9;
-      const floorHeight = 2.4;
-
-      for (let f = 0; f < floorCount; f++) {
-        const y = f * floorHeight;
-
-        // Floor base slab
-        const slabGeo = new THREE.BoxGeometry(slabWidth, 0.1, slabDepth);
-        const slabMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
-        const slabMesh = new THREE.Mesh(slabGeo, slabMat);
-        slabMesh.position.y = y;
-        bgBuildingGroup.add(slabMesh);
-
-        // Crisp CAD border line
-        const slabEdges = new THREE.LineSegments(
-          new THREE.EdgesGeometry(slabGeo),
-          new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.75 })
-        );
-        slabEdges.position.y = y;
-        bgBuildingGroup.add(slabEdges);
-
-        // 3 Volumetric Parcel Bounding Boxes per floor
-        const parcelConfigs = [
-          { w: 5.4, h: floorHeight * 0.76, d: 3.8, x: -3.2, z: -2, color: 0x0f172a, lineCol: 0x64748b, op: 0.04 },
-          { w: 5.4, h: floorHeight * 0.76, d: 3.8, x: 3.2, z: -2, color: 0x059669, lineCol: 0x10b981, op: 0.08 },
-          { w: 11.8, h: floorHeight * 0.76, d: 3.8, x: 0, z: 2.1, color: 0x0f172a, lineCol: 0x475569, op: 0.04 },
-        ];
-
-        parcelConfigs.forEach(p => {
-          const pGeo = new THREE.BoxGeometry(p.w, p.h, p.d);
-          const pMat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: p.op });
-          const pMesh = new THREE.Mesh(pGeo, pMat);
-          pMesh.position.set(p.x, y + p.h / 2 + 0.05, p.z);
-          bgBuildingGroup.add(pMesh);
-
-          const pEdges = new THREE.LineSegments(
-            new THREE.EdgesGeometry(pGeo),
-            new THREE.LineBasicMaterial({ color: p.lineCol, transparent: true, opacity: 0.85 })
-          );
-          pEdges.position.set(p.x, y + p.h / 2 + 0.05, p.z);
-          bgBuildingGroup.add(pEdges);
-        });
-
-        // Floor level corner node
-        const nodeGeo = new THREE.SphereGeometry(0.1, 8, 8);
-        const nodeMat = new THREE.MeshBasicMaterial({ color: 0x059669 });
-        const nodeMesh = new THREE.Mesh(nodeGeo, nodeMat);
-        nodeMesh.position.set(-slabWidth / 2 - 0.25, y + 0.05, -slabDepth / 2 - 0.25);
-        bgBuildingGroup.add(nodeMesh);
-      }
-
-      bgScene.add(bgBuildingGroup);
-
-      // Mouse Parallax Listener
-      window.addEventListener("mousemove", (e) => {
-        const normX = (e.clientX / window.innerWidth) * 2 - 1;
-        const normY = -(e.clientY / window.innerHeight) * 2 + 1;
-        bgTargetRotY = normX * 0.32;
-        bgTargetRotX = -normY * 0.16;
-      });
-
-      // Resize listener
-      window.addEventListener("resize", () => {
-        if (!container || !bgRenderer || !bgCamera) return;
-        const w = container.clientWidth || window.innerWidth;
-        const h = container.clientHeight || window.innerHeight;
-        bgCamera.aspect = w / h;
-        bgCamera.updateProjectionMatrix();
-        bgRenderer.setSize(w, h);
-      });
-
-      // Render Loop (Pauses when inside Studio workspace)
-      function animateBg() {
-        bgAnimId = requestAnimationFrame(animateBg);
-        if (currentViewMode !== "dashboard") return;
-
-        bgBuildingGroup.rotation.y += 0.0016;
-        bgBuildingGroup.rotation.x += (bgTargetRotX - bgBuildingGroup.rotation.x) * 0.04;
-        bgBuildingGroup.position.y = Math.sin(Date.now() * 0.0012) * 0.2;
-
-        bgRenderer.render(bgScene, bgCamera);
-      }
-      animateBg();
-    }
 
     function showToast(msg) {
       const toast = document.getElementById("app-toast");
@@ -2662,7 +2305,7 @@
         formData.append("sample_id", "sample_2bhk");
       }
 
-      const buildingName = document.getElementById("building-name-input").value || "Surya Heights Residency";
+      const buildingName = document.getElementById("building-name-input").value.trim() || (sample ? "Architectural Model" : "Building Block");
       const floors = document.getElementById("floors-slider").value || 5;
       const wallHeight = document.getElementById("height-slider").value || 3.0;
 
@@ -2699,7 +2342,7 @@
 
       const floors = document.getElementById("floors-slider").value || 5;
       const wallHeight = document.getElementById("height-slider").value || 3.0;
-      const buildingName = document.getElementById("building-name-input").value || "Surya Heights Residency";
+      const buildingName = document.getElementById("building-name-input").value.trim() || (file ? file.name.replace(/\.[^/.]+$/, "") : "Building Block");
 
       const formData = new FormData();
       formData.append("floor_plan", file);
@@ -2732,11 +2375,20 @@
       currentPipelineResult = data;
       currentSessionId = data.session_id;
 
-      // Reveal view controls
+      // Reveal active studio controls
       document.getElementById("empty-state").style.display = "none";
       document.getElementById("viewer-toolbar").style.display = "flex";
       document.getElementById("exploded-box").style.display = "flex";
       document.getElementById("floor-bar").style.display = "flex";
+      
+      const viewPills = document.getElementById("view-pills-box");
+      if (viewPills) viewPills.style.display = "flex";
+
+      const exportBlock = document.getElementById("export-actions-block");
+      if (exportBlock) exportBlock.style.display = "block";
+
+      const viewStatusMsg = document.getElementById("view-status-msg");
+      if (viewStatusMsg) viewStatusMsg.textContent = "Orbit: Drag \u2022 Pan: Right-Drag \u2022 Zoom: Scroll \u2022 Select: Click Mesh";
 
       // Enrich with Standard 3D ULPIN & LADM v2 parameters
       enrichCadastreData(data);
@@ -2749,8 +2401,8 @@
     function enrichCadastreData(data) {
       const rawFlats = data.flats_list || [];
       const totalCarpet = rawFlats.reduce((sum, f) => sum + (f.carpet_area_sqm || 0), 0);
-      const bldgCode = (document.getElementById("bldg-code-input").value || "SURY").toUpperCase().trim();
-      const stateParcelPrefix = "33-5509-94106"; // Maharashtra Waranga Survey 140/1
+      const bldgCode = (document.getElementById("bldg-code-input").value.trim() || "BLD").toUpperCase();
+      const baseParcelPrefix = "33550994106"; // 11-digit 2D Base Parcel (Maharashtra Waranga Survey 140/1)
 
       const baseLat = 21.018420;
       const baseLon = 79.027210;
@@ -2760,8 +2412,13 @@
         if (f.carpet_area_sqm >= 115) zoning = "RES-3BHK";
         else if (f.carpet_area_sqm < 65) zoning = "RES-1BHK";
 
-        const unitNum = f.flat_number.replace(/\D/g, "") || `${f.floor_level}${String(idx + 1).padStart(2, '0')}`;
-        const standardUlpin = `${stateParcelPrefix}-${bldgCode}-F${String(f.floor_level).padStart(2, '0')}-${unitNum}-${zoning}`;
+        // 16-digit unique 3D ULPIN: 11-digit 2D parcel + 1-digit building (1) + 2-digit floor + 2-digit unit sequence
+        let standardUlpin = f.ulpin_3d;
+        if (!standardUlpin || !/^\d{16}$/.test(standardUlpin)) {
+          const flNum = String(f.floor_level || 1).padStart(2, '0');
+          const unitIdx = String((idx % 50) + 1).padStart(2, '0');
+          standardUlpin = `${baseParcelPrefix}1${flNum}${unitIdx}`;
+        }
 
         const udsFraction = totalCarpet > 0 ? (f.carpet_area_sqm / totalCarpet) : (1 / rawFlats.length);
         const udsSqm = parseFloat((udsFraction * surfacePlotAreaM2).toFixed(2));
@@ -2769,17 +2426,7 @@
         const latOffset = ((f.center ? f.center[1] : 300) - 300) * 0.0000012;
         const lonOffset = ((f.center ? f.center[0] : 300) - 300) * 0.0000012;
 
-        const isMortgaged = (idx % 3 === 1);
         let encumbrance = null;
-        if (isMortgaged) {
-          const bank = MORTGAGE_BANKS[idx % MORTGAGE_BANKS.length];
-          encumbrance = {
-            bank_name: bank.name,
-            sanction_ref: `${bank.refPrefix}-${unitNum}`,
-            loan_amount_inr: bank.amount,
-            status: "ENCUMBERED_LIEN_ACTIVE"
-          };
-        }
 
         const wallH = data.wall_height_m || 3.0;
         const zMin = parseFloat(((f.floor_level - 1) * (wallH + 0.25)).toFixed(1));
@@ -2883,7 +2530,7 @@
               <span class="color-swatch-dot" style="background-color: ${escapeHtml(f.color)};"></span>
               ${escapeHtml(f.flat_number)}
             </div>
-            <div style="font-size: 0.62rem; color: var(--text-dim); font-family: var(--font-mono);">${escapeHtml(f.ulpin_3d.slice(-15))}</div>
+            <div style="font-size: 0.62rem; color: var(--text-dim); font-family: var(--font-mono);">${escapeHtml(f.ulpin_3d)}</div>
           </td>
           <td style="color: var(--text-muted);">${escapeHtml(f.owner_name)}</td>
           <td style="font-family: var(--font-mono); color: var(--text-dim);">Fl ${Number(f.floor_level)}</td>
@@ -3358,53 +3005,6 @@
       window.print();
     }
 
-    // ── Anti-Fraud Title Conveyance Check ────────────────────────────────────
-    function transferTitleMutation() {
-      if (!selectedFlatUlpin) return;
-      const flat = enrichedFlats.find(f => f.ulpin_3d === selectedFlatUlpin);
-      if (!flat) return;
-
-      if (flat.encumbrance) {
-        showToast("ANTI-FRAUD LOCKOUT: Title mutation blocked due to active mortgage lien.");
-        return;
-      }
-
-      const newOwner = prompt("Enter full statutory name of transferee (new registered owner):", "Rajeshwari Deshmukh");
-      if (!newOwner || !newOwner.trim()) return;
-
-      flat.owner_name = newOwner.trim();
-      flat.masked_aadhaar = "XXXX-XXXX-9901";
-
-      renderTable(enrichedFlats);
-      openDeedModal(flat.ulpin_3d);
-      showToast(`Title Mutation Approved: 3D ULPIN ${flat.ulpin_3d} conveyed to ${flat.owner_name}`);
-    }
-
-    function stampMortgagePrompt() {
-      if (!selectedFlatUlpin) return;
-      const flat = enrichedFlats.find(f => f.ulpin_3d === selectedFlatUlpin);
-      if (!flat) return;
-
-      if (flat.encumbrance) {
-        showToast("Unit is already encumbered under bank lien.");
-        return;
-      }
-
-      const bank = prompt("Enter Lending Financial Institution:", "State Bank of India");
-      if (!bank) return;
-      const amt = parseInt(prompt("Sanctioned Secured Debt Amount (INR):", "5000000"), 10) || 5000000;
-
-      flat.encumbrance = {
-        bank_name: bank.trim(),
-        sanction_ref: `MORT-${Date.now().toString().slice(-6)}`,
-        loan_amount_inr: amt,
-        status: "ENCUMBERED_LIEN_ACTIVE"
-      };
-
-      renderTable(enrichedFlats);
-      openDeedModal(flat.ulpin_3d);
-      showToast(`Mortgage Lien successfully stamped against 3D ULPIN ${flat.ulpin_3d}`);
-    }
 
     // ── Exports ──────────────────────────────────────────────────────────────
     function downloadExport(type) {

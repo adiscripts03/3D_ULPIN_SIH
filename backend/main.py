@@ -53,57 +53,30 @@ if os.path.exists(frontend_dir):
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
 @app.get("/", include_in_schema=False)
-@app.get("/en", include_in_schema=False)
-def root_en():
-    index_html = os.path.join(frontend_dir, "index_en.html")
-    if os.path.exists(index_html):
-        return FileResponse(index_html)
-    return RedirectResponse(url="/docs")
-
-@app.get("/hi", include_in_schema=False)
-def root_hi():
-    index_html = os.path.join(frontend_dir, "index_hi.html")
-    if os.path.exists(index_html):
-        return FileResponse(index_html)
-    return RedirectResponse(url="/")
+def root():
+    return RedirectResponse(url="/app")
 
 @app.get("/app", include_in_schema=False)
 def app_view():
     app_html = os.path.join(frontend_dir, "app.html")
     if os.path.exists(app_html):
         return FileResponse(app_html)
-    return RedirectResponse(url="/")
+    return RedirectResponse(url="/studio")
 
-@app.get("/programmes/3d-ulpin", include_in_schema=False)
-@app.get("/schemes/3d-ulpin", include_in_schema=False)
-@app.get("/portal", include_in_schema=False)
-def programme_view():
-    cadastre_html = os.path.join(frontend_dir, "3d_cadastre_portal.html")
-    if os.path.exists(cadastre_html):
-        return FileResponse(cadastre_html)
-    return RedirectResponse(url="/app")
-
-@app.get("/twin", include_in_schema=False)
-def twin_view():
-    twin_html = os.path.join(frontend_dir, "hostel_3d_twin.html")
-    if os.path.exists(twin_html):
-        return FileResponse(twin_html)
-    return RedirectResponse(url="/")
-
-@app.get("/ai-pipeline", include_in_schema=False)
-@app.get("/ai", include_in_schema=False)
-def ai_pipeline_view():
-    ai_html = os.path.join(frontend_dir, "ai_pipeline.html")
-    if os.path.exists(ai_html):
-        return FileResponse(ai_html)
 @app.get("/studio", include_in_schema=False)
 @app.get("/floorplan-studio", include_in_schema=False)
-@app.get("/floorplan-3d", include_in_schema=False)
 def floorplan_studio_view():
     studio_html = os.path.join(frontend_dir, "floorplan_3d_studio.html")
     if os.path.exists(studio_html):
-        return FileResponse(studio_html)
-    return RedirectResponse(url="/ai-pipeline")
+        return FileResponse(
+            studio_html,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    return RedirectResponse(url="/app")
 
 @app.get("/health", tags=["System Health"])
 def health_check():
