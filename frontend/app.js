@@ -194,36 +194,174 @@ function onTalukaChange() {
   }
 }
 
-// Step 1 -> Step 2: Execute Mahabhulekh Search
-async function executeSearch() {
-  const district = document.getElementById("sel-district").value;
-  const taluka = document.getElementById("sel-taluka").value;
+// Step 1 -> Step 2: Open Village Cadastral Map View
+function openVillageMap() {
+  const distSelect = document.getElementById("sel-district");
+  const talukaSelect = document.getElementById("sel-taluka");
   const villageSelect = document.getElementById("sel-village");
-  const villageText = villageSelect.options[villageSelect.selectedIndex]?.text || "Waranga (वारंगा)";
-  const surveyNo = document.getElementById("inp-survey-no").value.trim() || "140/1";
 
-  // Switch Views
+  const distText = distSelect.options[distSelect.selectedIndex]?.text || "Nagpur (नागपूर)";
+  const talukaText = talukaSelect.options[talukaSelect.selectedIndex]?.text || "Nagpur Rural (नागपूर ग्रामीण)";
+  const villageText = villageSelect.options[villageSelect.selectedIndex]?.text || "Waranga (वारंगा)";
+
+  // Update Location in Bhunaksha Sidebar
+  const dispDist = document.getElementById("bhu-disp-district");
+  if (dispDist) dispDist.innerText = distText;
+  const dispTal = document.getElementById("bhu-disp-taluka");
+  if (dispTal) dispTal.innerText = talukaText;
+  const dispVil = document.getElementById("bhu-disp-village");
+  if (dispVil) dispVil.innerText = villageText;
+
+  // Reset Map View State
+  const mapImg = document.getElementById("bhunaksha-map-img");
+  if (mapImg) mapImg.src = "/static/map_unhighlighted.png";
+  const plotInput = document.getElementById("bhu-plot-input");
+  if (plotInput) plotInput.value = "";
+  const plotSelect = document.getElementById("bhu-plot-select");
+  if (plotSelect) plotSelect.value = "";
+  const plotInfo = document.getElementById("bhu-plot-info-container");
+  if (plotInfo) plotInfo.style.display = "none";
+  const badge = document.getElementById("plot140-badge");
+  if (badge) badge.style.display = "none";
+
+  // Switch from Search Card to Bhunaksha Map
   document.getElementById("view-search").style.display = "none";
+  document.getElementById("view-results").style.display = "none";
+  const bhuView = document.getElementById("view-bhunaksha");
+  bhuView.style.display = "flex";
+
+  showToast(`Loaded Village Cadastral Map for ${villageText.split(' ')[0]}. Enter Plot No. 140 to inspect.`, "success");
+}
+
+// Bhunaksha Plot Search (triggered on click, enter key, or dropdown)
+function searchBhunakshaPlot() {
+  const plot = (document.getElementById("bhu-plot-input").value || "").trim();
+  if (!plot) {
+    showToast("Please enter a Plot Number (e.g. 140)", "error");
+    return;
+  }
+
+  if (plot === "140" || plot.startsWith("140")) {
+    selectPlot140();
+  } else {
+    // Show realistic dummy data for other plot numbers
+    const mapImg = document.getElementById("bhunaksha-map-img");
+    if (mapImg) mapImg.src = "/static/map_unhighlighted.png";
+    const badge = document.getElementById("plot140-badge");
+    if (badge) badge.style.display = "none";
+
+    const infoContainer = document.getElementById("bhu-plot-info-container");
+    if (infoContainer) infoContainer.style.display = "block";
+    const infoText = document.getElementById("bhu-plot-info-text");
+    if (infoText) {
+      infoText.innerText = `Survey No. : ${plot}/1\nTotal Area : 12.5000 Ha\nPot kharaba : 1.2000\nOwner Name : खासगी भूधारक (Private Freehold)\nKhata No. : 188\npu-id : 33550994106\n---------------------------\nMap Report`;
+    }
+    showToast(`Plot ${plot} searched. Switch to Plot 140 to inspect 3D pilot model, or click button below.`, "info");
+  }
+}
+
+function onBhunakshaPlotSelect(val) {
+  if (!val) return;
+  const plotInput = document.getElementById("bhu-plot-input");
+  if (plotInput) plotInput.value = val;
+  searchBhunakshaPlot();
+}
+
+// Highlight Plot 140 & populate authentic government details
+function selectPlot140() {
+  const plotInput = document.getElementById("bhu-plot-input");
+  if (plotInput) plotInput.value = "140";
+  const plotSelect = document.getElementById("bhu-plot-select");
+  if (plotSelect) plotSelect.value = "140";
+
+  // Switch image to the highlighted map with Plot 140 colored in dark navy blue
+  const mapImg = document.getElementById("bhunaksha-map-img");
+  if (mapImg) {
+    mapImg.src = "/static/map_highlighted.png";
+  }
+
+  // Show Plot 140 floating badge
+  const badge = document.getElementById("plot140-badge");
+  if (badge) badge.style.display = "block";
+
+  // Show authentic Plot Info Box matching Bhunaksha screenshot
+  const infoContainer = document.getElementById("bhu-plot-info-container");
+  if (infoContainer) infoContainer.style.display = "block";
+
+  const infoText = document.getElementById("bhu-plot-info-text");
+  if (infoText) {
+    infoText.innerText = `Survey No. : 140/1\nTotal Area : 0.0000\nPot kharaba : 29.0300\nOwner Name : महाराष्ट्र राज्य शासन\nKhata No. : 341\n---------------------------\nSurvey No. : 140/2\nTotal Area : 0.0000\nPot kharaba : 24.0000\nOwner Name : महाराष्ट्र नॅशनल लॉ युनिव्हर्सिटी\nKhata No. : 623\n---------------------------\nSurvey No. : 140/3\nTotal Area : 0.0000\nPot kharaba : 19.8100\nOwner Name : कविकुलगुरू कालिदास संस्कृत विश्वविद्यालय\nKhata No. : 624\n---------------------------\nMap Report`;
+  }
+
+  showToast("Plot 140 Selected: 4 Campus Buildings & 700 3D Volumetric Units Detected", "success");
+}
+
+// Step 2 -> Step 3: Enter into the Main Page (where 3D buildings are plotted)
+async function enter3DStratum() {
+  const plotInput = document.getElementById("bhu-plot-input");
+  const plotVal = (plotInput ? plotInput.value.trim() : "") || "140";
+  const surveyNo = plotVal.includes("/") ? plotVal : `${plotVal}/1`;
+
+  // Hide Bhunaksha map & search views, show 3D results workspace
+  document.getElementById("view-search").style.display = "none";
+  document.getElementById("view-bhunaksha").style.display = "none";
   const resultsView = document.getElementById("view-results");
   resultsView.style.display = "flex";
 
-  // Dynamically update breadcrumb label
+  // Update breadcrumb
   const breadcrumbEl = document.getElementById("breadcrumb-survey-label") || document.querySelector(".breadcrumb-path strong");
   if (breadcrumbEl) {
     breadcrumbEl.innerText = `Survey ${surveyNo} (pu-id: 33550994106)`;
   }
 
-  showToast(`Resolved Land Record: Survey ${surveyNo}, ${villageText.split(' ')[0]} (pu-id: 33550994106)`, "success");
+  showToast(`Resolved 3D Cadastral Stratum: Survey ${surveyNo}, Waranga (pu-id: 33550994106)`, "success");
 
-  // Load analytics & active building
+  // Load analytics & render 3D twin for active building
   await loadAnalytics();
   await selectBuilding("HSTL01");
 }
 
-// Step 2 -> Step 1: Return to Search View
+// Navigation Back to Bhunaksha Map
+function backToBhunakshaMap() {
+  document.getElementById("view-results").style.display = "none";
+  document.getElementById("view-search").style.display = "none";
+  document.getElementById("view-bhunaksha").style.display = "flex";
+}
+
+// Navigation Back to Initial Search
 function backToSearch() {
   document.getElementById("view-results").style.display = "none";
+  document.getElementById("view-bhunaksha").style.display = "none";
   document.getElementById("view-search").style.display = "flex";
+}
+
+// Bhunaksha Map Zoom Controls
+let bhuMapZoomLevel = 1.0;
+function zoomBhunakshaMap(factor) {
+  bhuMapZoomLevel = Math.max(0.6, Math.min(bhuMapZoomLevel * factor, 3.0));
+  const target = document.getElementById("map-zoom-target");
+  if (target) {
+    target.style.transform = `scale(${bhuMapZoomLevel})`;
+  }
+}
+
+function resetBhunakshaMapZoom() {
+  bhuMapZoomLevel = 1.0;
+  const target = document.getElementById("map-zoom-target");
+  if (target) {
+    target.style.transform = `scale(1.0)`;
+  }
+}
+
+function onMapClick(event) {
+  const rect = event.target.getBoundingClientRect();
+  const x = (event.clientX - rect.left) / rect.width;
+  const y = (event.clientY - rect.top) / rect.height;
+
+  // Western parcel (Plot 140) bounds approx: x between 0.18 and 0.48, y between 0.15 and 0.75
+  if (x >= 0.18 && x <= 0.48 && y >= 0.15 && y <= 0.75) {
+    selectPlot140();
+  }
 }
 
 // Select Building from the 4 Cards

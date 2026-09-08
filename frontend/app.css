@@ -179,6 +179,164 @@ header {
   margin-bottom: 28px;
 }
 
+.cascading-form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 860px) {
+  .cascading-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================================
+   VIEW 2: BHUNAKSHA CADASTRAL MAP WORKSPACE
+   ======================================================== */
+#view-bhunaksha {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  background: #fdfbf7;
+}
+
+.bhunaksha-container {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  flex: 1;
+  min-height: 680px;
+}
+
+@media (max-width: 992px) {
+  .bhunaksha-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+.bhunaksha-sidebar {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.bhunaksha-sidebar-header {
+  background: #0284c7;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+}
+
+.bhu-panel {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 14px;
+}
+
+.bhu-panel-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.bhu-loc-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+}
+
+.bhu-loc-label {
+  color: #64748b;
+}
+
+.bhu-loc-val {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.bhu-plot-info-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.bhu-plot-info-header {
+  background: #16a34a;
+  color: #ffffff;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.bhu-plot-info-body {
+  padding: 10px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #166534;
+  white-space: pre-wrap;
+  background: #f0fdf4;
+}
+
+.bhunaksha-map-stage {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.bhunaksha-map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.bhunaksha-map-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 16px;
+  background: #fafaf9;
+}
+
+/* ========================================================
+   VIEW 3: RESULTS & 3D WORKSPACE
+   ======================================================== */
+#view-results {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+
 .search-form-group {
   display: flex;
   flex-direction: column;

@@ -38,7 +38,7 @@
         <p>Digital India Land Records Modernization Programme (DILRMP) | Select Land Parcel</p>
       </div>
 
-      <div class="cascading-form-grid">
+      <div class="cascading-form-grid-3">
         
         <div class="search-form-group">
           <label>District (जिल्हा)</label>
@@ -134,29 +134,160 @@
           </select>
         </div>
 
-        <div class="search-form-group">
-          <label>Survey / Gat No. (गट क्र.)</label>
-          <input type="text" id="inp-survey-no" value="140/1" placeholder="e.g. 140/1">
-        </div>
-
       </div>
 
-      <button class="btn btn-primary search-btn-large" onclick="executeSearch()">
-        Search 3D Cadastral Record (भू-अभिलेख शोधा)
+      <button class="btn btn-primary search-btn-large" onclick="openVillageMap()">
+        View Village Cadastral Map (गावाचा भू-नकाशा पहा) ➔
       </button>
 
     </div>
   </section>
 
   <!-- ========================================================
-       PAGE 2: RESOLVED PARCEL DETAILS, 4 BUILDINGS & 3D TWIN
+       PAGE 2: BHUNAKSHA INTERACTIVE VILLAGE CADASTRAL MAP VIEW
+       ======================================================== -->
+  <section id="view-bhunaksha">
+    <div class="results-top-bar">
+      <button class="btn btn-subtle" onclick="backToSearch()">
+        ← Back to District / Taluka Selection (गाव बदला)
+      </button>
+      <div class="breadcrumb-path">
+        <strong>BhuNaksha — Waranga Village (वारंगा) | Cadastral Map Sheet</strong>
+      </div>
+    </div>
+
+    <div class="bhunaksha-container">
+      <!-- Left Sidebar: Location, Search Plot, Plot Info -->
+      <aside class="bhunaksha-sidebar">
+        <div class="bhunaksha-sidebar-header">
+          <span>☰ Location & Plot Info</span>
+          <span style="font-size:0.75rem;opacity:0.85;">DILRMP</span>
+        </div>
+
+        <!-- Location Box -->
+        <div class="bhu-panel">
+          <div class="bhu-panel-title">Location</div>
+          <div class="bhu-loc-row">
+            <span class="bhu-loc-label">State</span>
+            <span class="bhu-loc-val">Maharashtra</span>
+          </div>
+          <div class="bhu-loc-row">
+            <span class="bhu-loc-label">Category</span>
+            <span class="bhu-loc-val">Rural</span>
+          </div>
+          <div class="bhu-loc-row">
+            <span class="bhu-loc-label">District</span>
+            <span class="bhu-loc-val" id="bhu-disp-district">09 नागपूर</span>
+          </div>
+          <div class="bhu-loc-row">
+            <span class="bhu-loc-label">Taluka</span>
+            <span class="bhu-loc-val" id="bhu-disp-taluka">09 नागपूर (ग्रामीण)</span>
+          </div>
+          <div class="bhu-loc-row">
+            <span class="bhu-loc-label">Village</span>
+            <span class="bhu-loc-val" id="bhu-disp-village">270900090108850000 वारंगा</span>
+          </div>
+        </div>
+
+        <!-- Search Plot No Box -->
+        <div class="bhu-panel">
+          <div class="bhu-panel-title">Search Plot No:</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <input type="text" id="bhu-plot-input" class="form-control" placeholder="e.g. 140" value="" style="flex:1;padding:8px 10px;font-size:0.9rem;border:1.5px solid var(--border-strong);border-radius:4px;" onkeyup="if(event.key==='Enter')searchBhunakshaPlot()">
+            <button class="btn btn-primary" onclick="searchBhunakshaPlot()" style="padding:0 14px;border-radius:4px;" title="Search Plot">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.35;">
+            💡 Type <strong>140</strong> or click directly on Plot 140 on the map.
+          </div>
+        </div>
+
+        <!-- Select Plot No Box -->
+        <div class="bhu-panel">
+          <div class="bhu-panel-title">Select Plot No:</div>
+          <select id="bhu-plot-select" class="form-control" style="width:100%;padding:8px;font-size:0.85rem;border:1.5px solid var(--border-strong);border-radius:4px;" onchange="onBhunakshaPlotSelect(this.value)">
+            <option value="">---Select---</option>
+            <option value="140">140 (Survey 140/1, 140/2, 140/3)</option>
+            <option value="139">139</option>
+            <option value="141">141</option>
+            <option value="144">144</option>
+          </select>
+        </div>
+
+        <!-- Plot Info Details Box (revealed when 140 is searched) -->
+        <div class="bhu-panel" id="bhu-plot-info-container" style="display:none;flex:1;">
+          <div class="bhu-plot-info-box">
+            <div class="bhu-plot-info-header">Plot Info</div>
+            <div class="bhu-plot-info-body" id="bhu-plot-info-text">Survey No. : 140/1
+Total Area : 0.0000
+Pot kharaba : 29.0300
+Owner Name : महाराष्ट्र राज्य शासन
+Khata No. : 341
+---------------------------
+Survey No. : 140/2
+Total Area : 0.0000
+Pot kharaba : 24.0000
+Owner Name : महाराष्ट्र नॅशनल लॉ युनिव्हर्सिटी
+Khata No. : 623
+---------------------------
+Survey No. : 140/3
+Total Area : 0.0000
+Pot kharaba : 19.8100
+Owner Name : कविकुलगुरू कालिदास संस्कृत विश्वविद्यालय
+Khata No. : 624
+---------------------------
+Map Report</div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-enter-3d-stratum" onclick="enter3DStratum()" style="width:100%;margin-top:14px;padding:12px 14px;font-size:0.92rem;font-weight:700;background:var(--accent-primary);display:flex;align-items:center;justify-content:center;gap:8px;border-radius:6px;box-shadow:0 2px 6px rgba(180,83,9,0.25);">
+            <span>Inspect 3D Building Stratum (3D भू-अभिलेख पहा)</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right: Interactive Cadastral Map Viewport -->
+      <main class="bhunaksha-map-stage">
+        <div class="bhunaksha-map-toolbar">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;"></span>
+            <span>वारंगा (Waranga) Cadastral Map Sheet • Revenue Village 270900090108850000</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="btn btn-subtle" onclick="zoomBhunakshaMap(1.2)" style="padding:4px 10px;font-size:0.85rem;font-weight:700;" title="Zoom In">+</button>
+            <button class="btn btn-subtle" onclick="zoomBhunakshaMap(0.8)" style="padding:4px 10px;font-size:0.85rem;font-weight:700;" title="Zoom Out">-</button>
+            <button class="btn btn-subtle" onclick="resetBhunakshaMapZoom()" style="padding:4px 10px;font-size:0.75rem;" title="Reset Zoom">Reset</button>
+          </div>
+        </div>
+
+        <div class="bhunaksha-map-wrapper" id="bhunaksha-map-wrapper">
+          <div style="position:relative;display:inline-block;max-width:100%;transition:transform 0.2s ease;" id="map-zoom-target">
+            <!-- Village Map Image -->
+            <img id="bhunaksha-map-img" src="/static/map_unhighlighted.png" alt="Waranga Cadastral Map" style="max-width:100%;max-height:72vh;display:block;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.08);cursor:pointer;" onclick="onMapClick(event)">
+            
+            <!-- Clickable hotspot over Plot 140 on the western side of the map -->
+            <div id="plot140-hotspot" onclick="selectPlot140()" style="position:absolute;top:10%;left:22%;width:26%;height:68%;cursor:pointer;border-radius:8px;" title="Plot 140 (Survey 140/1, 140/2, 140/3) - Click to Inspect"></div>
+            
+            <!-- Floating badge when 140 is selected -->
+            <div id="plot140-badge" style="display:none;position:absolute;top:24%;left:36%;background:rgba(15,23,42,0.92);color:#ffffff;padding:8px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.25);pointer-events:none;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,0.2);white-space:nowrap;">
+              🎯 Plot 140 Selected • Survey 140/1 (pu-id: 33550994106)
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       PAGE 3: RESOLVED PARCEL DETAILS, 4 BUILDINGS & 3D TWIN
        ======================================================== -->
   <section id="view-results">
     
     <!-- Results Top Bar & Breadcrumb -->
     <div class="results-top-bar">
-      <button class="btn btn-subtle" onclick="backToSearch()">
-        ← Back to Search (नवीन शोध)
+      <button class="btn btn-subtle" onclick="backToBhunakshaMap()">
+        ← Back to Village Map (भू-नकाशा)
       </button>
       <div class="breadcrumb-path">
         <strong id="breadcrumb-survey-label">Survey 140/1 (pu-id: 33550994106)</strong>
