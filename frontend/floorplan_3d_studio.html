@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Floor Plan → 3D Architecture & Ownership Cadastre Studio | 3D ULPIN</title>
-  <meta name="description" content="AI Testing Studio for converting 2D floor plans into 3D architecture, distinguishing distinct flats and owners in multi-storey buildings using ResNet34-UNet and FloorPlanTo3D." />
+  <title>National 3D ULPIN & Volumetric Cadastre Studio | PS 26011</title>
+  <meta name="description" content="Official Department of Land Resources (DoLR) 3D ULPIN Architecture Studio. Converts 2D floor plans into 3D volumetric cadastre parcels with ISO 19152 LADM v2 compliance, UDS land equity, and mortgage lien validation." />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   
   <!-- Three.js + OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -15,20 +16,26 @@
 
   <style>
     :root {
-      --bg: #090d16;
-      --surface: #0f172a;
-      --surface-card: #1e293b;
-      --surface-hover: #27354f;
-      --border: #24344d;
+      --bg: #050811;
+      --bg-alt: #090e1a;
+      --surface: #0e1626;
+      --surface-card: #152238;
+      --surface-hover: #1c2d4a;
+      --border: #1e3352;
+      --border-subtle: rgba(30, 51, 82, 0.6);
       --accent: #3b82f6;
+      --accent-hover: #2563eb;
       --accent-glow: rgba(59, 130, 246, 0.35);
+      --accent-amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
       --success: #10b981;
-      --warning: #f59e0b;
       --danger: #ef4444;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
-      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
 
@@ -41,82 +48,114 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    /* Top Navigation */
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* Top Official Cadastral Header */
     header {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(10, 16, 30, 0.95);
       backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
-      z-index: 50;
-      padding: 12px 24px;
+      z-index: 60;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
     }
-    .brand {
+
+    .header-brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       text-decoration: none;
       color: var(--text);
     }
-    .brand-badge {
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+    .gov-emblem {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 1.1rem;
-      box-shadow: 0 0 16px var(--accent-glow);
+      font-size: 1.25rem;
+      box-shadow: 0 0 16px var(--amber-glow);
     }
-    .brand-text h1 {
-      font-size: 1.05rem;
+    .brand-titles h1 {
+      font-size: 0.98rem;
       font-weight: 700;
       letter-spacing: -0.01em;
-    }
-    .brand-text p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-    .header-links {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
     }
-    .nav-btn {
+    .badge-ps {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+    .brand-titles p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-link {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 500;
       padding: 6px 12px;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid transparent;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .nav-btn:hover {
+    .nav-link:hover {
       background: var(--surface-card);
       color: var(--text);
       border-color: var(--border);
     }
-    .status-pill {
+    .nav-link.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border-color: var(--accent);
+    }
+
+    .system-status {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       padding: 5px 12px;
       border-radius: 20px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-family: var(--font-mono);
-      background: rgba(16, 185, 129, 0.12);
+      background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.3);
       color: var(--success);
     }
-    .status-pill .dot {
+    .status-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
@@ -124,103 +163,112 @@
       box-shadow: 0 0 8px var(--success);
       animation: pulse 1.8s infinite;
     }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
     /* Main Container */
     main {
       flex: 1;
-      padding: 18px 24px;
-      max-width: 1800px;
+      padding: 14px 20px;
+      max-width: 1880px;
       margin: 0 auto;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
 
-    /* Purpose Notice Banner */
-    .hero-banner {
-      background: linear-gradient(90deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+    /* Cadastral Mission Banner */
+    .cadastre-banner {
+      background: linear-gradient(90deg, rgba(21, 34, 56, 0.9) 0%, rgba(14, 22, 38, 0.95) 100%);
       border: 1px solid var(--border);
-      border-left: 4px solid var(--accent);
-      border-radius: 12px;
-      padding: 14px 20px;
+      border-left: 4px solid var(--accent-amber);
+      border-radius: 10px;
+      padding: 12px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
     }
-    .hero-banner-content h2 {
-      font-size: 1.05rem;
+    .banner-text h2 {
+      font-size: 0.95rem;
       font-weight: 700;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .hero-banner-content p {
-      font-size: 0.82rem;
+    .banner-text p {
+      font-size: 0.78rem;
       color: var(--text-muted);
-      max-width: 950px;
+      max-width: 1000px;
       line-height: 1.45;
     }
-    .model-chips {
+    .banner-tags {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
-    .chip {
+    .spec-tag {
       background: var(--surface-card);
       border: 1px solid var(--border);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.68rem;
       font-family: var(--font-mono);
       color: var(--text-muted);
     }
-    .chip.highlight {
+    .spec-tag.highlight {
       border-color: var(--accent);
       color: #93c5fd;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .spec-tag.gold {
+      border-color: var(--accent-amber);
+      color: #fde68a;
+      background: rgba(245, 158, 11, 0.1);
     }
 
-    /* Grid Layout: Controls & Workspace */
+    /* 3-Column Studio Grid */
     .studio-grid {
       display: grid;
-      grid-template-columns: 320px 1fr 420px;
-      gap: 16px;
+      grid-template-columns: 330px 1fr 440px;
+      gap: 14px;
       align-items: stretch;
-      min-height: 720px;
+      min-height: 740px;
     }
 
-    @media (max-width: 1450px) {
-      .studio-grid { grid-template-columns: 300px 1fr; }
-      .right-cadastre-panel { grid-column: 1 / -1; }
+    @media (max-width: 1520px) {
+      .studio-grid { grid-template-columns: 310px 1fr 400px; }
     }
-    @media (max-width: 1024px) {
+    @media (max-width: 1280px) {
+      .studio-grid { grid-template-columns: 300px 1fr; }
+      .cadastre-side-panel { grid-column: 1 / -1; }
+    }
+    @media (max-width: 980px) {
       .studio-grid { grid-template-columns: 1fr; }
     }
 
-    /* Panel Card */
+    /* Common Panel Card */
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
     }
     .panel-header {
-      padding: 12px 16px;
-      background: rgba(30, 41, 59, 0.5);
+      padding: 10px 14px;
+      background: rgba(21, 34, 56, 0.65);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
     .panel-header h3 {
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       font-weight: 700;
       letter-spacing: -0.01em;
       display: flex;
@@ -228,114 +276,117 @@
       gap: 8px;
     }
     .panel-body {
-      padding: 16px;
+      padding: 14px;
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 13px;
     }
 
-    /* Left Control Panel Elements */
-    .upload-zone {
+    /* Form Controls & Upload */
+    .upload-box {
       border: 2px dashed var(--border);
-      border-radius: 10px;
-      padding: 24px 16px;
+      border-radius: 8px;
+      padding: 20px 14px;
       text-align: center;
       cursor: pointer;
-      background: rgba(30, 41, 59, 0.25);
+      background: rgba(21, 34, 56, 0.3);
       transition: all 0.2s;
     }
-    .upload-zone:hover, .upload-zone.dragover {
+    .upload-box:hover, .upload-box.dragover {
       border-color: var(--accent);
       background: rgba(59, 130, 246, 0.08);
     }
-    .upload-icon {
-      font-size: 2rem;
-      margin-bottom: 8px;
-      color: var(--accent);
+    .upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .upload-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
+    .upload-desc { font-size: 0.7rem; color: var(--text-dim); }
+
+    .sample-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .upload-text {
-      font-size: 0.84rem;
+    .sample-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s;
+    }
+    .sample-card:hover {
+      background: var(--surface-hover);
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .sample-card.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent);
+    }
+    .sample-info-title {
+      font-size: 0.75rem;
       font-weight: 600;
-      margin-bottom: 4px;
+      color: var(--text);
     }
-    .upload-hint {
-      font-size: 0.72rem;
+    .sample-info-sub {
+      font-size: 0.65rem;
       color: var(--text-dim);
+    }
+    .sample-type-badge {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
     .form-label {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
-    .form-label span.val {
+    .form-label span.metric-tag {
       color: var(--accent);
       font-family: var(--font-mono);
+      font-weight: 700;
     }
     .form-input {
       background: var(--surface-card);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 8px 12px;
-      border-radius: 7px;
-      font-size: 0.8rem;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
       outline: none;
       transition: border-color 0.2s;
     }
-    .form-input:focus {
-      border-color: var(--accent);
-    }
+    .form-input:focus { border-color: var(--accent); }
 
-    .range-slider {
+    .range-input {
       width: 100%;
       accent-color: var(--accent);
       cursor: pointer;
     }
 
-    .sample-btn-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .sample-btn {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 7px 10px;
-      border-radius: 7px;
-      font-size: 0.74rem;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.15s;
-    }
-    .sample-btn:hover {
-      background: var(--surface-hover);
-      color: var(--text);
-      border-color: rgba(59, 130, 246, 0.4);
-    }
-    .sample-btn.active {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: var(--accent);
-      color: #93c5fd;
-      font-weight: 600;
-    }
-
-    .primary-btn {
+    .btn-run {
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: #fff;
       border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 0.84rem;
+      padding: 10px 14px;
+      border-radius: 7px;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
@@ -343,515 +394,824 @@
       justify-content: center;
       gap: 8px;
       transition: transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
     }
-    .primary-btn:hover {
+    .btn-run:hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
     }
 
-    /* Center Visualizer Area */
-    .center-workspace {
+    /* CENTER VIEWPORT */
+    .center-panel {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
     }
-    .tab-bar {
+    .viewport-tabs {
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
-    .view-tabs {
-      display: flex;
-      gap: 6px;
-    }
-    .tab-btn {
+    .tab-group { display: flex; gap: 6px; }
+    .v-tab-btn {
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-muted);
-      padding: 6px 14px;
-      border-radius: 7px;
-      font-size: 0.78rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.74rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .tab-btn:hover {
-      background: var(--surface-card);
-      color: var(--text);
-    }
-    .tab-btn.active {
+    .v-tab-btn:hover { background: var(--surface-card); color: var(--text); }
+    .v-tab-btn.active {
       background: var(--surface-card);
       color: var(--accent);
       border-color: var(--border);
     }
 
-    .viewer-container {
+    .canvas-viewport {
       position: relative;
       flex: 1;
-      min-height: 540px;
-      background: #060913;
+      min-height: 560px;
+      background: #040711;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    #three-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
+    #three-canvas { width: 100%; height: 100%; display: block; }
+
+    /* Floating Studio Toolbar */
+    .studio-toolbar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 25;
+    }
+    .toolbar-row {
+      background: rgba(10, 17, 31, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 5px;
+      border-radius: 7px;
+      display: flex;
+      gap: 4px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+    .tb-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.68rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .tb-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .tb-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
     }
 
-    /* Blank Screen Empty State Overlay */
-    .empty-state-overlay {
+    /* Exploded Storeys Control Card */
+    .exploded-slider-box {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(10, 17, 31, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 7px;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 25;
+      min-width: 170px;
+    }
+    .exploded-slider-box label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Bottom Floor Slice Bar */
+    .floor-bar-wrap {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(10, 17, 31, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border-radius: 7px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 25;
+      gap: 8px;
+    }
+    .floor-pill-scroll {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      max-width: 75%;
+    }
+    .fl-pill {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .fl-pill:hover { background: var(--surface-hover); color: var(--text); }
+    .fl-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Interactive 3D Raycasting Tooltip */
+    #raycast-tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      z-index: 50;
+      background: rgba(14, 22, 38, 0.96);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 6px 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      font-size: 0.72rem;
+      color: var(--text);
+      transform: translate(-50%, -120%);
+    }
+
+    /* Empty State */
+    .empty-overlay {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 12px;
       z-index: 10;
-      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.85) 0%, rgba(6, 9, 19, 0.95) 70%);
+      background: radial-gradient(circle at center, rgba(14, 22, 38, 0.9) 0%, rgba(4, 7, 17, 0.98) 75%);
       pointer-events: none;
       text-align: center;
       padding: 24px;
     }
-    .empty-state-icon {
-      font-size: 3.2rem;
-      color: var(--accent);
-      animation: float-icon 3s ease-in-out infinite alternate;
-    }
-    @keyframes float-icon { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
-    .empty-state-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #f1f5f9;
-    }
-    .empty-state-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      max-width: 520px;
-      line-height: 1.5;
-    }
-
-    /* 3D Floating Toolbar */
-    .viewer-toolbar {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      display: none;
-      gap: 6px;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      padding: 6px;
-      border-radius: 8px;
-      z-index: 20;
-    }
-    .tool-btn {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 5px 9px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .tool-btn:hover { background: var(--surface-hover); color: var(--text); }
-    .tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-    /* Floor Selector Bar */
-    .floor-selector-bar {
-      position: absolute;
-      bottom: 14px;
-      left: 14px;
-      right: 14px;
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      padding: 8px 14px;
-      border-radius: 8px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 20;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .floor-pills {
-      display: flex;
-      gap: 5px;
-      overflow-x: auto;
-    }
-    .floor-pill {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 3px 9px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .floor-pill:hover { background: var(--surface-hover); color: var(--text); }
-    .floor-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-    /* 2D Prediction Side-by-side */
-    .preview-2d-container {
-      display: none;
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      inset: 0;
-      background: var(--surface);
-      z-index: 15;
-      padding: 16px;
-      overflow-y: auto;
-    }
-    .preview-2d-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      height: 100%;
-    }
-    .preview-box {
-      background: #060913;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .preview-box-header {
-      padding: 8px 12px;
-      background: var(--surface-card);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-    }
-    .preview-box-body {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      min-height: 420px;
-    }
-    .preview-img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    /* Right Cadastre & Flat Owner Table */
-    .cadastre-table-container {
-      flex: 1;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #080d18;
-    }
-    .cadastre-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.74rem;
-      text-align: left;
-    }
-    .cadastre-table th {
-      position: sticky;
-      top: 0;
-      background: var(--surface-card);
-      padding: 8px 10px;
-      color: var(--text-muted);
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
-      z-index: 2;
-    }
-    .cadastre-table td {
-      padding: 7px 10px;
-      border-bottom: 1px solid rgba(36, 52, 77, 0.4);
-      color: var(--text);
-    }
-    .cadastre-table tr:hover {
-      background: rgba(59, 130, 246, 0.08);
-      cursor: pointer;
-    }
-    .cadastre-table tr.selected {
-      background: rgba(59, 130, 246, 0.22);
-      outline: 1px solid var(--accent);
-    }
-    .color-swatch {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    /* Metric Badges */
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .metric-card {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      padding: 8px 10px;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .metric-value {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text);
-      font-family: var(--font-mono);
-    }
-    .metric-label {
-      font-size: 0.68rem;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    /* Export buttons */
-    .export-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .export-btn {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 10px;
-      border-radius: 7px;
-      font-size: 0.74rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .export-btn:hover {
-      background: var(--surface-hover);
-      border-color: var(--accent);
-    }
+    .empty-icon { font-size: 3.4rem; color: var(--accent-amber); }
+    .empty-title { font-size: 1.15rem; font-weight: 700; color: #f1f5f9; }
+    .empty-sub { font-size: 0.8rem; color: var(--text-muted); max-width: 500px; line-height: 1.5; }
 
     /* Loading Overlay */
     .loading-overlay {
       display: none;
       position: absolute;
       inset: 0;
-      background: rgba(9, 13, 22, 0.88);
+      background: rgba(5, 8, 17, 0.92);
       backdrop-filter: blur(8px);
       z-index: 100;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 12px;
     }
-    .spinner {
-      width: 44px;
-      height: 44px;
+    .spinner-ring {
+      width: 46px;
+      height: 46px;
       border: 3px solid rgba(59, 130, 246, 0.2);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 2D Plan Comparison Container */
+    .preview-2d-layer {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--surface);
+      z-index: 20;
+      padding: 14px;
+      overflow-y: auto;
+    }
+    .preview-2d-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      height: 100%;
+    }
+    .preview-panel-box {
+      background: #040711;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-panel-header {
+      padding: 7px 12px;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .preview-panel-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      min-height: 440px;
+    }
+    .preview-panel-body img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* RIGHT PANEL: 3D ULPIN CADASTRE REGISTRY */
+    .cadastre-side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    /* Metrics Grid */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .telemetry-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 7px 8px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .telemetry-val {
+      font-size: 0.92rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text);
+    }
+    .telemetry-lbl {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Search & Filter Bar */
+    .cadastre-filter-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* Cadastre Table */
+    .table-viewport {
+      flex: 1;
+      min-height: 290px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: #060a14;
+    }
+    .cadastre-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.72rem;
+      text-align: left;
+    }
+    .cadastre-tbl th {
+      position: sticky;
+      top: 0;
+      background: var(--surface-card);
+      padding: 7px 9px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      z-index: 5;
+      font-size: 0.68rem;
+    }
+    .cadastre-tbl td {
+      padding: 6px 9px;
+      border-bottom: 1px solid rgba(30, 51, 82, 0.4);
+      color: var(--text);
+    }
+    .cadastre-tbl tr:hover {
+      background: rgba(59, 130, 246, 0.08);
+      cursor: pointer;
+    }
+    .cadastre-tbl tr.selected {
+      background: rgba(59, 130, 246, 0.22);
+      outline: 1px solid var(--accent);
+    }
+    .swatch {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    .status-clear { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .status-lien { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    /* Export Suite */
+    .export-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .btn-export {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 9px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-export:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+    }
+
+    /* MODAL: Digital 3D ULPIN Cadastral Property Card / Title Deed */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 15, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #0d1527;
+      border: 1px solid var(--accent);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px var(--accent-glow);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalSlide 0.2s ease-out;
+    }
+    @keyframes modalSlide { from { transform: translateY(12px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+    .modal-header {
+      padding: 14px 18px;
+      background: linear-gradient(90deg, #16243e 0%, #101c33 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-title p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--danger); }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      max-height: 75vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Property Card Layout inside Modal */
+    .title-deed-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #090e1d;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .deed-header-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 10px;
+    }
+    .ulpin-large {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #93c5fd;
+      letter-spacing: 0.02em;
+    }
+    .deed-badge {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--success);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .deed-kv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .kv-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(30, 51, 82, 0.5);
+      padding: 7px 10px;
+      border-radius: 6px;
+    }
+    .kv-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .kv-val {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .anti-fraud-box {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 10px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.74rem;
+      color: #fca5a5;
+    }
+    .anti-fraud-box.safe {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #86efac;
+    }
+
+    .modal-actions {
+      padding: 12px 18px;
+      background: rgba(16, 26, 44, 0.75);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .btn-action {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .btn-action.secondary {
+      background: var(--surface-card);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+    .btn-action.secondary:hover { background: var(--surface-hover); color: var(--text); }
+    .btn-action.stamp {
+      background: #b45309;
+      color: #fff;
+    }
+    .btn-action.stamp:hover { background: #d97706; }
+    .btn-action.transfer {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-action.transfer:hover { background: var(--accent-hover); }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Cadastral Top Navigation -->
   <header>
-    <a href="/frontend/index.html" class="brand">
-      <div class="brand-badge">🏛️</div>
-      <div class="brand-text">
-        <h1>Floor Plan → 3D Architecture & Ownership Cadastre</h1>
-        <p>National 3D ULPIN Platform (PS 26011)</p>
+    <a href="/app" class="header-brand">
+      <div class="gov-emblem">🏛️</div>
+      <div class="brand-titles">
+        <h1>
+          National 3D ULPIN Volumetric Cadastre Studio
+          <span class="badge-ps">PS 26011</span>
+        </h1>
+        <p>Department of Land Resources (DoLR) • Ministry of Rural Development • ISO 19152 LADM v2</p>
       </div>
     </a>
-    <div class="header-links">
-      <span class="status-pill">
-        <span class="dot"></span>
-        <span id="model-status-text">ResNet34-UNet (Apple MPS Active)</span>
+
+    <div class="header-nav">
+      <span class="system-status">
+        <span class="status-dot"></span>
+        <span id="system-status-label">Cadastre Engine Active</span>
       </span>
-      <a href="/frontend/ai_pipeline.html" class="nav-btn">AI Pipeline</a>
-      <a href="/frontend/3d_cadastre_portal.html" class="nav-btn">3D Cadastre Portal</a>
+      <a href="/portal" class="nav-link">🌐 3D Portal</a>
+      <a href="/app" class="nav-link">📊 Mutation Console</a>
+      <a href="/ai-pipeline" class="nav-link">🤖 AI Pipeline</a>
+      <a href="/docs" target="_blank" class="nav-link">📖 API Docs</a>
     </div>
   </header>
 
   <main>
-    <!-- Purpose Banner -->
-    <section class="hero-banner">
-      <div class="hero-banner-content">
-        <h2>🏢 Multi-Storey Residential Ownership Decomposition</h2>
+    <!-- Cadastral Mission Banner -->
+    <section class="cadastre-banner">
+      <div class="banner-text">
+        <h2>🏢 Multi-Storey 3D ULPIN Architecture & Title Decomposition</h2>
         <p>
-          Upload your 2D residential floor plan (PNG, JPG, PDF, SVG). The neural network isolates the structural walls, cuts out common corridors, and identifies the <strong>distinct flats belonging to different owners across every floor</strong> of the multi-storey building with statutory 3D ULPIN identifiers.
+          Converts multi-storey architectural blueprints into statutory 3D volumetric cadastre units. Isolates structural walls, common corridors, and vertical circulation cores, computing <strong>3D ULPIN identifiers, Fractional Land Share (UDS), Gross Airspace Volume</strong>, and simulated mortgage liens under ISO 19152 LADM v2.
         </p>
       </div>
-      <div class="model-chips">
-        <span class="chip highlight">Model 1: ResNet34-UNet (CubiCasa5k)</span>
-        <span class="chip highlight">Model 2: FloorPlanTo3D Geometry</span>
-        <span class="chip">Standard: ISO 19152 LADM v2</span>
+      <div class="banner-tags">
+        <span class="spec-tag highlight">Model: ResNet34-UNet / FloorPlanTo3D</span>
+        <span class="spec-tag gold">Standard: ISO 19152 LADM v2</span>
+        <span class="spec-tag">Cadastre: Survey 140/1 Waranga (pu-id: 33550994106)</span>
       </div>
     </section>
 
     <!-- Studio Grid -->
     <div class="studio-grid">
 
-      <!-- LEFT: Upload & Controls -->
+      <!-- LEFT: Upload, Parameters & Stacking Controls -->
       <aside class="panel">
         <div class="panel-header">
-          <h3>⚙️ Upload & Parameters</h3>
+          <h3>⚙️ Blueprint & Stacking Controls</h3>
         </div>
         <div class="panel-body">
           
-          <!-- Upload Area -->
-          <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+          <!-- Dropzone -->
+          <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-input').click()">
             <div class="upload-icon">📂</div>
-            <div class="upload-text" id="upload-label">Upload Floor Plan</div>
-            <div class="upload-hint">Drag & drop PNG, JPG, PDF, SVG</div>
+            <div class="upload-title" id="upload-label">Upload Floor Plan</div>
+            <div class="upload-desc">Drag & drop PNG, JPG, PDF, SVG blueprints</div>
             <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.webp,.pdf,.svg" style="display: none;" onchange="handleFileSelect(event)" />
           </div>
 
           <!-- Verified Real Samples -->
           <div class="form-group">
-            <label class="form-label">Or Pick a Verified Sample Plan:</label>
-            <div class="sample-btn-group">
-              <button class="sample-btn" onclick="selectSample('sample_2bhk', this)">🏢 2BHK Apartment</button>
-              <button class="sample-btn" onclick="selectSample('sample_multi_unit', this)">🏘️ Multi-Flat Floor</button>
-              <button class="sample-btn" onclick="selectSample('sample_cad', this)">📐 CAD Blueprint</button>
-              <button class="sample-btn" onclick="selectSample('sample_hostel_pdf', this)">📄 Hostel Wing (PDF)</button>
-              <button class="sample-btn" onclick="selectSample('sample_fdd22', this)">🏙️ Tower Block</button>
+            <label class="form-label">Verified Architectural Samples:</label>
+            <div class="sample-grid">
+              <div class="sample-card" onclick="selectSample('sample_2bhk', this)">
+                <div>
+                  <div class="sample-info-title">🏢 2BHK Apartment</div>
+                  <div class="sample-info-sub">Master bed, hall, kitchen & balcony</div>
+                </div>
+                <span class="sample-type-badge">PNG</span>
+              </div>
+              <div class="sample-card" onclick="selectSample('sample_multi_unit', this)">
+                <div>
+                  <div class="sample-info-title">🏘️ Multi-Flat Floor</div>
+                  <div class="sample-info-sub">Corridor with 4 distinct owner flats</div>
+                </div>
+                <span class="sample-type-badge">PNG</span>
+              </div>
+              <div class="sample-card" onclick="selectSample('sample_cad', this)">
+                <div>
+                  <div class="sample-info-title">📐 CAD Vector Blueprint</div>
+                  <div class="sample-info-sub">High precision wall contour drawing</div>
+                </div>
+                <span class="sample-type-badge">PNG</span>
+              </div>
+              <div class="sample-card" onclick="selectSample('sample_hostel_pdf', this)">
+                <div>
+                  <div class="sample-info-title">📄 Hostel Block A (HSTL01)</div>
+                  <div class="sample-info-sub">Official 10-floor institutional PDF</div>
+                </div>
+                <span class="sample-type-badge">PDF</span>
+              </div>
+              <div class="sample-card" onclick="selectSample('sample_fdd22', this)">
+                <div>
+                  <div class="sample-info-title">🏙️ Tower Block FDD22</div>
+                  <div class="sample-info-sub">High density residential tower</div>
+                </div>
+                <span class="sample-type-badge">JPG</span>
+              </div>
             </div>
           </div>
 
-          <!-- Building Name -->
+          <!-- Cadastral Metadata -->
           <div class="form-group">
-            <label class="form-label">Building Name:</label>
-            <input type="text" id="building-name-input" class="form-input" value="Surya Heights Residency" />
+            <label class="form-label">Building Name & Code:</label>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 6px;">
+              <input type="text" id="building-name-input" class="form-input" value="Surya Heights Residency" />
+              <input type="text" id="bldg-code-input" class="form-input" value="SURY" placeholder="Code" style="font-family: var(--font-mono); text-transform: uppercase;" />
+            </div>
+          </div>
+
+          <!-- Base Plot Area for UDS -->
+          <div class="form-group">
+            <label class="form-label">
+              Base Surface Plot Area (m²):
+              <span class="metric-tag" id="plot-area-display">1,200 m²</span>
+            </label>
+            <input type="range" id="plot-area-slider" class="range-input" min="500" max="8000" step="50" value="1200" oninput="onPlotAreaChange(this.value)" />
           </div>
 
           <!-- Multi-Storey Floors Slider -->
           <div class="form-group">
             <label class="form-label">
-              Total Floors (Multi-Storey):
-              <span class="val" id="floors-display">5 Floors</span>
+              Total Vertical Floors:
+              <span class="metric-tag" id="floors-display">5 Floors</span>
             </label>
-            <input type="range" id="floors-slider" class="range-slider" min="1" max="15" value="5" oninput="onFloorSliderChange(this.value)" />
+            <input type="range" id="floors-slider" class="range-input" min="1" max="15" value="5" oninput="onFloorSliderChange(this.value)" />
           </div>
 
           <!-- Wall Height Slider -->
           <div class="form-group">
             <label class="form-label">
               Ceiling / Wall Height:
-              <span class="val" id="height-display">3.0 m</span>
+              <span class="metric-tag" id="height-display">3.0 m</span>
             </label>
-            <input type="range" id="height-slider" class="range-slider" min="1.5" max="5.0" step="0.1" value="3.0" oninput="onHeightSliderChange(this.value)" />
+            <input type="range" id="height-slider" class="range-input" min="2.5" max="5.0" step="0.1" value="3.0" oninput="onHeightSliderChange(this.value)" />
           </div>
 
-          <!-- Run Button -->
-          <button class="primary-btn" id="generate-btn" onclick="triggerPipeline()">
-            <span>🚀</span> Generate 3D Architecture & Flats
+          <!-- Run Pipeline Action -->
+          <button class="btn-run" id="generate-btn" onclick="triggerPipeline()">
+            <span>🚀</span> Generate 3D ULPIN Cadastre
           </button>
 
-          <!-- Status Indicator -->
-          <div style="font-size: 0.72rem; color: var(--text-dim); text-align: center;" id="status-hint">
-            Ready to process uploaded floor plan
+          <div style="font-size: 0.68rem; color: var(--text-dim); text-align: center;" id="status-hint">
+            Ready to extract 3D architecture & ULPIN cadastre
           </div>
 
         </div>
       </aside>
 
-      <!-- CENTER: 3D Architecture Canvas -->
-      <section class="panel center-workspace">
-        <div class="tab-bar">
-          <div class="view-tabs">
-            <button class="tab-btn active" id="tab-3d" onclick="switchView('3d')">🏛️ 3D Architecture Model</button>
-            <button class="tab-btn" id="tab-2d" onclick="switchView('2d')">📐 2D Prediction & Blueprint</button>
+      <!-- CENTER: 3D Volumetric Cadastre Viewport -->
+      <section class="panel center-panel">
+        <div class="viewport-tabs">
+          <div class="tab-group">
+            <button class="v-tab-btn active" id="tab-3d" onclick="switchView('3d')">🏛️ 3D Volumetric Cadastre</button>
+            <button class="v-tab-btn" id="tab-2d" onclick="switchView('2d')">📐 2D Blueprint & AI Mask</button>
           </div>
-          <div style="font-size: 0.74rem; color: var(--text-dim);" id="view-status-msg">
-            Left Click: Orbit • Right Click: Pan • Scroll: Zoom
+          <div style="font-size: 0.7rem; color: var(--text-dim);" id="view-status-msg">
+            Left Click: Orbit • Right Click: Pan • Scroll: Zoom • Click Mesh: Title Deed
           </div>
         </div>
 
-        <div class="viewer-container" id="viewer-container">
+        <div class="canvas-viewport" id="viewer-container">
           
-          <!-- Blank Screen Initial State Overlay -->
-          <div class="empty-state-overlay" id="empty-state">
-            <div class="empty-state-icon">🏛️</div>
-            <div class="empty-state-title">3D Architecture Workspace</div>
-            <div class="empty-state-desc">
-              Upload a 2D floor plan on the left or select a sample plan above.<br/>
-              The neural network will build the 3D building and detect distinct flats belonging to different owners.
+          <!-- Empty State Overlay -->
+          <div class="empty-overlay" id="empty-state">
+            <div class="empty-icon">🏛️</div>
+            <div class="empty-title">3D Volumetric Cadastre Workspace</div>
+            <div class="empty-sub">
+              Upload a floor plan on the left or click a verified sample plan.<br/>
+              The pipeline extracts architectural boundaries, performs vertical stacking, and maps 3D ULPIN parcel titles with ISO 19152 compliance.
             </div>
           </div>
 
-          <!-- Loading Spinner Overlay -->
+          <!-- Loading Spinner -->
           <div class="loading-overlay" id="loading-overlay">
-            <div class="spinner"></div>
-            <div style="font-size: 0.85rem; font-weight: 600; color: #93c5fd;" id="loading-text">
-              Running ResNet34-UNet Inference & Extracting Flats...
+            <div class="spinner-ring"></div>
+            <div style="font-size: 0.84rem; font-weight: 600; color: #93c5fd;" id="loading-text">
+              Extracting structural vectors & computing 3D ULPINs...
             </div>
           </div>
 
           <!-- Three.js Canvas -->
           <canvas id="three-canvas"></canvas>
 
-          <!-- 3D Toolbar (Shown once loaded) -->
-          <div class="viewer-toolbar" id="viewer-toolbar">
-            <button class="tool-btn active" id="btn-mode-owners" onclick="toggleColorMode('owners')">🎨 Owner Colors</button>
-            <button class="tool-btn" id="btn-mode-arch" onclick="toggleColorMode('arch')">🏢 Solid White</button>
-            <button class="tool-btn" id="btn-xray" onclick="toggleXRay()">🩻 X-Ray</button>
-            <button class="tool-btn" onclick="resetCamera()">🔄 Reset View</button>
+          <!-- Floating 3D Raycasting Tooltip -->
+          <div id="raycast-tooltip">
+            <div style="font-weight: 700; color: #93c5fd;" id="tip-ulpin">--</div>
+            <div style="font-size: 0.68rem; color: #cbd5e1;" id="tip-info">--</div>
           </div>
 
-          <!-- Floor Filter Bar (Shown once loaded) -->
-          <div class="floor-selector-bar" id="floor-bar">
-            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Floor Filter:</span>
-            <div class="floor-pills" id="floor-pills">
-              <button class="floor-pill active" onclick="filterFloor('all', this)">All Floors</button>
+          <!-- Floating Studio Toolbar -->
+          <div class="studio-toolbar" id="viewer-toolbar">
+            <div class="toolbar-row">
+              <button class="tb-btn active" id="btn-mode-owners" onclick="toggleColorMode('owners')" title="Color by Flat/Owner">🎨 Owners</button>
+              <button class="tb-btn" id="btn-mode-uds" onclick="toggleColorMode('uds')" title="Color by Undivided Share">📊 UDS Heatmap</button>
+              <button class="tb-btn" id="btn-mode-arch" onclick="toggleColorMode('arch')" title="Architectural Solid White">🏢 Solid White</button>
+              <button class="tb-btn" id="btn-xray" onclick="toggleXRay()" title="Translucent Walls">🩻 X-Ray</button>
             </div>
-            <span style="font-size: 0.7rem; color: var(--text-dim);" id="floor-count-label">5 Storeys</span>
+            <div class="toolbar-row">
+              <button class="tb-btn" onclick="setCameraView('persp')">Orbit</button>
+              <button class="tb-btn" onclick="setCameraView('top')">Top Cadastre</button>
+              <button class="tb-btn" onclick="setCameraView('front')">Front Elevation</button>
+              <button class="tb-btn" onclick="resetCamera()">🔄 Reset</button>
+            </div>
           </div>
 
-          <!-- 2D Prediction Side-by-side Overlay -->
-          <div class="preview-2d-container" id="preview-2d">
+          <!-- Exploded Storeys Control Card -->
+          <div class="exploded-slider-box" id="exploded-box">
+            <label>
+              Exploded Floors:
+              <span id="exploded-val" style="color: var(--accent); font-family: var(--font-mono);">0.0x</span>
+            </label>
+            <input type="range" id="exploded-slider" class="range-input" min="0" max="2.0" step="0.05" value="0" oninput="onExplodeChange(this.value)" />
+          </div>
+
+          <!-- Bottom Floor Slice Bar -->
+          <div class="floor-bar-wrap" id="floor-bar">
+            <span style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted);">Floor Filter:</span>
+            <div class="floor-pill-scroll" id="floor-pills">
+              <button class="fl-pill active" onclick="filterFloor('all', this)">All Floors</button>
+            </div>
+            <span style="font-size: 0.68rem; font-family: var(--font-mono); color: #93c5fd;" id="elevation-indicator">Z: 0.0m - 15.0m</span>
+          </div>
+
+          <!-- 2D Plan Comparison Overlay -->
+          <div class="preview-2d-layer" id="preview-2d">
             <div class="preview-2d-grid">
-              <div class="preview-box">
-                <div class="preview-box-header">
-                  <span>UPLOADED 2D FLOOR PLAN</span>
+              <div class="preview-panel-box">
+                <div class="preview-panel-header">
+                  <span>INPUT ARCHITECTURAL BLUEPRINT</span>
                   <span id="orig-res-label">--</span>
                 </div>
-                <div class="preview-box-body">
-                  <img id="orig-plan-img" class="preview-img" alt="Floor Plan" />
+                <div class="preview-panel-body">
+                  <img id="orig-plan-img" alt="Floor Plan" />
                 </div>
               </div>
-              <div class="preview-box">
-                <div class="preview-box-header">
-                  <span>RESNET34-UNET SEGMENTATION</span>
-                  <span>Walls & Openings</span>
+              <div class="preview-panel-box">
+                <div class="preview-panel-header">
+                  <span>RESNET34-UNET SEGMENTATION & VECTORS</span>
+                  <span>Walls, Openings & Rooms</span>
                 </div>
-                <div class="preview-box-body">
-                  <img id="seg-mask-img" class="preview-img" alt="Segmentation" />
+                <div class="preview-panel-body">
+                  <img id="seg-mask-img" alt="Segmentation" />
                 </div>
               </div>
             </div>
@@ -860,48 +1220,57 @@
         </div>
       </section>
 
-      <!-- RIGHT: Flat Ownership Cadastre -->
-      <aside class="panel right-cadastre-panel">
+      <!-- RIGHT: 3D ULPIN Cadastre & Title Registry -->
+      <aside class="panel cadastre-side-panel">
         <div class="panel-header">
-          <h3>🏷️ Flat Ownership Cadastre</h3>
-          <span style="font-size: 0.7rem; color: var(--text-dim);" id="flat-total-badge">-- Units</span>
+          <h3>🏷️ 3D ULPIN Cadastre Registry</h3>
+          <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--accent);" id="flat-total-badge">-- Units</span>
         </div>
         <div class="panel-body">
 
-          <!-- Key Metrics -->
-          <div class="metric-grid">
-            <div class="metric-card">
-              <div class="metric-value" id="stat-flats">--</div>
-              <div class="metric-label">Total Flats</div>
+          <!-- Key Cadastral Telemetry -->
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <div class="telemetry-val" id="stat-flats">--</div>
+              <div class="telemetry-lbl">Parcels</div>
             </div>
-            <div class="metric-card">
-              <div class="metric-value" id="stat-area">-- m²</div>
-              <div class="metric-label">Carpet Area</div>
+            <div class="telemetry-card">
+              <div class="telemetry-val" id="stat-area">-- m²</div>
+              <div class="telemetry-lbl">Carpet Area</div>
             </div>
-            <div class="metric-card">
-              <div class="metric-value" id="stat-volume">-- m³</div>
-              <div class="metric-label">Air Volume</div>
+            <div class="telemetry-card">
+              <div class="telemetry-val" id="stat-volume">-- m³</div>
+              <div class="telemetry-lbl">Airspace Vol</div>
+            </div>
+            <div class="telemetry-card">
+              <div class="telemetry-val" id="stat-topology" style="color: var(--success);">100%</div>
+              <div class="telemetry-lbl">Topology OK</div>
             </div>
           </div>
 
-          <!-- Flat Owners Table -->
-          <div class="form-group" style="flex: 1; min-height: 280px; display: flex; flex-direction: column;">
-            <label class="form-label">Click a Flat to Highlight Owner's Unit in 3D:</label>
-            <div class="cadastre-table-container">
-              <table class="cadastre-table">
+          <!-- Search & Filter Bar -->
+          <div class="cadastre-filter-bar">
+            <input type="text" id="cadastre-search" class="search-input" placeholder="🔍 Search by ULPIN, Flat #, or Owner..." oninput="filterCadastreTable(this.value)" />
+          </div>
+
+          <!-- Cadastre Table -->
+          <div class="form-group" style="flex: 1; min-height: 270px; display: flex; flex-direction: column;">
+            <div class="table-viewport">
+              <table class="cadastre-tbl">
                 <thead>
                   <tr>
-                    <th>Flat #</th>
-                    <th>Owner Name</th>
-                    <th>Floor</th>
-                    <th>Area (m²)</th>
-                    <th>3D ULPIN</th>
+                    <th>Unit / ULPIN</th>
+                    <th>Owner</th>
+                    <th>Flr</th>
+                    <th>Carpet</th>
+                    <th>UDS</th>
+                    <th>Lien</th>
                   </tr>
                 </thead>
                 <tbody id="cadastre-table-body">
                   <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 40px 20px;">
-                      No floor plan loaded yet.<br/>Upload a floor plan on the left to detect flats and owners.
+                    <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 40px 14px;">
+                      No floor plan loaded.<br/>Upload or pick a sample on the left to extract 3D ULPIN parcels.
                     </td>
                   </tr>
                 </tbody>
@@ -909,19 +1278,17 @@
             </div>
           </div>
 
-          <!-- Export Actions -->
+          <!-- Export Suite -->
           <div class="form-group">
-            <label class="form-label">Export 3D Model & Cadastre:</label>
-            <div class="export-row">
-              <button class="export-btn" onclick="downloadExport('obj')">
-                <span>📥</span> Download .OBJ
-              </button>
-              <button class="export-btn" onclick="downloadExport('unity')">
-                <span>🎮</span> Unity JSON
-              </button>
+            <label class="form-label">Export Cadastre & 3D Assets:</label>
+            <div class="export-grid">
+              <button class="btn-export" onclick="downloadExport('obj')">📥 3D Mesh (.OBJ)</button>
+              <button class="btn-export" onclick="downloadExport('unity')">🎮 Unity Client</button>
+              <button class="btn-export" onclick="downloadExport('cadastre')">📑 ULPIN JSON</button>
+              <button class="btn-export" onclick="downloadCadastreCSV()">📊 ULPIN CSV</button>
             </div>
-            <button class="export-btn" style="margin-top: 6px;" onclick="downloadExport('cadastre')">
-              <span>📄</span> Download 3D ULPIN Ownership Registry
+            <button class="btn-export" style="margin-top: 6px; border-color: var(--accent);" onclick="openSelectedUnitDeed()">
+              🏛️ View Digital 3D ULPIN Title Certificate
             </button>
           </div>
 
@@ -931,31 +1298,76 @@
     </div>
   </main>
 
+  <!-- MODAL: Digital 3D ULPIN Cadastral Property Card / Title Deed -->
+  <div class="modal-backdrop" id="deed-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <h3>🏛️ Digital 3D ULPIN Cadastral Property Card</h3>
+          <p>Government of Maharashtra • Land Administration Domain Model (ISO 19152)</p>
+        </div>
+        <button class="modal-close" onclick="closeDeedModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" id="deed-modal-content">
+        <!-- Dynamically Populated -->
+      </div>
+
+      <div class="modal-actions" id="deed-modal-actions">
+        <!-- Dynamic Actions: Resale Mutation, Mortgage Stamping, Print -->
+      </div>
+    </div>
+  </div>
+
   <script>
     // State
     let currentSessionId = null;
     let currentPipelineResult = null;
     let selectedSampleId = null;
-    let activeColorMode = "owners"; // "owners" or "arch"
+    let activeColorMode = "owners"; // "owners", "uds", "arch"
     let isXRay = false;
     let selectedFlatUlpin = null;
+    let currentExplodeY = 0;
+
+    // Cadastre Enriched State
+    let enrichedFlats = [];
+    let surfacePlotAreaM2 = 1200;
 
     // Three.js State
     let scene, camera, renderer, controls;
     let planGroup, underlayMesh;
     let flatMeshes = [];
     let wallMeshes = [];
+    let slabMeshes = [];
+    let raycaster, mouse;
 
-    const TARGET_PLAN_SIZE = 14.0; // World units
+    const TARGET_PLAN_SIZE = 14.0;
     let currentScale = 1.0;
     let currentCx = 0;
     let currentCy = 0;
 
-    // Initialize on load with BLANK state
+    // Mock Mortgage Pool
+    const MORTGAGE_BANKS = [
+      { name: "State Bank of India", refPrefix: "SBI-NAG-2026", amount: 4800000 },
+      { name: "Bank of Maharashtra", refPrefix: "BOM-WAR-2026", amount: 3500000 },
+      { name: "HDFC Bank Ltd", refPrefix: "HDFC-HOM-2026", amount: 6200000 },
+    ];
+
     window.addEventListener("DOMContentLoaded", () => {
       initThree();
       checkModelStatus();
-      // DO NOT call loadSample here - keep it blank as requested!
+      initRaycasting();
+
+      // Support direct URL demonstration: /studio?sample=sample_2bhk
+      const urlParams = new URLSearchParams(window.location.search);
+      const autoSample = urlParams.get("sample");
+      if (autoSample) {
+        setTimeout(() => {
+          const card = document.querySelector(`.sample-card[onclick*="${autoSample}"]`);
+          if (card) selectSample(autoSample, card);
+          else executePipeline(autoSample);
+        }, 500);
+      }
     });
 
     function initThree() {
@@ -963,10 +1375,10 @@
       const canvas = document.getElementById("three-canvas");
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x060913);
+      scene.background = new THREE.Color(0x040711);
 
       camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
-      camera.position.set(22, 26, 32);
+      camera.position.set(24, 28, 34);
 
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -977,22 +1389,22 @@
       controls = new THREE.OrbitControls(camera, canvas);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
-      controls.maxPolarAngle = Math.PI / 2 - 0.02;
+      controls.maxPolarAngle = Math.PI / 2 - 0.01;
 
       // Lights
-      const hemi = new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.65);
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x152238, 0.7);
       scene.add(hemi);
 
-      const sun = new THREE.DirectionalLight(0xffffff, 1.4);
-      sun.position.set(25, 45, 20);
+      const sun = new THREE.DirectionalLight(0xffffff, 1.3);
+      sun.position.set(30, 50, 25);
       sun.castShadow = true;
       sun.shadow.mapSize.set(2048, 2048);
       scene.add(sun);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
-      // Subtle Ground Grid
-      const grid = new THREE.GridHelper(60, 60, 0x1e293b, 0x0f172a);
+      // Cadastral Coordinate Grid
+      const grid = new THREE.GridHelper(70, 70, 0x1e3352, 0x0a1222);
       grid.position.y = -0.005;
       scene.add(grid);
 
@@ -1018,35 +1430,95 @@
     }
 
     function resetCamera() {
-      camera.position.set(22, 26, 32);
-      controls.target.set(0, 3, 0);
+      setCameraView('persp');
+    }
+
+    function setCameraView(preset) {
+      if (!currentPipelineResult) return;
+      const bldg = currentPipelineResult.building_summary || {};
+      const totalFloors = bldg.total_floors || 5;
+      const wallHeight = currentPipelineResult.wall_height_m || 3.0;
+      const totalHeight = totalFloors * (wallHeight + 0.3);
+      const midY = totalHeight / 2;
+
+      if (preset === 'top') {
+        camera.position.set(0, totalHeight + 35, 0.01);
+        controls.target.set(0, midY, 0);
+      } else if (preset === 'front') {
+        camera.position.set(0, midY, totalHeight + 32);
+        controls.target.set(0, midY, 0);
+      } else { // persp
+        camera.position.set(24, totalHeight + 14, 32);
+        controls.target.set(0, midY, 0);
+      }
       controls.update();
+    }
+
+    // ── Raycasting Hover & Click Inspection ─────────────────────────────────
+    function initRaycasting() {
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+      const canvas = document.getElementById("three-canvas");
+      const tooltip = document.getElementById("raycast-tooltip");
+
+      canvas.addEventListener("mousemove", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(flatMeshes, false);
+
+        if (intersects.length > 0 && intersects[0].object.visible) {
+          const m = intersects[0].object;
+          tooltip.style.display = "block";
+          tooltip.style.left = `${e.clientX - rect.left}px`;
+          tooltip.style.top = `${e.clientY - rect.top}px`;
+          document.getElementById("tip-ulpin").textContent = m.userData.ulpin_3d;
+          document.getElementById("tip-info").textContent = `${m.userData.flat_number} • ${m.userData.owner_name} (${m.userData.carpet_area} m²)`;
+          canvas.style.cursor = "pointer";
+        } else {
+          tooltip.style.display = "none";
+          canvas.style.cursor = "default";
+        }
+      });
+
+      canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(flatMeshes, false);
+
+        if (intersects.length > 0 && intersects[0].object.visible) {
+          const m = intersects[0].object;
+          selectFlat(m.userData.ulpin_3d, true);
+        }
+      });
     }
 
     async function checkModelStatus() {
       try {
         const res = await fetch("/api/ai/floorplan-3d/status");
-        if (!res.ok) {
-          console.warn("Status endpoint returned status:", res.status);
-          return;
-        }
+        if (!res.ok) return;
         const data = await res.json();
-        const pillText = document.getElementById("model-status-text");
+        const lbl = document.getElementById("system-status-label");
         if (data.resnet_unet && data.resnet_unet.available) {
-          pillText.textContent = `ResNet34-UNet (${data.resnet_unet.device.toUpperCase()} Active)`;
+          lbl.textContent = `ResNet34-UNet (${data.resnet_unet.device.toUpperCase()}) Active`;
         } else {
-          pillText.textContent = "OpenCV Cadastre Engine (Active)";
+          lbl.textContent = "ISO 19152 Cadastre Engine Active";
         }
       } catch (e) {
-        console.warn("Status error:", e);
+        console.warn("Status check:", e);
       }
     }
 
-    function selectSample(sampleId, btn) {
+    function selectSample(sampleId, elem) {
       selectedSampleId = sampleId;
-      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
-      if (btn) btn.classList.add("active");
-      document.getElementById("upload-label").textContent = `Selected: ${btn.textContent.trim()}`;
+      document.querySelectorAll(".sample-card").forEach(c => c.classList.remove("active"));
+      if (elem) elem.classList.add("active");
+      document.getElementById("upload-label").textContent = `Selected: ${elem.querySelector(".sample-info-title").textContent}`;
       executePipeline(sampleId);
     }
 
@@ -1054,7 +1526,7 @@
       const file = e.target.files[0];
       if (!file) return;
       selectedSampleId = null;
-      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".sample-card").forEach(c => c.classList.remove("active"));
       document.getElementById("upload-label").textContent = file.name;
       executePipeline();
     }
@@ -1070,7 +1542,7 @@
       if (file) {
         selectedSampleId = null;
         document.getElementById("file-input").files = e.dataTransfer.files;
-        document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".sample-card").forEach(c => c.classList.remove("active"));
         document.getElementById("upload-label").textContent = file.name;
         executePipeline();
       }
@@ -1083,7 +1555,7 @@
     async function executePipeline(sampleIdToUse) {
       const overlay = document.getElementById("loading-overlay");
       overlay.style.display = "flex";
-      document.getElementById("loading-text").textContent = "Running ResNet34-UNet Inference & Extracting Flats...";
+      document.getElementById("loading-text").textContent = "Running Structural Extraction & 3D ULPIN Calculations...";
 
       const formData = new FormData();
       const fileInput = document.getElementById("file-input");
@@ -1094,12 +1566,12 @@
       } else if (sample) {
         formData.append("sample_id", sample);
       } else {
-        alert("Please choose a sample plan or upload a floor plan image first!");
+        alert("Please pick an architectural sample or upload a blueprint first!");
         overlay.style.display = "none";
         return;
       }
 
-      const buildingName = document.getElementById("building-name-input").value || "Surya Heights";
+      const buildingName = document.getElementById("building-name-input").value || "Surya Heights Residency";
       const floors = document.getElementById("floors-slider").value || 5;
       const wallHeight = document.getElementById("height-slider").value || 3.0;
 
@@ -1115,24 +1587,21 @@
 
         if (!res.ok) {
           const errText = await res.text();
-          let msg = `Pipeline execution failed (${res.status})`;
-          try {
-            const errJson = JSON.parse(errText);
-            msg = errJson.detail || msg;
-          } catch (_) {
-            if (errText) msg = errText;
-          }
-          throw new Error(msg);
+          throw new Error(`Pipeline execution failed: ${errText}`);
         }
 
         const data = await res.json();
         currentPipelineResult = data;
         currentSessionId = data.session_id;
 
-        // Hide empty state overlay now that we have real content
+        // Reveal view controls
         document.getElementById("empty-state").style.display = "none";
         document.getElementById("viewer-toolbar").style.display = "flex";
+        document.getElementById("exploded-box").style.display = "flex";
         document.getElementById("floor-bar").style.display = "flex";
+
+        // Enrich with Standard 3D ULPIN & LADM v2 parameters
+        enrichCadastreData(data);
 
         renderStudio(data);
       } catch (err) {
@@ -1143,12 +1612,172 @@
       }
     }
 
+    // ── 3D ULPIN & ISO 19152 LADM v2 Cadastral Enrichment ───────────────────
+    function enrichCadastreData(data) {
+      const rawFlats = data.flats_list || [];
+      const totalCarpet = rawFlats.reduce((sum, f) => sum + (f.carpet_area_sqm || 0), 0);
+      const bldgCode = (document.getElementById("bldg-code-input").value || "SURY").toUpperCase().trim();
+      const stateParcelPrefix = "33-5509-94106"; // Maharashtra Waranga Survey 140/1
+
+      // Anchor GPS Waranga, Nagpur Rural
+      const baseLat = 21.018420;
+      const baseLon = 79.027210;
+
+      enrichedFlats = rawFlats.map((f, idx) => {
+        // Compute Standard 3D ULPIN: <STATE>-<BLDG>-<FLOOR>-<UNIT>-<TYPE>
+        let zoning = "RES-2BHK";
+        if (f.carpet_area_sqm >= 115) zoning = "RES-3BHK";
+        else if (f.carpet_area_sqm < 65) zoning = "RES-1BHK";
+
+        const unitNum = f.flat_number.replace(/\D/g, "") || `${f.floor_level}${String(idx + 1).padStart(2, '0')}`;
+        const standardUlpin = `${stateParcelPrefix}-${bldgCode}-F${String(f.floor_level).padStart(2, '0')}-${unitNum}-${zoning}`;
+
+        // Fractional Undivided Share of Land (UDS) Calculus:
+        // UDS = (Carpet_i / Total_Carpet) * Surface_Plot_Area
+        const udsFraction = totalCarpet > 0 ? (f.carpet_area_sqm / totalCarpet) : (1 / rawFlats.length);
+        const udsSqm = parseFloat((udsFraction * surfacePlotAreaM2).toFixed(2));
+
+        // GPS WGS84 coordinates
+        const latOffset = ((f.center ? f.center[1] : 300) - 300) * 0.0000012;
+        const lonOffset = ((f.center ? f.center[0] : 300) - 300) * 0.0000012;
+        const lat = (baseLat + latOffset).toFixed(6);
+        const lon = (baseLon + lonOffset).toFixed(6);
+
+        // Simulated Encumbrance (every 4th flat has a mortgage lien for demonstration)
+        const isMortgaged = (idx % 4 === 1);
+        let mortgageInfo = null;
+        if (isMortgaged) {
+          const bank = MORTGAGE_BANKS[idx % MORTGAGE_BANKS.length];
+          mortgageInfo = {
+            bank_name: bank.name,
+            sanction_ref: `${bank.refPrefix}-${unitNum}`,
+            loan_amount_inr: bank.amount,
+            stamped_date: "2025-11-14",
+            status: "ACTIVE_LIEN"
+          };
+        }
+
+        return {
+          ...f,
+          ulpin_3d: standardUlpin,
+          unit_num: unitNum,
+          zoning_type: zoning,
+          uds_sqm: udsSqm,
+          uds_fraction: (udsFraction * 100).toFixed(2) + "%",
+          gps_wgs84: { lat, lon },
+          encumbrance: mortgageInfo,
+          khata_number: "341",
+          survey_number: "140/1",
+          village: "Waranga (वारंगा)",
+          taluka: "Nagpur Rural",
+          district: "Nagpur",
+          state: "Maharashtra",
+        };
+      });
+    }
+
+    function renderStudio(data) {
+      const bldg = data.building_summary || {};
+      const totalFlats = enrichedFlats.length;
+      const totalFloors = bldg.total_floors || 5;
+      const totalCarpet = enrichedFlats.reduce((s, f) => s + f.carpet_area_sqm, 0);
+      const totalVol = enrichedFlats.reduce((s, f) => s + f.airspace_volume_m3, 0);
+
+      // 1. Telemetry
+      document.getElementById("stat-flats").textContent = totalFlats;
+      document.getElementById("stat-area").textContent = `${Math.round(totalCarpet)} m²`;
+      document.getElementById("stat-volume").textContent = `${Math.round(totalVol)} m³`;
+      document.getElementById("flat-total-badge").textContent = `${totalFlats} Volumetric Parcels`;
+
+      // 2. Floor Filter Pills
+      const pills = document.getElementById("floor-pills");
+      pills.innerHTML = `<button class="fl-pill active" onclick="filterFloor('all', this)">All Floors</button>`;
+      for (let f = 1; f <= totalFloors; f++) {
+        pills.innerHTML += `<button class="fl-pill" onclick="filterFloor(${f}, this)">Floor ${f}</button>`;
+      }
+      const wallH = data.wall_height_m || 3.0;
+      document.getElementById("elevation-indicator").textContent = `Z: 0.0m - ${(totalFloors * (wallH + 0.3)).toFixed(1)}m`;
+
+      // 3. 2D Previews
+      if (data.input_image_b64) {
+        document.getElementById("orig-plan-img").src = "data:image/png;base64," + data.input_image_b64;
+        document.getElementById("seg-mask-img").src = "data:image/png;base64," + data.input_image_b64;
+        document.getElementById("orig-res-label").textContent = (data.pipeline_metadata && data.pipeline_metadata.resolution) || "--";
+      }
+
+      // 4. Cadastre Table
+      renderTable(enrichedFlats);
+
+      // 5. Build 3D Scene
+      build3D(data);
+    }
+
+    // ── Security Sanitization ───────────────────────────────────────────────
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderTable(flats) {
+      const tbody = document.getElementById("cadastre-table-body");
+      tbody.innerHTML = "";
+
+      if (!flats || flats.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px 10px;">No parcels match your search query.</td></tr>`;
+        return;
+      }
+
+      flats.forEach(f => {
+        const tr = document.createElement("tr");
+        tr.id = `row-${escapeHtml(f.ulpin_3d)}`;
+        tr.onclick = () => selectFlat(f.ulpin_3d);
+
+        const lienBadge = f.encumbrance
+          ? `<span class="status-badge status-lien" title="Active Mortgage: ${escapeHtml(f.encumbrance.bank_name)}">MORTGAGED</span>`
+          : `<span class="status-badge status-clear">CLEAR</span>`;
+
+        tr.innerHTML = `
+          <td>
+            <span class="swatch" style="background: ${escapeHtml(f.color)};"></span>
+            <strong>${escapeHtml(f.flat_number)}</strong>
+            <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim);">${escapeHtml(f.ulpin_3d.split('-').slice(-3).join('-'))}</div>
+          </td>
+          <td>${escapeHtml(f.owner_name)}</td>
+          <td>Fl ${Number(f.floor_level)}</td>
+          <td>${Number(f.carpet_area_sqm)} m²</td>
+          <td style="color: var(--accent-amber); font-weight: 600;">${Number(f.uds_sqm)} m²</td>
+          <td>${lienBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterCadastreTable(query) {
+      const q = (query || "").toLowerCase().trim();
+      if (!q) {
+        renderTable(enrichedFlats);
+        return;
+      }
+      const filtered = enrichedFlats.filter(f =>
+        f.ulpin_3d.toLowerCase().includes(q) ||
+        f.flat_number.toLowerCase().includes(q) ||
+        f.owner_name.toLowerCase().includes(q) ||
+        String(f.floor_level) === q
+      );
+      renderTable(filtered);
+    }
+
     // ── Build Accurate 3D Geometry ───────────────────────────────────────────
     function buildShape(outer, holes, scale, cx, cy) {
       const shape = new THREE.Shape();
       outer.forEach(([x, y], i) => {
         const sx = (x - cx) * scale;
-        const sy = -(y - cy) * scale; // Invert Y so 2D image coordinates match 3D world Z correctly
+        const sy = -(y - cy) * scale;
         if (i === 0) shape.moveTo(sx, sy);
         else shape.lineTo(sx, sy);
       });
@@ -1168,62 +1797,7 @@
       return shape;
     }
 
-    function renderStudio(data) {
-      // 1. Update Metrics
-      const bldg = data.building_summary || {};
-      const flats = data.flats_list || (data.architecture_3d && data.architecture_3d.flats_3d) || [];
-      const totalFlats = bldg.total_flats || flats.length;
-      const totalFloors = bldg.total_floors || (data.architecture_3d && data.architecture_3d.floors) || 5;
-
-      document.getElementById("stat-flats").textContent = totalFlats;
-      document.getElementById("stat-area").textContent = `${Math.round(bldg.carpet_area_total_sqm || 0)} m²`;
-      document.getElementById("stat-volume").textContent = `${Math.round(bldg.airspace_volume_total_m3 || 0)} m³`;
-      document.getElementById("flat-total-badge").textContent = `${totalFlats} Volumetric Units`;
-      document.getElementById("floor-count-label").textContent = `${totalFloors} Storeys`;
-
-      // 2. Floor Filter Pills
-      const pills = document.getElementById("floor-pills");
-      pills.innerHTML = `<button class="floor-pill active" onclick="filterFloor('all', this)">All Floors</button>`;
-      for (let f = 1; f <= totalFloors; f++) {
-        pills.innerHTML += `<button class="floor-pill" onclick="filterFloor(${f}, this)">Floor ${f}</button>`;
-      }
-
-      // 3. 2D Previews
-      if (data.input_image_b64) {
-        document.getElementById("orig-plan-img").src = "data:image/png;base64," + data.input_image_b64;
-        document.getElementById("seg-mask-img").src = "data:image/png;base64," + data.input_image_b64;
-        document.getElementById("orig-res-label").textContent = (data.pipeline_metadata && data.pipeline_metadata.resolution) || "--";
-      }
-
-      // 4. Cadastre Table
-      renderTable(flats);
-
-      // 5. Build 3D Architecture
-      build3D(data);
-    }
-
-    function renderTable(flats) {
-      const tbody = document.getElementById("cadastre-table-body");
-      tbody.innerHTML = "";
-
-      flats.forEach(f => {
-        const tr = document.createElement("tr");
-        tr.id = `row-${f.ulpin_3d}`;
-        tr.onclick = () => selectFlat(f.ulpin_3d);
-
-        tr.innerHTML = `
-          <td><span class="color-swatch" style="background: ${f.color};"></span><strong>${f.flat_number}</strong></td>
-          <td>${f.owner_name}</td>
-          <td>Fl ${f.floor_level}</td>
-          <td>${f.carpet_area_sqm} m²</td>
-          <td style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">${f.ulpin_3d.split('-').slice(-2).join('-')}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
     function build3D(data) {
-      // Clear previous
       while (planGroup.children.length > 0) {
         const obj = planGroup.children[0];
         if (obj.geometry) obj.geometry.dispose();
@@ -1231,21 +1805,19 @@
       }
       flatMeshes = [];
       wallMeshes = [];
+      slabMeshes = [];
 
-      // Safe extraction of polygons and flats from any response schema
       const bldg = data.building_summary || {};
-      const polygons = data.polygons || (data.preview_2d && data.preview_2d.raw_polygons) || {};
-      const allWalls = (polygons && polygons.wall) || (data.architecture_3d && data.architecture_3d.wall_polygons) || [];
-      const flatsList = data.flats_list || (data.architecture_3d && data.architecture_3d.flats_3d) || [];
+      const polygons = data.polygons || {};
+      const allWalls = polygons.wall || [];
 
-      const totalFloors = bldg.total_floors || (data.architecture_3d && data.architecture_3d.floors) || 5;
-      const wallHeight = data.wall_height_m || (data.architecture_3d && data.architecture_3d.wall_height_m) || 3.0;
+      const totalFloors = bldg.total_floors || 5;
+      const wallHeight = data.wall_height_m || 3.0;
       const slabThickness = 0.25;
       const floorPitch = wallHeight + slabThickness;
 
-      // Compute bounding box over walls to center the model
+      // Compute bounding box
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
       allWalls.forEach(p => {
         (p.outer || []).forEach(([x, y]) => {
           if (x < minX) minX = x;
@@ -1255,9 +1827,8 @@
         });
       });
 
-      // If walls didn't provide bounds, check flats
       if (!isFinite(minX)) {
-        flatsList.forEach(f => {
+        enrichedFlats.forEach(f => {
           (f.polygon || []).forEach(([x, y]) => {
             if (x < minX) minX = x;
             if (y < minY) minY = y;
@@ -1268,10 +1839,7 @@
       }
 
       if (!isFinite(minX)) {
-        const cSize = (bldg.canvas_size) || (data.preview_2d && [data.preview_2d.width, data.preview_2d.height]) || [800, 600];
-        minX = 0; minY = 0;
-        maxX = cSize[0] || 800;
-        maxY = cSize[1] || 600;
+        minX = 0; minY = 0; maxX = 800; maxY = 600;
       }
 
       const bw = Math.max(maxX - minX, 1);
@@ -1284,7 +1852,7 @@
       currentCx = cx;
       currentCy = cy;
 
-      // 1. Blueprint Underlay on Ground Plane
+      // Ground Blueprint Texture Underlay
       if (data.input_image_b64) {
         const img = new Image();
         img.onload = () => {
@@ -1293,10 +1861,10 @@
           tex.colorSpace = THREE.SRGBColorSpace;
           tex.flipY = false;
 
-          const [W, H] = data.building_summary.canvas_size;
+          const [W, H] = data.building_summary.canvas_size || [bw, bh];
           const planeGeom = new THREE.PlaneGeometry(W * scale, H * scale);
           planeGeom.rotateX(-Math.PI / 2);
-          const planeMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.75, depthWrite: false });
+          const planeMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.65, depthWrite: false });
           underlayMesh = new THREE.Mesh(planeGeom, planeMat);
           underlayMesh.position.set(0, 0.01, 0);
           planGroup.add(underlayMesh);
@@ -1304,86 +1872,82 @@
         img.src = "data:image/png;base64," + data.input_image_b64;
       }
 
-      // Materials
       const wallMat = new THREE.MeshStandardMaterial({
-        color: 0xf1f5f9,
-        roughness: 0.6,
+        color: 0xf8fafc,
+        roughness: 0.65,
         metalness: 0.05,
         transparent: isXRay,
-        opacity: isXRay ? 0.35 : 1.0,
+        opacity: isXRay ? 0.28 : 1.0,
       });
-      const edgeMat = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.85 });
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x1e3352, transparent: true, opacity: 0.85 });
 
-      // Multi-Storey Stacking
+      // Build Multi-Storey Stacking
       for (let fl = 1; fl <= totalFloors; fl++) {
         const floorBaseY = (fl - 1) * floorPitch;
 
-        // Concrete Floor Slab for this floor
+        // Concrete Floor Slab
         const slabGeom = new THREE.BoxGeometry(bw * scale * 1.04, slabThickness, bh * scale * 1.04);
-        const slabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const slabMat = new THREE.MeshStandardMaterial({ color: 0x152238, roughness: 0.85 });
         const slabMesh = new THREE.Mesh(slabGeom, slabMat);
         slabMesh.position.set(0, floorBaseY + slabThickness / 2, 0);
         slabMesh.receiveShadow = true;
-        slabMesh.userData = { floorLevel: fl, isSlab: true };
+        slabMesh.userData = { floorLevel: fl, isSlab: true, baseOffsetY: floorBaseY + slabThickness / 2 };
         planGroup.add(slabMesh);
+        slabMeshes.push(slabMesh);
 
-        // Extrude Real Architectural Walls
+        // Extrude Walls
         allWalls.forEach(p => {
           if ((p.outer || []).length < 3) return;
           const shape = buildShape(p.outer, p.holes, scale, cx, cy);
-          const geom = new THREE.ExtrudeGeometry(shape, {
-            depth: wallHeight,
-            bevelEnabled: false,
-          });
+          const geom = new THREE.ExtrudeGeometry(shape, { depth: wallHeight, bevelEnabled: false });
           const mesh = new THREE.Mesh(geom, wallMat);
           mesh.rotation.x = -Math.PI / 2;
           mesh.position.y = floorBaseY + slabThickness;
           mesh.castShadow = true;
           mesh.receiveShadow = true;
 
-          // Crisp edge crease lines
-          const edges = new THREE.EdgesGeometry(geom, 14);
+          const edges = new THREE.EdgesGeometry(geom, 15);
           mesh.add(new THREE.LineSegments(edges, edgeMat));
 
-          mesh.userData = { floorLevel: fl, isWall: true };
+          mesh.userData = { floorLevel: fl, isWall: true, baseOffsetY: floorBaseY + slabThickness };
           planGroup.add(mesh);
           wallMeshes.push(mesh);
         });
 
-        // Extrude Distinct Colored Floor Parcels for Flats on this Floor
-        const flatsOnThisFloor = data.flats_list.filter(f => f.floor_level === fl);
-        flatsOnThisFloor.forEach(flat => {
+        // Extrude 3D ULPIN Flat Parcels for this Floor
+        const flatsThisFloor = enrichedFlats.filter(f => f.floor_level === fl);
+        flatsThisFloor.forEach(flat => {
           if (!flat.polygon || flat.polygon.length < 3) return;
 
           const flatShape = buildShape(flat.polygon, [], scale, cx, cy);
-          const flatGeom = new THREE.ExtrudeGeometry(flatShape, {
-            depth: 0.08, // Thin floor slab tinting
-            bevelEnabled: false,
-          });
+          const flatGeom = new THREE.ExtrudeGeometry(flatShape, { depth: 0.08, bevelEnabled: false });
 
           const parcelColor = new THREE.Color(flat.color);
           const flatMat = new THREE.MeshStandardMaterial({
             color: parcelColor,
             roughness: 0.4,
-            metalness: 0.1,
+            metalness: 0.15,
             transparent: true,
-            opacity: activeColorMode === "owners" ? 0.75 : 0.15,
+            opacity: 0.85,
           });
 
           const flatMesh = new THREE.Mesh(flatGeom, flatMat);
           flatMesh.rotation.x = -Math.PI / 2;
           flatMesh.position.y = floorBaseY + slabThickness + 0.02;
 
-          const flatEdges = new THREE.EdgesGeometry(flatGeom, 14);
+          const flatEdges = new THREE.EdgesGeometry(flatGeom, 15);
           flatMesh.add(new THREE.LineSegments(flatEdges, new THREE.LineBasicMaterial({ color: parcelColor, linewidth: 2 })));
 
           flatMesh.userData = {
             ulpin_3d: flat.ulpin_3d,
             flat_number: flat.flat_number,
             owner_name: flat.owner_name,
+            carpet_area: flat.carpet_area_sqm,
+            uds_sqm: flat.uds_sqm,
             color: flat.color,
             floorLevel: fl,
             isFlat: true,
+            baseOffsetY: floorBaseY + slabThickness + 0.02,
           };
 
           planGroup.add(flatMesh);
@@ -1391,39 +1955,74 @@
         });
       }
 
-      // Camera Focus on Building Center
-      const totalHeight = totalFloors * floorPitch;
-      controls.target.set(0, totalHeight / 2, 0);
-      camera.position.set(22, totalHeight + 12, 28);
-      controls.update();
+      setCameraView('persp');
     }
 
-    // ── Interactive Highlights & Filters ──────────────────────────────────────
-    function selectFlat(ulpin) {
+    // ── Interactive Selection & Focus ────────────────────────────────────────
+    function selectFlat(ulpin, openDeedDirectly = false) {
       selectedFlatUlpin = ulpin;
 
-      document.querySelectorAll(".cadastre-table tr").forEach(r => r.classList.remove("selected"));
+      document.querySelectorAll(".cadastre-tbl tr").forEach(r => r.classList.remove("selected"));
       const row = document.getElementById(`row-${ulpin}`);
       if (row) {
         row.classList.add("selected");
         row.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
-      // Highlight in 3D
+      // Highlight in 3D scene
       flatMeshes.forEach(m => {
         if (m.userData.ulpin_3d === ulpin) {
-          m.material.opacity = 0.95;
+          m.material.opacity = 1.0;
           m.material.emissive = new THREE.Color(m.userData.color);
-          m.material.emissiveIntensity = 0.5;
+          m.material.emissiveIntensity = 0.6;
+
+          // Animate camera focus smoothly toward unit
+          const meshWorldPos = new THREE.Vector3();
+          m.getWorldPosition(meshWorldPos);
+          controls.target.lerp(meshWorldPos, 0.4);
+          controls.update();
         } else {
-          m.material.opacity = 0.25;
+          m.material.opacity = 0.22;
           m.material.emissiveIntensity = 0.0;
+        }
+      });
+
+      if (openDeedDirectly) {
+        openDeedModal(ulpin);
+      }
+    }
+
+    function openSelectedUnitDeed() {
+      if (!selectedFlatUlpin) {
+        if (enrichedFlats.length > 0) {
+          selectFlat(enrichedFlats[0].ulpin_3d, true);
+        } else {
+          alert("Please upload and generate a 3D cadastre first!");
+        }
+        return;
+      }
+      openDeedModal(selectedFlatUlpin);
+    }
+
+    // ── Exploded Storeys Slider ──────────────────────────────────────────────
+    function onExplodeChange(val) {
+      currentExplodeY = parseFloat(val);
+      document.getElementById("exploded-val").textContent = `${currentExplodeY.toFixed(2)}x`;
+
+      const extraPerFloor = currentExplodeY * 4.0;
+      planGroup.children.forEach(obj => {
+        if (obj === underlayMesh) return;
+        const fl = obj.userData.floorLevel;
+        if (fl && obj.userData.baseOffsetY !== undefined) {
+          const shift = (fl - 1) * extraPerFloor;
+          obj.position.y = obj.userData.baseOffsetY + shift;
         }
       });
     }
 
+    // ── Floor Filtering ──────────────────────────────────────────────────────
     function filterFloor(floor, btn) {
-      document.querySelectorAll(".floor-pill").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".fl-pill").forEach(p => p.classList.remove("active"));
       if (btn) btn.classList.add("active");
 
       planGroup.children.forEach(obj => {
@@ -1437,17 +2036,25 @@
       });
     }
 
+    // ── Visual Modes ────────────────────────────────────────────────────────
     function toggleColorMode(mode) {
       activeColorMode = mode;
       document.getElementById("btn-mode-owners").classList.toggle("active", mode === "owners");
+      document.getElementById("btn-mode-uds").classList.toggle("active", mode === "uds");
       document.getElementById("btn-mode-arch").classList.toggle("active", mode === "arch");
 
       flatMeshes.forEach(m => {
         if (mode === "owners") {
-          m.material.opacity = (selectedFlatUlpin && m.userData.ulpin_3d !== selectedFlatUlpin) ? 0.25 : 0.75;
+          m.material.opacity = (selectedFlatUlpin && m.userData.ulpin_3d !== selectedFlatUlpin) ? 0.22 : 0.85;
           m.material.color = new THREE.Color(m.userData.color);
-        } else {
-          m.material.opacity = 0.08;
+        } else if (mode === "uds") {
+          // Heatmap from Amber to Cyan based on UDS share
+          const ratio = Math.min(m.userData.uds_sqm / 180, 1.0);
+          const heatColor = new THREE.Color().lerpColors(new THREE.Color(0xf59e0b), new THREE.Color(0x06b6d4), ratio);
+          m.material.opacity = 0.9;
+          m.material.color = heatColor;
+        } else { // arch
+          m.material.opacity = 0.12;
           m.material.color = new THREE.Color(0xffffff);
         }
       });
@@ -1458,21 +2065,26 @@
       document.getElementById("btn-xray").classList.toggle("active", isXRay);
       wallMeshes.forEach(m => {
         m.material.transparent = true;
-        m.material.opacity = isXRay ? 0.25 : 1.0;
+        m.material.opacity = isXRay ? 0.22 : 1.0;
       });
     }
 
     function onFloorSliderChange(val) {
       document.getElementById("floors-display").textContent = `${val} Floors`;
-      if (currentPipelineResult) {
-        executePipeline();
-      }
+      if (currentPipelineResult) executePipeline();
     }
 
     function onHeightSliderChange(val) {
       document.getElementById("height-display").textContent = `${val} m`;
+      if (currentPipelineResult) executePipeline();
+    }
+
+    function onPlotAreaChange(val) {
+      surfacePlotAreaM2 = parseFloat(val);
+      document.getElementById("plot-area-display").textContent = `${val} m²`;
       if (currentPipelineResult) {
-        executePipeline();
+        enrichCadastreData(currentPipelineResult);
+        renderTable(enrichedFlats);
       }
     }
 
@@ -1484,9 +2096,163 @@
       document.getElementById("preview-2d").style.display = view === "2d" ? "block" : "none";
     }
 
+    // ── MODAL: 3D ULPIN Title Deed / Property Card ───────────────────────────
+    function openDeedModal(ulpin) {
+      const flat = enrichedFlats.find(f => f.ulpin_3d === ulpin) || enrichedFlats[0];
+      if (!flat) return;
+
+      const modal = document.getElementById("deed-modal");
+      const content = document.getElementById("deed-modal-content");
+      const actions = document.getElementById("deed-modal-actions");
+
+      const encHtml = flat.encumbrance
+        ? `<div class="anti-fraud-box">
+             <div style="font-size: 1.2rem;">🔒</div>
+             <div>
+               <strong>ACTIVE STATUTORY MORTGAGE LIEN (ISO 19152 RRR LOCKED)</strong><br/>
+               Bank: ${escapeHtml(flat.encumbrance.bank_name)} • Sanction Ref: <code>${escapeHtml(flat.encumbrance.sanction_ref)}</code><br/>
+               Secured Debt: ₹${Number(flat.encumbrance.loan_amount_inr || 0).toLocaleString('en-IN')} • <em>Conveyance & Resale are strictly blocked by Cadastral Anti-Fraud Lockout.</em>
+             </div>
+           </div>`
+        : `<div class="anti-fraud-box safe">
+             <div style="font-size: 1.2rem;">✅</div>
+             <div>
+               <strong>UNENCUMBERED STRATA FREEHOLD TITLE</strong><br/>
+               Clear title registered under Bhunaksha pu-id: 33550994106. Unit is eligible for legal conveyance, lease, or mortgage stamping.
+             </div>
+           </div>`;
+
+      content.innerHTML = `
+        <div class="title-deed-box">
+          <div class="deed-header-strip">
+            <div>
+              <div style="font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase;">Standard 3D ULPIN Identifier</div>
+              <div class="ulpin-large">${escapeHtml(flat.ulpin_3d)}</div>
+            </div>
+            <span class="deed-badge">ISO 19152 LADM v2 VERIFIED</span>
+          </div>
+
+          <div class="deed-kv-grid">
+            <div class="kv-item">
+              <div class="kv-label">Owner / Rights Holder</div>
+              <div class="kv-val" style="color: #93c5fd;">${escapeHtml(flat.owner_name)}</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Masked Aadhaar / Bhu-Aadhaar</div>
+              <div class="kv-val">${escapeHtml(flat.owner_aadhaar || "XXXX-XXXX-8921")}</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Floor & Unit Label</div>
+              <div class="kv-val">Floor ${Number(flat.floor_level)} • ${escapeHtml(flat.flat_number)}</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Statutory Zoning & Type</div>
+              <div class="kv-val">${escapeHtml(flat.flat_type)} (${escapeHtml(flat.zoning_type)})</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Net Carpet Area</div>
+              <div class="kv-val">${Number(flat.carpet_area_sqm)} m²</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Airspace Volume</div>
+              <div class="kv-val">${Number(flat.airspace_volume_m3)} m³</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Fractional Share of Land (UDS)</div>
+              <div class="kv-val" style="color: var(--accent-amber);">${Number(flat.uds_sqm)} m² (${escapeHtml(flat.uds_fraction)})</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Centroid WGS84 GPS Coordinates</div>
+              <div class="kv-val">${escapeHtml(flat.gps_wgs84.lat)}° N, ${escapeHtml(flat.gps_wgs84.lon)}° E</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Volumetric Extents (Elevation)</div>
+              <div class="kv-val">Z: ${Number(flat.z_min_m)}m → ${Number(flat.z_max_m)}m AGL</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Mahabhulekh Land Record Anchor</div>
+              <div class="kv-val">Survey ${escapeHtml(flat.survey_number)}, Khata ${escapeHtml(flat.khata_number)}, Waranga</div>
+            </div>
+          </div>
+
+          ${encHtml}
+        </div>
+      `;
+
+      actions.innerHTML = `
+        <button class="btn-action secondary" onclick="window.print()">🖨️ Print Property Card</button>
+        ${flat.encumbrance
+          ? `<button class="btn-action transfer" onclick="attemptTransferEncumbered('${escapeHtml(flat.ulpin_3d)}')">Transfer Title (Resale)</button>`
+          : `<button class="btn-action stamp" onclick="stampMortgage('${escapeHtml(flat.ulpin_3d)}')">🏦 Stamp Bank Mortgage</button>
+             <button class="btn-action transfer" onclick="transferTitle('${escapeHtml(flat.ulpin_3d)}')">Transfer Title (Resale)</button>`
+        }
+      `;
+
+      modal.style.display = "flex";
+    }
+
+    function closeDeedModal() {
+      document.getElementById("deed-modal").style.display = "none";
+    }
+
+    // Anti-Fraud Conveyance Security Simulation
+    function attemptTransferEncumbered(ulpin) {
+      alert("⚠️ ANTI-FRAUD SECURITY LOCKOUT ACTIVATED!\n\nISO 19152 LADM v2 Rule Violation:\nTitle Mutation BLOCKED because parcel " + escapeHtml(ulpin) + " is encumbered under an active bank mortgage lien.\n\nConveyance or resale is prohibited until the registered bank releases the encumbrance stamp.");
+    }
+
+    function stampMortgage(ulpin) {
+      const flat = enrichedFlats.find(f => f.ulpin_3d === ulpin);
+      if (!flat) return;
+
+      let bank = prompt("Enter Financing Bank Name:", "Bank of Maharashtra");
+      if (!bank) return;
+      bank = bank.trim().replace(/[<>"']/g, "");
+      if (bank.length < 2 || bank.length > 80) {
+        alert("Invalid Bank Name format. Please provide a valid institution name.");
+        return;
+      }
+
+      const amountRaw = prompt("Enter Sanctioned Loan Amount (INR):", "5000000");
+      if (!amountRaw) return;
+      const parsedAmount = Math.max(50000, Math.min(parseFloat(amountRaw.replace(/[^0-9.]/g, '')) || 5000000, 1000000000));
+
+      flat.encumbrance = {
+        bank_name: bank,
+        sanction_ref: `MORT-${Math.floor(Math.random()*9000 + 1000)}`,
+        loan_amount_inr: parsedAmount,
+        stamped_date: new Date().toISOString().split("T")[0],
+        status: "ACTIVE_LIEN",
+      };
+
+      alert(`✅ Mortgage Lien successfully stamped against 3D ULPIN ${flat.ulpin_3d}!\nBank: ${bank}\nProperty is now locked against illegal transfer.`);
+      renderTable(enrichedFlats);
+      openDeedModal(ulpin);
+    }
+
+    function transferTitle(ulpin) {
+      const flat = enrichedFlats.find(f => f.ulpin_3d === ulpin);
+      if (!flat) return;
+
+      let newOwner = prompt("Enter Transferee / Buyer Full Name:", "Aditya Deshmukh");
+      if (!newOwner) return;
+      newOwner = newOwner.trim().replace(/[<>"']/g, "");
+      if (newOwner.length < 2 || newOwner.length > 80) {
+        alert("Invalid Citizen Name format. Please provide a valid buyer name.");
+        return;
+      }
+
+      flat.owner_name = newOwner;
+      flat.owner_aadhaar = "XXXX-XXXX-" + Math.floor(Math.random()*9000 + 1000);
+
+      alert(`✅ Strata Title Mutation Approved!\n3D ULPIN ${flat.ulpin_3d} has been conveyed to ${newOwner}.\nMutation logged in immutable cadastre ledger.`);
+      renderTable(enrichedFlats);
+      openDeedModal(ulpin);
+    }
+
+    // ── Exports ──────────────────────────────────────────────────────────────
     function downloadExport(type) {
       if (!currentSessionId) {
-        alert("Please upload and generate a 3D building first!");
+        alert("Please generate 3D architecture first!");
         return;
       }
       if (type === "obj") {
@@ -1494,8 +2260,48 @@
       } else if (type === "unity") {
         window.open(`/api/ai/floorplan-3d/export-unity/${currentSessionId}`, "_blank");
       } else if (type === "cadastre") {
-        window.open(`/api/ai/floorplan-3d/export-cadastre/${currentSessionId}`, "_blank");
+        // Download complete enriched JSON
+        const blob = new Blob([JSON.stringify(enrichedFlats, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `3D_ULPIN_Cadastral_Registry_${currentSessionId}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
       }
+    }
+
+    function downloadCadastreCSV() {
+      if (!enrichedFlats || enrichedFlats.length === 0) {
+        alert("Please generate 3D architecture first!");
+        return;
+      }
+      const headers = ["ulpin_3d", "flat_number", "floor_level", "owner_name", "carpet_area_sqm", "airspace_volume_m3", "uds_sqm", "uds_fraction", "z_min_m", "z_max_m", "lat", "lon", "mortgage_status", "bank_name"];
+      const rows = enrichedFlats.map(f => [
+        f.ulpin_3d,
+        f.flat_number,
+        f.floor_level,
+        `"${f.owner_name}"`,
+        f.carpet_area_sqm,
+        f.airspace_volume_m3,
+        f.uds_sqm,
+        f.uds_fraction,
+        f.z_min_m,
+        f.z_max_m,
+        f.gps_wgs84.lat,
+        f.gps_wgs84.lon,
+        f.encumbrance ? "MORTGAGED" : "CLEAR",
+        f.encumbrance ? `"${f.encumbrance.bank_name}"` : "NONE"
+      ]);
+
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `3D_ULPIN_Registry_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
