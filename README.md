@@ -1,4 +1,4 @@
-# 🏛️ National 3D ULPIN & Volumetric Cadastre Platform
+ 🏛️ National 3D ULPIN & Volumetric Cadastre Platform
 ### Smart India Hackathon (SIH) — PS 26011 | Ministry of Rural Development — Department of Land Resources (DoLR)
 **Category:** Software | **Theme:** Smart Automation | **Cadastral Standard:** ISO 19152 LADM v2 & Maharashtra Land Revenue (Survey 140/1)
 
