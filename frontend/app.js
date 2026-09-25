@@ -36,13 +36,28 @@ if (document.readyState === "loading") {
 }
 
 function setupEventListeners() {
-  // Ensure only Search view is visible on initial load
   const vSearch = document.getElementById("view-search");
   const vBhu = document.getElementById("view-bhunaksha");
   const vRes = document.getElementById("view-results");
-  if (vSearch) vSearch.style.setProperty("display", "flex", "important");
-  if (vBhu) vBhu.style.setProperty("display", "none", "important");
-  if (vRes) vRes.style.setProperty("display", "none", "important");
+
+  // Check if directed directly to a building (e.g. from AI Studio or bookmark)
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetBldg = urlParams.get("building_id") || urlParams.get("bldg_id");
+
+  if (targetBldg) {
+    if (vSearch) vSearch.style.setProperty("display", "none", "important");
+    if (vBhu) vBhu.style.setProperty("display", "none", "important");
+    if (vRes) vRes.style.setProperty("display", "flex", "important");
+    setTimeout(async () => {
+      await loadAnalytics();
+      await selectBuilding(targetBldg.toUpperCase());
+    }, 250);
+  } else {
+    // Ensure only Search view is visible on initial load
+    if (vSearch) vSearch.style.setProperty("display", "flex", "important");
+    if (vBhu) vBhu.style.setProperty("display", "none", "important");
+    if (vRes) vRes.style.setProperty("display", "none", "important");
+  }
 
   const floorFilter = document.getElementById("floor-filter");
   if (floorFilter) {
@@ -411,7 +426,28 @@ async function selectBuilding(buildingId) {
   const activeCard = document.getElementById(`bldg-card-${buildingId}`);
   if (activeCard) activeCard.classList.add("active");
 
-  const meta = BUILDING_METADATA[buildingId] || { name: buildingId, status: "not_yet_surveyed" };
+  if (!BUILDING_METADATA[buildingId]) {
+    BUILDING_METADATA[buildingId] = {
+      name: `${buildingId} Building`,
+      status: "completed",
+      desc: "3D Volumetric digital twin registered in National Cadastre."
+    };
+  }
+
+  // Check if building has been completed in backend database
+  try {
+    const checkRes = await fetch(`/api/parcels/mesh-data/${buildingId}`);
+    if (checkRes.ok) {
+      const bData = await checkRes.json();
+      if (bData.data_status === "completed" && bData.parcels && bData.parcels.length > 0) {
+        BUILDING_METADATA[buildingId].status = "completed";
+      }
+    }
+  } catch (e) {
+    // Keep fallback metadata status
+  }
+
+  const meta = BUILDING_METADATA[buildingId];
   document.getElementById("viewport-building-title").innerText = `${meta.name} (${buildingId}) — Volumetric 3D Twin`;
 
   const controls = document.getElementById("surveyed-controls");
@@ -428,21 +464,25 @@ async function selectBuilding(buildingId) {
 // Render Informational View for Other Campus Buildings
 function renderPendingNotice(buildingId, meta) {
   const container = document.getElementById("plot3d-container");
+  const defaultFloors = buildingId.includes('ADMIN') ? 3 : (buildingId.includes('ACAD') ? 4 : 5);
   container.innerHTML = `
     <div class="pending-notice-box">
-      <div style="font-size:2.2rem;margin-bottom:12px;color:#b45309;">🏛️</div>
+      <div style="font-size:2.2rem;margin-bottom:12px;color:#b45309;"></div>
       <div class="pending-notice-title">${meta.name} (${buildingId})</div>
       <div class="pending-notice-desc">
         ${meta.desc}
         <br><br>
-        <strong>Cadastral Status:</strong> Survey data pending ingestion. Field surveyors can upload CAD drawings or scanned plans through the Ingestion Engine.
+        <strong>Cadastral Status:</strong> Survey data pending ingestion. Field surveyors can upload CAD drawings or scanned plans through the AI Studio or Ingestion Engine.
       </div>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
-        <button class="btn btn-primary" onclick="openIngestModal('${buildingId}')" style="background:#0284c7;">
-          ⚡ Ingest & Survey ${meta.name}
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+        <a href="/studio?bldg_id=${buildingId}&bldg_name=${encodeURIComponent(meta.name)}&floors=${defaultFloors}" class="btn btn-primary" style="background:#6366f1;border:1px solid #4f46e5;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;box-shadow:0 2px 6px rgba(99,102,241,0.25);">
+           Digitize with AI 3D Studio &rarr;
+        </a>
+        <button class="btn btn-subtle" onclick="openIngestModal('${buildingId}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;">
+           Ingestion Engine
         </button>
         <button class="btn btn-subtle" onclick="selectBuilding('HSTL01')">
-          ← View Hostel Block A (700 Units)
+          ← View Hostel Block A
         </button>
       </div>
     </div>
@@ -755,13 +795,13 @@ async function submitAllotment() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Allotment failed");
 
-    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
+    showToast(data.message.replace(/[]/g, "").trim(), "success");
     closeModal();
     await loadBuilding3DTwin(currentBuildingId);
     await loadAnalytics();
     inspectParcel(ulpin);
   } catch (err) {
-    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
+    showToast(err.message.replace(/[]/g, "").trim(), "error");
   }
 }
 
@@ -793,12 +833,12 @@ async function submitTransfer() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Transfer mutation failed");
 
-    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
+    showToast(data.message.replace(/[]/g, "").trim(), "success");
     closeModal();
     await loadBuilding3DTwin(currentBuildingId);
     inspectParcel(ulpin);
   } catch (err) {
-    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
+    showToast(err.message.replace(/[]/g, "").trim(), "error");
   }
 }
 
@@ -828,13 +868,13 @@ async function submitMortgage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Mortgage stamping failed");
 
-    showToast(data.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "success");
+    showToast(data.message.replace(/[]/g, "").trim(), "success");
     closeModal();
     await loadBuilding3DTwin(currentBuildingId);
     await loadAnalytics();
     inspectParcel(ulpin);
   } catch (err) {
-    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
+    showToast(err.message.replace(/[]/g, "").trim(), "error");
   }
 }
 
@@ -852,7 +892,7 @@ async function runTopologyAudit() {
                 `- Compliance Rating: ${data.compliance_score_percent}% (${data.validation_status})`;
     alert(msg);
   } catch (err) {
-    showToast(err.message.replace(/[✅❌⚠️👤🏦]/g, "").trim(), "error");
+    showToast(err.message.replace(/[]/g, "").trim(), "error");
   }
 }
 
@@ -964,7 +1004,7 @@ function addRuleRow(pattern = "", type = "ROOM", depth = "", isCommon = false) {
     </td>
     <td><input type="number" step="0.5" class="rule-depth" value="${depth}" placeholder="Auto (m)"></td>
     <td style="text-align:center;"><input type="checkbox" class="rule-common" ${isCommon ? "checked" : ""}></td>
-    <td style="text-align:center;"><button type="button" class="btn-del-rule" onclick="deleteRuleRow(this)">✕</button></td>
+    <td style="text-align:center;"><button type="button" class="btn-del-rule" onclick="deleteRuleRow(this)"></button></td>
   `;
   tbody.appendChild(tr);
 }
@@ -1054,7 +1094,7 @@ async function submitIngestionPipeline() {
   const submitBtn = document.getElementById("btn-run-ingestion");
   const origText = submitBtn.innerText;
   submitBtn.disabled = true;
-  submitBtn.innerText = "⏳ Executing Cadastral Ingestion Pipeline...";
+  submitBtn.innerText = "Executing Cadastral Ingestion Pipeline...";
 
   const formData = new FormData();
   formData.append("file", fileInput.files[0]);
@@ -1097,7 +1137,7 @@ async function submitIngestionPipeline() {
     const resultsBox = document.getElementById("ingest-results-box");
     resultsBox.style.display = "flex";
 
-    document.getElementById("diag-status-icon").innerText = data.topology_validation.passed ? "✅" : "⚠️";
+    document.getElementById("diag-status-icon").innerText = data.topology_validation.passed ? "" : "";
     document.getElementById("diag-title").innerText = `${bldgName} (${bldgId}) Ingested Successfully`;
     document.getElementById("diag-method-badge").innerText = data.extraction_method.toUpperCase();
 
@@ -1114,13 +1154,13 @@ async function submitIngestionPipeline() {
       droneBanner.style.background = "#f0fdf4";
       droneBanner.style.color = "#166534";
       droneBanner.style.borderColor = "#bbf7d0";
-      droneBanner.innerHTML = `<strong>🚁 Drone ML Height Validation:</strong> ${pc.message}`;
+      droneBanner.innerHTML = `<strong> Drone ML Height Validation:</strong> ${pc.message}`;
     } else if (pc && pc.status === "DISCREPANCY_FLAGGED") {
       droneBanner.style.display = "block";
       droneBanner.style.background = "#fffbeb";
       droneBanner.style.color = "#92400e";
       droneBanner.style.borderColor = "#fde68a";
-      droneBanner.innerHTML = `<strong>⚠️ Drone ML Height Validation:</strong> ${pc.message}`;
+      droneBanner.innerHTML = `<strong> Drone ML Height Validation:</strong> ${pc.message}`;
     } else {
       droneBanner.style.display = "none";
     }
@@ -1132,7 +1172,7 @@ async function submitIngestionPipeline() {
 
     if (data.ocr_diagnostics && data.ocr_diagnostics.low_confidence_units_count > 0) {
       ocrContainer.style.display = "block";
-      ocrList.innerHTML = `<button class="btn btn-subtle" onclick="submitOCRCorrections(this)" style="float:right;padding:3px 8px;font-size:0.7rem;margin-bottom:4px;background:#fef3c7;border:1px solid #fde68a;">✅ Approve AI OCR Corrections</button><div style="clear:both;"></div>`;
+      ocrList.innerHTML = `<button class="btn btn-subtle" onclick="submitOCRCorrections(this)" style="float:right;padding:3px 8px;font-size:0.7rem;margin-bottom:4px;background:#fef3c7;border:1px solid #fde68a;"> Approve AI OCR Corrections</button><div style="clear:both;"></div>`;
       data.ocr_diagnostics.low_confidence_warnings.slice(0, 4).forEach(w => {
         const item = document.createElement("div");
         item.className = "ocr-warning-item";
@@ -1194,7 +1234,7 @@ function startVoiceAI() {
      
      recognition.onstart = function() {
        btn.style.background = "#b91c1c";
-       btn.innerHTML = "🔴 Listening... Speak Now";
+       btn.innerHTML = " Listening... Speak Now";
        statusSpan.innerText = "Listening to surveyor dictation...";
        statusSpan.style.color = "#ea580c";
      };
@@ -1202,7 +1242,7 @@ function startVoiceAI() {
      recognition.onresult = async function(event) {
        const transcript = event.results[0][0].transcript;
        statusSpan.innerHTML = `<i>"${transcript}"</i> <span style='color:#0284c7'> (AI is synthesizing 3D geometry...)</span>`;
-       btn.innerHTML = "⏳ Processing...";
+       btn.innerHTML = "Processing...";
        btn.style.background = "#0284c7";
        btn.disabled = true;
        
@@ -1219,7 +1259,7 @@ function startVoiceAI() {
            const data = await res.json();
            
            if(data.status === "success" && data.prediction_result) {
-               statusSpan.innerHTML = `<span style='color:#15803d;font-weight:700;'>✅ Magic! Generated ${data.prediction_result.total_units} 3D Cadastral units. Load in 2s...</span>`;
+               statusSpan.innerHTML = `<span style='color:#15803d;font-weight:700;'> Magic! Generated ${data.prediction_result.total_units} 3D Cadastral units. Load in 2s...</span>`;
                lastIngestedBuildingId = bldgId;
                BUILDING_METADATA[bldgId] = {
                   name: `Voice Generated (${bldgId})`,
@@ -1229,19 +1269,19 @@ function startVoiceAI() {
                showToast("Voice AI Architecture Successful!", "success");
                setTimeout(() => inspectIngestedBuilding(), 2000);
            } else {
-               statusSpan.innerHTML = `<span style='color:#b91c1c'>❌ AI couldn't parse that structure. Try again.</span>`;
+               statusSpan.innerHTML = `<span style='color:#b91c1c'> AI couldn't parse that structure. Try again.</span>`;
            }
        } catch (err) {
-           statusSpan.innerHTML = `<span style='color:#b91c1c'>❌ Network Connection Error.</span>`;
+           statusSpan.innerHTML = `<span style='color:#b91c1c'> Network Connection Error.</span>`;
        } finally {
-           btn.innerHTML = "🎙️ AI Voice Architect";
+           btn.innerHTML = " AI Voice Architect";
            btn.style.background = "#ef4444";
            btn.disabled = false;
        }
      };
      
      recognition.onerror = function(event) {
-       btn.innerHTML = "🎙️ AI Voice Architect";
+       btn.innerHTML = " AI Voice Architect";
        btn.style.background = "#ef4444";
        statusSpan.innerText = "Microphone error! " + event.error;
        btn.disabled = false;
@@ -1254,7 +1294,7 @@ function startVoiceAI() {
 function submitOCRCorrections(btn) {
   btn.innerText = "Saving to DB...";
   setTimeout(() => {
-    btn.innerText = "✅ OCR Corrections Applied";
+    btn.innerText = " OCR Corrections Applied";
     btn.style.background = "#dcfce7";
     btn.style.borderColor = "#86efac";
     showToast("Human-in-the-Loop OCR corrections saved to ISO Cadastral DB.", "success");

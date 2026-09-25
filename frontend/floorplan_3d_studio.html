@@ -166,7 +166,7 @@
       overflow: hidden;
     }
 
-    /* ── LANDING DASHBOARD VIEW (STRIPE / GOV MINIMAL WITH 3D BACKGROUND) ── */
+    /*  LANDING DASHBOARD VIEW (STRIPE / GOV MINIMAL WITH 3D BACKGROUND)  */
     .landing-dashboard-section {
       flex: 1;
       position: relative;
@@ -492,7 +492,7 @@
       color: var(--text);
     }
 
-    /* ── STUDIO WORKSPACE VIEW ─────────────────────────────────────────────── */
+    /*  STUDIO WORKSPACE VIEW  */
     .studio-workspace-section {
       flex: 1;
       min-height: 0;
@@ -1700,21 +1700,29 @@
     </a>
 
     <div class="header-nav">
-      <a href="/app" class="nav-link-btn">
+      <a href="/" class="nav-link-btn" title="National DoLR Land Records Portal">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        National Portal
+      </a>
+      <a href="/app" class="nav-link-btn" title="Mahabhulekh 3D Cadastre Registry">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
           <polyline points="2 17 12 22 22 17"></polyline>
           <polyline points="2 12 12 17 22 12"></polyline>
         </svg>
-        Cadastre App
+        3D Cadastre Registry
       </a>
+      <span class="nav-link-btn nav-btn-primary" style="pointer-events: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        AI 3D Studio
+      </span>
     </div>
   </header>
 
   <!-- Main Viewport -->
   <main>
     
-    <!-- ── STUDIO WORKSPACE VIEW ──────────────────────────────────────────── -->
+    <!--  STUDIO WORKSPACE VIEW  -->
     <section class="studio-workspace-section" id="view-studio">
       
       <!-- Architectural Compact Mission Banner -->
@@ -2106,6 +2114,10 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                       Digital 3D ULPIN Title Certificate
                     </button>
+                    <button class="btn-view-deed" id="btn-publish-cadastre" onclick="publishBuildingToCadastre()" style="background:#059669;border-color:#059669;box-shadow:0 2px 6px rgba(5,150,105,0.25);" title="Publish to official Mahabhulekh cadastre and inspect in /app">
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                       Publish to Cadastre &amp; View in Registry &rarr;
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2278,6 +2290,7 @@
       initThree();
       checkModelStatus();
       initRaycasting();
+      checkUrlParameters();
 
       // Only run auto-sample if explicitly requested via query parameter: /studio?sample=sample_2bhk
       const urlParams = new URLSearchParams(window.location.search);
@@ -2351,7 +2364,7 @@
       return plane;
     }
 
-    // ── Three.js Initialization ─────────────────────────────────────────────
+    //  Three.js Initialization 
     function initThree() {
       const container = document.getElementById("viewer-container");
       const canvas = document.getElementById("three-canvas");
@@ -2495,7 +2508,7 @@
       }
     }
 
-    // ── Raycasting Hover & Click Inspection ─────────────────────────────────
+    //  Raycasting Hover & Click Inspection 
     function initRaycasting() {
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
@@ -2543,7 +2556,7 @@
       }
     }
 
-    // ── Backend Model Status Check ──────────────────────────────────────────
+    //  Backend Model Status Check 
     async function checkModelStatus() {
       try {
         const res = await fetch("/api/ai/floorplan-3d/status");
@@ -2559,7 +2572,7 @@
       }
     }
 
-    // ── Sample Blueprint Selection ──────────────────────────────────────────
+    //  Sample Blueprint Selection 
     function selectSample(sampleId, el) {
       document.querySelectorAll(".sample-card-item").forEach(c => c.classList.remove("active"));
       if (el) el.classList.add("active");
@@ -2601,7 +2614,7 @@
       }
     }
 
-    // ── Pipeline Ingestion ──────────────────────────────────────────────────
+    //  Pipeline Ingestion 
     async function executePipeline(sampleIdToUse) {
       const sample = sampleIdToUse || selectedSampleId;
       const fileInput = document.getElementById("file-input");
@@ -2712,7 +2725,7 @@
       showToast("Cadastre extracted: 3D ULPIN registry populated");
     }
 
-    // ── 3D ULPIN & ISO 19152 LADM v2 Cadastral Enrichment ───────────────────
+    //  3D ULPIN & ISO 19152 LADM v2 Cadastral Enrichment 
     function enrichCadastreData(data) {
       const rawFlats = data.flats_list || [];
       const totalCarpet = rawFlats.reduce((sum, f) => sum + (f.carpet_area_sqm || 0), 0);
@@ -2770,7 +2783,7 @@
       });
     }
 
-    // ── Render Studio State ─────────────────────────────────────────────────
+    //  Render Studio State 
     function renderStudio(data) {
       const bldg = data.building_summary || {};
       const totalFlats = enrichedFlats.length;
@@ -2809,7 +2822,7 @@
       build3D(data);
     }
 
-    // ── Security Sanitization ───────────────────────────────────────────────
+    //  Security Sanitization 
     function escapeHtml(str) {
       if (str === null || str === undefined) return "";
       return String(str)
@@ -2820,7 +2833,7 @@
         .replace(/'/g, "&#039;");
     }
 
-    // ── Table Rendering with Motion Stagger ──────────────────────────────────
+    //  Table Rendering with Motion Stagger 
     function renderTable(flats) {
       const tbody = document.getElementById("cadastre-table-body");
       tbody.innerHTML = "";
@@ -2874,7 +2887,7 @@
       }
     }
 
-    // ── Build Accurate 3D Geometry ──────────────────────────────────────────
+    //  Build Accurate 3D Geometry 
     function buildShape(outer, holes, scale, cx, cy) {
       const shape = new THREE.Shape();
       if (!outer || outer.length === 0) return shape;
@@ -3078,7 +3091,7 @@
       setCameraView('persp');
     }
 
-    // ── Interactive Selection & Focus ────────────────────────────────────────
+    //  Interactive Selection & Focus 
     function selectFlat(ulpin, openDeedDirectly = false, shouldScrollTable = false) {
       selectedFlatUlpin = ulpin;
 
@@ -3130,7 +3143,7 @@
       openDeedModal(selectedFlatUlpin);
     }
 
-    // ── Exploded Storeys Slider ──────────────────────────────────────────────
+    //  Exploded Storeys Slider 
     function onExplodeChange(val) {
       currentExplodeY = parseFloat(val);
       document.getElementById("exploded-val").textContent = `${currentExplodeY.toFixed(2)}x`;
@@ -3147,7 +3160,7 @@
       });
     }
 
-    // ── Floor Filtering ──────────────────────────────────────────────────────
+    //  Floor Filtering 
     function filterFloor(targetFloor, el) {
       document.querySelectorAll(".slice-btn").forEach(p => p.classList.remove("active"));
       if (el) el.classList.add("active");
@@ -3177,7 +3190,7 @@
       }
     }
 
-    // ── Visual Modes ─────────────────────────────────────────────────────────
+    //  Visual Modes 
     function toggleColorMode(mode) {
       activeColorMode = mode;
       document.querySelectorAll(".studio-float-bar .float-dock-btn").forEach(b => {
@@ -3222,7 +3235,7 @@
       });
     }
 
-    // ── Parameter Live Update Handlers ───────────────────────────────────────
+    //  Parameter Live Update Handlers 
     function onPlotAreaChange(val) {
       surfacePlotAreaM2 = parseFloat(val);
       document.getElementById("plot-area-display").innerHTML = `${val} m&sup2;`;
@@ -3263,7 +3276,7 @@
       }
     }
 
-    // ── Search & Filter in Table ─────────────────────────────────────────────
+    //  Search & Filter in Table 
     function filterCadastreTable(query) {
       const q = (query || "").toLowerCase().trim();
       if (!q) {
@@ -3279,7 +3292,7 @@
       renderTable(filtered);
     }
 
-    // ── MODAL: 3D ULPIN Title Deed / Property Card ───────────────────────────
+    //  MODAL: 3D ULPIN Title Deed / Property Card 
     function openDeedModal(ulpin) {
       const flat = enrichedFlats.find(f => f.ulpin_3d === ulpin);
       if (!flat) return;
@@ -3346,7 +3359,7 @@
     }
 
 
-    // ── Exports ──────────────────────────────────────────────────────────────
+    //  Exports 
     function downloadExport(type) {
       if (!currentSessionId) {
         showToast("Generate a 3D cadastre first.");
@@ -3376,6 +3389,80 @@
       link.download = `3D_ULPIN_Cadastre_${currentSessionId || 'export'}.csv`;
       link.click();
       showToast("3D ULPIN CSV generated and downloaded");
+    }
+
+    //  Deep-Linking & Parameter Pre-population from /app 
+    let targetBldgIdFromUrl = "";
+    function checkUrlParameters() {
+      const params = new URLSearchParams(window.location.search);
+      const bldgId = params.get("bldg_id") || params.get("building_id");
+      const bldgName = params.get("bldg_name") || params.get("building_name");
+      const floors = params.get("floors");
+
+      if (bldgId) {
+        targetBldgIdFromUrl = bldgId.trim().toUpperCase();
+        const codeInput = document.getElementById("bldg-code-input");
+        if (codeInput) codeInput.value = targetBldgIdFromUrl;
+      }
+      if (bldgName) {
+        const nameInput = document.getElementById("building-name-input");
+        if (nameInput) nameInput.value = decodeURIComponent(bldgName);
+      }
+      if (floors) {
+        const floorSlider = document.getElementById("floors-slider");
+        const floorDisplay = document.getElementById("floors-display");
+        if (floorSlider) floorSlider.value = floors;
+        if (floorDisplay) floorDisplay.innerText = `${floors} Floors`;
+      }
+    }
+
+    //  Live Publishing to National Cadastre Registry (/app) 
+    async function publishBuildingToCadastre() {
+      if (!currentSessionId) {
+        showToast("Please generate a 3D cadastre model first.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-publish-cadastre");
+      const originalHtml = btn ? btn.innerHTML : "";
+      if (btn) {
+        btn.innerHTML = `<span>Publishing to Mahabhulekh Cadastre...</span>`;
+        btn.disabled = true;
+      }
+
+      const bldgId = (document.getElementById("bldg-code-input").value.trim() || targetBldgIdFromUrl || "ADMIN01").toUpperCase();
+      const bldgName = document.getElementById("building-name-input").value.trim() || `${bldgId} Building`;
+
+      try {
+        const res = await fetch("/api/ai/floorplan-3d/publish-to-cadastre", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: currentSessionId,
+            building_id: bldgId,
+            building_name: bldgName,
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ detail: "Publishing failed" }));
+          throw new Error(errData.detail || "Publishing failed");
+        }
+
+        const data = await res.json();
+        showToast(` Registered ${data.total_parcels} 3D parcels for ${data.building_id}! Redirecting to Mahabhulekh...`);
+
+        setTimeout(() => {
+          window.location.href = data.redirect_url || `/app?building_id=${bldgId}`;
+        }, 1200);
+
+      } catch (err) {
+        showToast("Publish Error: " + err.message);
+        if (btn) {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        }
+      }
     }
   </script>
 </body>

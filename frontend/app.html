@@ -12,14 +12,18 @@
   <!-- Top Unified Header -->
   <header>
     <div class="brand-section">
-      <a href="/studio" class="btn btn-subtle" style="font-weight:600; padding:4px 10px; font-size:0.75rem;">3D Studio</a>
+      <a href="/" class="btn btn-subtle" style="font-weight:600; padding:5px 12px; font-size:0.75rem;"> National Portal</a>
+      <a href="/studio" class="btn btn-subtle" style="font-weight:600; padding:5px 12px; font-size:0.75rem; background:#ede9fe; color:#5b21b6; border:1px solid #ddd6fe;"> AI 3D Studio</a>
       <div style="width:1px; height:20px; background:var(--border-strong); margin:0 4px;"></div>
       <div class="brand-title">
         <h1>National 3D ULPIN Cadastral System</h1>
         <p>Department of Land Resources | Ministry of Rural Development</p>
       </div>
     </div>
-    <div class="header-right">
+    <div class="header-right" style="display:flex; align-items:center; gap:10px;">
+      <a href="/studio" class="btn btn-primary" style="background:#6366f1; border-color:#4f46e5; color:#ffffff; font-weight:700; padding:7px 14px; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(99,102,241,0.3); text-decoration:none;">
+         Digitize with AI 3D Studio &rarr;
+      </a>
       <button class="btn btn-primary" id="btn-open-actions" onclick="openModal()">+ Cadastral Actions</button>
     </div>
   </header>
@@ -140,7 +144,7 @@
       </div>
 
       <button class="btn btn-primary search-btn-large" onclick="openVillageMap()">
-        View Village Cadastral Map (गावाचा भू-नकाशा पहा) ➔
+        View Village Cadastral Map (गावाचा भू-नकाशा पहा) 
       </button>
 
     </div>
@@ -163,7 +167,7 @@
       <!-- Left Sidebar: Location, Search Plot, Plot Info -->
       <aside class="bhunaksha-sidebar">
         <div class="bhunaksha-sidebar-header">
-          <span>☰ Location & Plot Info</span>
+          <span> Location & Plot Info</span>
           <span style="font-size:0.75rem;opacity:0.85;">DILRMP</span>
         </div>
 
@@ -271,7 +275,7 @@ Map Report</div>
             
             <!-- Floating badge when 140 is selected -->
             <div id="plot140-badge" style="display:none;position:absolute;top:28%;left:17%;background:rgba(15,23,42,0.92);color:#ffffff;padding:8px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.25);pointer-events:none;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,0.2);white-space:nowrap;">
-              🎯 Plot 140 Selected • Survey 140/1 (pu-id: 33550994106)
+               Plot 140 Selected • Survey 140/1 (pu-id: 33550994106)
             </div>
           </div>
         </div>
@@ -365,6 +369,15 @@ Map Report</div>
           <div class="bldg-card-name">Residential Building</div>
           <div class="bldg-card-desc">Staff and faculty residential quarters.</div>
         </div>
+
+        <!-- Card 5: Digitize with AI 3D Studio -->
+        <a href="/studio" class="building-card" style="border:1.5px dashed #818cf8; background:#f5f3ff; text-decoration:none; display:flex; flex-direction:column; justify-content:center; cursor:pointer;" title="Open AI 3D Studio">
+          <div class="bldg-card-top">
+            <span class="bldg-card-code" style="background:#6366f1;color:#ffffff;">+ AI STUDIO</span>
+          </div>
+          <div class="bldg-card-name" style="color:#4338ca;font-weight:700;"> Digitize New Building</div>
+          <div class="bldg-card-desc" style="color:#6b21a8;">Upload 2D floor plan & extrude 3D parcels with AI.</div>
+        </a>
 
       </div>
     </div>
@@ -490,7 +503,7 @@ Map Report</div>
         <div>
           <h3>Cadastral Mutation & Allotment</h3>
         </div>
-        <button id="btn-close-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;">✕</button>
+        <button id="btn-close-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;"></button>
       </div>
 
       <div class="tab-bar">
@@ -576,16 +589,16 @@ Map Report</div>
       <!-- Modal Header -->
       <div class="ingest-modal-header">
         <div>
-          <h3>🏛️ Field Surveyor 3D Ingestion Portal</h3>
+          <h3> Field Surveyor 3D Ingestion Portal</h3>
           <p>Zero-Friction Cadastral Ingestion Engine | Vector CAD & CV/OCR Dual Extraction | Drone Height ML Validation</p>
         </div>
-        <button onclick="closeIngestModal()" style="background:none;border:none;color:#94a3b8;font-size:1.3rem;cursor:pointer;">✕</button>
+        <button onclick="closeIngestModal()" style="background:none;border:none;color:#94a3b8;font-size:1.3rem;cursor:pointer;"></button>
       </div>
 
       <!-- Microphone AI Bar -->
       <div style="background:#fef2f2; padding:8px 16px; border-bottom:1px solid #fecaca; display:flex; align-items:center; gap:12px;">
          <button id="btn-voice-ai" onclick="startVoiceAI()" style="background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            🎙️ AI Voice Architect
+             AI Voice Architect
          </button>
          <span id="voice-ai-status" style="font-size:0.75rem;color:#b91c1c;font-weight:600;">Hold to dictate building layout (e.g., "Create a 5-floor residential apartment...").</span>
       </div>
@@ -670,7 +683,7 @@ Map Report</div>
             <!-- Floor Plan Dropzone -->
             <div class="file-dropzone" onclick="document.getElementById('file-ingest-plan').click()">
               <input type="file" id="file-ingest-plan" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp" onchange="handlePlanFileSelected(this)">
-              <div style="font-size:1.8rem;margin-bottom:4px;">📐</div>
+              <div style="font-size:1.8rem;margin-bottom:4px;"></div>
               <div class="file-dropzone-label">Upload Floor Plan Drawing</div>
               <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Vector CAD PDF or Scanned Photo (Auto CV/OCR)</div>
               <div id="badge-plan-file" class="file-selected-badge" style="display:none;"></div>
@@ -679,7 +692,7 @@ Map Report</div>
             <!-- Point Cloud Dropzone -->
             <div class="file-dropzone" onclick="document.getElementById('file-ingest-pointcloud').click()">
               <input type="file" id="file-ingest-pointcloud" accept=".ply,.xyz,.las,.laz,.obj" onchange="handlePointCloudFileSelected(this)">
-              <div style="font-size:1.8rem;margin-bottom:4px;">🚁</div>
+              <div style="font-size:1.8rem;margin-bottom:4px;"></div>
               <div class="file-dropzone-label">Drone Photogrammetry Scan (Optional)</div>
               <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Point Cloud (.ply, .xyz, .las) for ML Height Audit</div>
               <div id="badge-pointcloud-file" class="file-selected-badge" style="display:none;"></div>
@@ -697,10 +710,10 @@ Map Report</div>
           <!-- Presets -->
           <div class="presets-bar">
             <span style="font-size:0.7rem;font-weight:700;color:var(--text-muted);">Quick Presets:</span>
-            <button class="btn-preset" onclick="loadRulePreset('admin')">🏢 Administrative Complex</button>
-            <button class="btn-preset" onclick="loadRulePreset('academic')">🎓 Academic & Labs</button>
-            <button class="btn-preset" onclick="loadRulePreset('hostel')">🏠 Student Residence / Hostel</button>
-            <button class="btn-preset" onclick="loadRulePreset('residential')">🏘️ Staff Housing</button>
+            <button class="btn-preset" onclick="loadRulePreset('admin')"> Administrative Complex</button>
+            <button class="btn-preset" onclick="loadRulePreset('academic')"> Academic & Labs</button>
+            <button class="btn-preset" onclick="loadRulePreset('hostel')"> Student Residence / Hostel</button>
+            <button class="btn-preset" onclick="loadRulePreset('residential')"> Staff Housing</button>
           </div>
 
           <!-- Rules Table -->
@@ -724,7 +737,7 @@ Map Report</div>
         <div id="ingest-results-box" class="diag-box" style="display:none;">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div style="font-weight:700;font-size:0.85rem;color:#0f172a;display:flex;align-items:center;gap:6px;">
-              <span id="diag-status-icon">✅</span>
+              <span id="diag-status-icon"></span>
               <span id="diag-title">3D Cadastral Ingestion Completed</span>
             </div>
             <span id="diag-method-badge" class="stat-chip" style="background:#e0f2fe;color:#0369a1;font-weight:700;">VECTOR CAD</span>
@@ -756,13 +769,13 @@ Map Report</div>
 
           <!-- OCR Warnings Container -->
           <div id="diag-ocr-container" style="display:none;">
-            <div style="font-weight:700;font-size:0.72rem;color:#92400e;margin-top:6px;">⚠️ OCR Confidence Review Flags:</div>
+            <div style="font-weight:700;font-size:0.72rem;color:#92400e;margin-top:6px;"> OCR Confidence Review Flags:</div>
             <div id="diag-ocr-list"></div>
           </div>
 
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
             <button class="btn btn-primary" id="btn-view-ingested-3d" onclick="inspectIngestedBuilding()" style="background:#15803d;">
-              👁️ Inspect Ingested 3D Digital Twin
+               Inspect Ingested 3D Digital Twin
             </button>
           </div>
         </div>
@@ -773,7 +786,7 @@ Map Report</div>
       <div class="modal-action-bar">
         <button class="btn btn-subtle" onclick="closeIngestModal()">Cancel</button>
         <button class="btn btn-primary" id="btn-run-ingestion" onclick="submitIngestionPipeline()" style="background:#0284c7;">
-          🚀 Generate 3D Model & Validate
+           Generate 3D Model & Validate
         </button>
       </div>
 
@@ -783,7 +796,7 @@ Map Report</div>
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <script src="/static/app.js?v=3.3"></script>
+  <script src="/static/app.js?v=4.0"></script>
 </body>
 </html>
 

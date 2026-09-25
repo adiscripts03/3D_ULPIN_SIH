@@ -4,12 +4,15 @@ Accepts multi-image uploads: floor plan + exterior photo + room photos
 """
 
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import os
 import shutil
 import tempfile
+import math
+from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
+from backend.database import get_db_connection
 from backend.services.building_predictor import predict_building
 from backend.services.yolo_detector import _YOLO_AVAILABLE
 
@@ -269,7 +272,7 @@ async def get_building_mesh(building_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── FLOOR PLAN → 3D ARCHITECTURE & OWNERSHIP CADASTRE ENDPOINTS ──────────────
+#  FLOOR PLAN → 3D ARCHITECTURE & OWNERSHIP CADASTRE ENDPOINTS 
 
 @router.get("/floorplan-3d/status")
 async def get_floorplan_3d_status():
@@ -439,4 +442,195 @@ async def export_floorplan_cadastre(session_id: str):
         raise HTTPException(status_code=404, detail="Session expired or not found. Please re-generate.")
 
     return cached["flats"]
+
+
+class PublishCadastrePayload(BaseModel):
+    session_id: str
+    building_id: str = "ADMIN01"
+    building_name: Optional[str] = None
+    category: Optional[str] = None
+    anchor_lat: Optional[float] = 20.9495556
+    anchor_lon: Optional[float] = 79.0294722
+
+
+@router.post("/floorplan-3d/publish-to-cadastre")
+async def publish_floorplan_to_cadastre(payload: PublishCadastrePayload):
+    """
+    Persists AI-generated 3D building and units from Studio into the official
+    cadastre_3d.db SQLite registry, allowing immediate interactive inspection in /app.
+    """
+    from backend.services.floorplan_3d_ml import EXPORT_CACHE
+
+    cached = EXPORT_CACHE.get(payload.session_id)
+    if not cached or "flats" not in cached:
+        raise HTTPException(
+            status_code=404,
+            detail="Studio session expired or not found. Please re-generate the 3D model in Studio first."
+        )
+
+    flats = cached.get("flats", [])
+    common = cached.get("common", [])
+    floors = cached.get("floors", 1)
+    scale_m_per_px = cached.get("scale_m_per_px", 0.035)
+
+    building_id = (payload.building_id or "ADMIN01").strip().upper()
+    building_name = payload.building_name or cached.get("building_name", f"{building_id} Building")
+    category = payload.category or ("Administrative Complex" if "ADMIN" in building_id else ("Academic & Laboratories" if "ACAD" in building_id else "Residential Stratum"))
+    anchor_lat = payload.anchor_lat or 20.9495556
+    anchor_lon = payload.anchor_lon or 79.0294722
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # 1. Resolve institution_id
+        cursor.execute("SELECT institution_id FROM institutions LIMIT 1")
+        inst_row = cursor.fetchone()
+        inst_id = inst_row["institution_id"] if inst_row else "INST_IIITN_001"
+
+        # 2. Update or insert building record
+        cursor.execute("SELECT building_id FROM buildings WHERE building_id = ?", (building_id,))
+        existing_bldg = cursor.fetchone()
+
+        desc_str = f"Digitized via AI 3D Decomposition Studio with {len(flats)} units across {floors} storeys."
+
+        if existing_bldg:
+            cursor.execute("""
+            UPDATE buildings
+            SET building_name = ?, category = ?, data_status = 'completed',
+                total_floors = ?, anchor_lat = ?, anchor_lon = ?,
+                description = ?
+            WHERE building_id = ?
+            """, (
+                building_name, category, floors, anchor_lat, anchor_lon,
+                desc_str, building_id
+            ))
+        else:
+            cursor.execute("""
+            INSERT INTO buildings (
+                building_id, institution_id, building_name, category, data_status,
+                total_floors, floor_pitch_m, room_clear_height_m, slab_thickness_m,
+                anchor_lat, anchor_lon, description
+            ) VALUES (?, ?, ?, ?, 'completed', ?, 3.4, 2.9, 0.5, ?, ?, ?)
+            """, (
+                building_id, inst_id, building_name, category, floors,
+                anchor_lat, anchor_lon, desc_str
+            ))
+
+        # 3. Clean up prior parcels for this building (safe for re-publishing)
+        cursor.execute("DELETE FROM parcels_3d WHERE building_id = ?", (building_id,))
+
+        # 4. Insert flats as 3D parcels
+        METERS_PER_DEG_LAT = 111320.0
+        meters_per_deg_lon = 111320.0 * math.cos(math.radians(anchor_lat))
+        total_carpet = sum(f.get("carpet_area_sqm", 0.0) for f in flats) or 1.0
+
+        bldg_map = {"ADMIN01": 1, "ACAD01": 2, "HSTL01": 3, "RES01": 4}
+        b_digit = bldg_map.get(building_id, 5)
+
+        all_units = []
+
+        # Process private units
+        for idx, f in enumerate(flats):
+            bbox = f.get("bbox_px", [0, 0, 100, 100])
+            rx0 = round(bbox[0] * scale_m_per_px, 2)
+            ry0 = round(bbox[1] * scale_m_per_px, 2)
+            w_m = max(round(bbox[2] * scale_m_per_px, 2), 3.0)
+            d_m = max(round(bbox[3] * scale_m_per_px, 2), 3.0)
+            rx1 = round(rx0 + w_m, 2)
+            ry1 = round(ry0 + d_m, 2)
+            cx_m = (rx0 + rx1) / 2.0
+            cy_m = (ry0 + ry1) / 2.0
+
+            lat = round(anchor_lat - (cy_m / METERS_PER_DEG_LAT), 8)
+            lon = round(anchor_lon + (cx_m / meters_per_deg_lon), 8)
+
+            carpet = round(f.get("carpet_area_sqm", w_m * d_m), 2)
+            fl = int(f.get("floor_level", 1))
+            vol = round(f.get("airspace_volume_m3", carpet * 2.9), 2)
+            uds = round(carpet / total_carpet, 7)
+
+            z_min = round(f.get("z_min_m", (fl - 1) * 3.4), 2)
+            z_max = round(f.get("z_max_m", z_min + 2.9), 2)
+            z_slab = round(z_max + 0.5, 2)
+
+            flat_num = f.get("flat_number", f"{fl}{idx+1:02d}")
+            digits = "".join(filter(str.isdigit, str(flat_num)))
+            u_code = f"{int(digits) % 100:02d}" if digits else f"{idx+1:02d}"
+            ulpin_3d = f"33550994106{b_digit}{fl:02d}{u_code}"
+
+            ptype = f.get("flat_type", "OFFICE" if "ADMIN" in building_id else ("CLASS" if "ACAD" in building_id else "2BHK"))
+
+            all_units.append((
+                ulpin_3d, building_id, fl, str(flat_num), ptype,
+                z_min, z_max, z_slab, w_m, d_m, rx0, rx1, ry0, ry1,
+                lat, lon, carpet, vol, uds, 0
+            ))
+
+        # Process common circulation units
+        for c_idx, c in enumerate(common):
+            poly = c.get("polygon", [])
+            fl = int(c.get("floor_level", 1))
+            if poly and len(poly) >= 3:
+                xs = [p[0] * scale_m_per_px for p in poly]
+                ys = [p[1] * scale_m_per_px for p in poly]
+                rx0, rx1 = round(min(xs), 2), round(max(xs), 2)
+                ry0, ry1 = round(min(ys), 2), round(max(ys), 2)
+                w_m = max(round(rx1 - rx0, 2), 2.0)
+                d_m = max(round(ry1 - ry0, 2), 2.0)
+            else:
+                rx0, rx1 = 5.0, 15.0
+                ry0, ry1 = 5.0, 10.0
+                w_m, d_m = 10.0, 5.0
+
+            cx_m = (rx0 + rx1) / 2.0
+            cy_m = (ry0 + ry1) / 2.0
+            lat = round(anchor_lat - (cy_m / METERS_PER_DEG_LAT), 8)
+            lon = round(anchor_lon + (cx_m / meters_per_deg_lon), 8)
+
+            c_area = round(c.get("carpet_area_sqm", w_m * d_m), 2)
+            vol = round(c_area * 2.9, 2)
+            z_min = round((fl - 1) * 3.4, 2)
+            z_max = round(z_min + 2.9, 2)
+            z_slab = round(z_max + 0.5, 2)
+
+            comm_suffix = f"{71 + (c_idx % 28):02d}"
+            ulpin_3d = f"33550994106{b_digit}{fl:02d}{comm_suffix}"
+            c_name = c.get("name", f"Common Corridor {fl}")
+
+            all_units.append((
+                ulpin_3d, building_id, fl, c_name, "CORR",
+                z_min, z_max, z_slab, w_m, d_m, rx0, rx1, ry0, ry1,
+                lat, lon, c_area, vol, 0.0, 1
+            ))
+
+        cursor.executemany("""
+        INSERT OR REPLACE INTO parcels_3d (
+            ulpin_3d, building_id, floor, room_id, type,
+            z_min, z_max, z_slab_top, real_width_m, real_depth_m,
+            real_x_start_m, real_x_end_m, real_y_start_m, real_y_end_m,
+            latitude, longitude, carpet_area_sqm, gross_volume_cbm,
+            undivided_share_land, is_common_property
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, all_units)
+
+        conn.commit()
+        inserted_count = len(all_units)
+
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Database publishing failed: {str(e)}")
+
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Successfully published {building_name} ({building_id}) to National 3D Cadastre!",
+        "building_id": building_id,
+        "building_name": building_name,
+        "total_parcels": inserted_count,
+        "floors": floors,
+        "redirect_url": f"/app?building_id={building_id}"
+    }
 

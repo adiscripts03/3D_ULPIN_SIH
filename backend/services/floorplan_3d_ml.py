@@ -539,6 +539,10 @@ def run_floorplan_3d_pipeline(
         "obj": "\n".join(obj_lines),
         "unity": unity_data,
         "flats": flats,
+        "common": common,
+        "building_name": building_name,
+        "floors": floors,
+        "scale_m_per_px": 0.035,
         "created_at": time.time(),
     }
 
