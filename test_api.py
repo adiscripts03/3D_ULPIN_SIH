@@ -4,7 +4,8 @@ import requests
 
 # Test AI Pipeline 
 def run_tests():
-    url = "http://127.0.0.1:8000/api/ai/predict"
+    port = os.environ.get("PORT", "8005")
+    url = f"http://127.0.0.1:{port}/api/ai/predict"
     
     # Test 1: Text only
     print("Testing Text Input...")

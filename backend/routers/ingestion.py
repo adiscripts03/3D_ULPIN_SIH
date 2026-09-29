@@ -72,7 +72,9 @@ async def run_ingestion_job(
     Receives uploaded floor plans, parses room classification rules, executes CV/OCR
     and vector extraction, performs ML point cloud floor validation, and registers 3D parcels.
     """
-    clean_bldg_id = building_id.strip().upper()
+    clean_bldg_id = "".join(c for c in building_id.strip().upper() if c.isalnum() or c in ("-", "_"))
+    if not clean_bldg_id:
+        raise HTTPException(status_code=400, detail="Invalid building_id: must contain alphanumeric characters.")
 
     # 1. Save uploaded floor plan
     os.makedirs(UPLOAD_DIR, exist_ok=True)
