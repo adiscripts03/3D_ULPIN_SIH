@@ -18,7 +18,7 @@ python-multipart>=0.0.9
 python-dotenv>=1.0.0
 
 # Computer Vision & OCR (for scanned drawings / imagery)
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
 pytesseract>=0.3.10
 Pillow>=10.0.0
 
